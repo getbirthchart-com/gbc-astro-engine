@@ -53,6 +53,11 @@ from gbc_astro.models.relationship import (
 from gbc_astro.models.transform import TransformedChart
 from gbc_astro.profiles.defaults import RELATIONSHIP_WESTERN_V1, WESTERN_MODERN_V1
 from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
+from gbc_astro.profiles.progression import (
+    SECONDARY_PROGRESSION_V1,
+    SOLAR_ARC_V1,
+    ProgressionProfile,
+)
 from gbc_astro.profiles.scoring import SYNASTRY_SCORING_V1, ScoringProfile
 from gbc_astro.profiles.transit import TRANSIT_PROFILE_V1, TransitProfile
 from gbc_astro.providers.base import EphemerisProvider
@@ -70,6 +75,10 @@ from gbc_astro.search.events import (
 )
 from gbc_astro.transforms.draconic import calculate_draconic
 from gbc_astro.transforms.harmonic import calculate_harmonic
+from gbc_astro.transforms.progressions import (
+    calculate_secondary_progressions,
+    calculate_solar_arc,
+)
 from gbc_astro.zodiac.sidereal import (
     AyanamsaCalculator,
     longitude_to_sidereal,
@@ -88,12 +97,16 @@ class AstrologyEngine:
         relationship_profile: RelationshipProfile = RELATIONSHIP_WESTERN_V1,
         scoring_profile: ScoringProfile = SYNASTRY_SCORING_V1,
         transit_profile: TransitProfile = TRANSIT_PROFILE_V1,
+        progression_profile: ProgressionProfile = SECONDARY_PROGRESSION_V1,
+        solar_arc_profile: ProgressionProfile = SOLAR_ARC_V1,
     ) -> None:
         self._provider = provider
         self.profile = profile
         self.relationship_profile = relationship_profile
         self.scoring_profile = scoring_profile
         self.transit_profile = transit_profile
+        self.progression_profile = progression_profile
+        self.solar_arc_profile = solar_arc_profile
         self._house_calculator = house_calculator
         self._ayanamsa_calculator: AyanamsaCalculator | None = None
         self._validate_profile(profile)
@@ -414,6 +427,18 @@ class AstrologyEngine:
         aspect family onto conjunctions is what a harmonic chart is for.
         """
         return calculate_harmonic(chart, harmonic, self.profile)
+
+    def progressions(self, chart: NatalChart, target: datetime) -> TransformedChart:
+        """The secondary-progressed chart for an instant: one day per year of life."""
+        return calculate_secondary_progressions(
+            chart, target, self.profile, self.progression_profile, self.natal
+        )
+
+    def solar_arc(self, chart: NatalChart, target: datetime) -> TransformedChart:
+        """Direct every natal point by the progressed Sun's travel."""
+        return calculate_solar_arc(
+            chart, target, self.profile, self.solar_arc_profile, self.natal
+        )
 
     def _get_ayanamsa_calculator(self) -> AyanamsaCalculator:
         if self._ayanamsa_calculator is None:

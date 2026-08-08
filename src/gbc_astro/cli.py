@@ -125,11 +125,15 @@ def _build_parser() -> argparse.ArgumentParser:
     for name, help_text in (
         ("draconic", "Re-zero the zodiac on the lunar node."),
         ("harmonic", "The harmonic-n chart: every longitude multiplied by n."),
+        ("progressions", "Secondary progressions: one day of motion per year of life."),
+        ("solar-arc", "Direct every natal point by the progressed Sun's travel."),
     ):
         transform = subcommands.add_parser(name, help=help_text)
         _add_natal_arguments(transform)
         if name == "harmonic":
             transform.add_argument("--n", type=int, required=True, help="Harmonic number.")
+        if name in {"progressions", "solar-arc"}:
+            transform.add_argument("--at", required=True, help="Target instant, UTC ISO 8601.")
         transform.add_argument("--json", action="store_true")
 
     benchmark = subcommands.add_parser("benchmark")
@@ -311,11 +315,14 @@ def _transform(args: argparse.Namespace) -> int:
         unknown_time=args.unknown_time,
         fold=args.fold,
     )
-    result = (
-        engine.draconic(chart)
-        if args.command == "draconic"
-        else engine.harmonic(chart, args.n)
-    )
+    if args.command == "draconic":
+        result = engine.draconic(chart)
+    elif args.command == "harmonic":
+        result = engine.harmonic(chart, args.n)
+    elif args.command == "progressions":
+        result = engine.progressions(chart, _utc(args.at))
+    else:
+        result = engine.solar_arc(chart, _utc(args.at))
     if args.json:
         print(result.to_json(indent=2))
     else:
@@ -444,7 +451,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _relationship(args)
         if args.command in {"transits", "returns", "events"}:
             return _forecast(args)
-        if args.command in {"draconic", "harmonic"}:
+        if args.command in {"draconic", "harmonic", "progressions", "solar-arc"}:
             return _transform(args)
         if args.command == "benchmark":
             return _benchmark(args)
