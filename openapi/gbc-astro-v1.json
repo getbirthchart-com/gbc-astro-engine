@@ -1,0 +1,348 @@
+{
+  "components": {
+    "schemas": {
+      "ApiErrorBody": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ApiErrorBody",
+        "type": "object"
+      },
+      "ApiErrorEnvelope": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorBody"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ApiErrorEnvelope",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "api_version": {
+            "title": "Api Version",
+            "type": "string"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "engine",
+          "engine_version",
+          "schema_version",
+          "api_version"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "HouseSystem": {
+        "description": "House systems supported by AstrologyEngine.natal.",
+        "enum": [
+          "placidus",
+          "whole_sign",
+          "equal"
+        ],
+        "title": "HouseSystem",
+        "type": "string"
+      },
+      "NatalChartRequest": {
+        "additionalProperties": false,
+        "description": "Natal chart calculation request.\n\nPreserves local civil date + optional local clock time + IANA timezone.\nThe engine owns historical timezone / DST interpretation \u2014 clients must not\npre-convert to UTC.",
+        "examples": [
+          {
+            "latitude": 38.7223,
+            "local_date": "1996-06-14",
+            "local_time": "04:12",
+            "longitude": -9.1393,
+            "timezone": "Europe/Lisbon",
+            "unknown_time": false
+          },
+          {
+            "latitude": 38.7223,
+            "local_date": "1996-06-14",
+            "longitude": -9.1393,
+            "timezone": "Europe/Lisbon",
+            "unknown_time": true
+          }
+        ],
+        "properties": {
+          "altitude_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional altitude in meters.",
+            "title": "Altitude M"
+          },
+          "fold": {
+            "anyOf": [
+              {
+                "enum": [
+                  0,
+                  1
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional PEP 495 fold for ambiguous local times. Do not invent a fold; omit and surface AMBIGUOUS_LOCAL_TIME when unresolved.",
+            "title": "Fold"
+          },
+          "house_system": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseSystem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "House system. Defaults to the engine calculation profile (western-modern-v1 \u2192 placidus). No silent fallback between systems."
+          },
+          "latitude": {
+            "description": "WGS84 latitude in degrees (-90 to 90).",
+            "title": "Latitude",
+            "type": "number"
+          },
+          "local_date": {
+            "description": "Local civil birth date as YYYY-MM-DD.",
+            "examples": [
+              "1996-06-14"
+            ],
+            "title": "Local Date",
+            "type": "string"
+          },
+          "local_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Local clock time as HH:MM or HH:MM:SS when birth time is known. Must be null when unknown_time is true.",
+            "examples": [
+              "04:12",
+              "04:12:00"
+            ],
+            "title": "Local Time"
+          },
+          "longitude": {
+            "description": "WGS84 longitude in degrees (-180 to 180).",
+            "title": "Longitude",
+            "type": "number"
+          },
+          "timezone": {
+            "description": "IANA timezone identifier (not a fixed UTC offset).",
+            "examples": [
+              "Europe/Lisbon",
+              "Asia/Ho_Chi_Minh"
+            ],
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          },
+          "unknown_time": {
+            "default": false,
+            "description": "When true, birth time is unknown. Angles/houses are omitted by the engine; local_time must be null.",
+            "title": "Unknown Time",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "local_date",
+          "timezone",
+          "latitude",
+          "longitude"
+        ],
+        "title": "NatalChartRequest",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Thin HTTP adapter over the gbc-astro AstrologyEngine. All natal calculations are performed by the existing Python engine; this service does not reimplement astrology math, geocoding, persistence, or interpretation.",
+    "title": "GetBirthChart Astrology API",
+    "version": "v1",
+    "x-gbc-api-version": "v1",
+    "x-gbc-engine-version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Service health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/v1/charts/natal": {
+      "post": {
+        "description": "Call the existing AstrologyEngine.natal(...) and return canonical JSON.",
+        "operationId": "calculate_natal_v1_charts_natal_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NatalChartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "angles": {},
+                  "aspects": [],
+                  "bodies": {},
+                  "derived": {},
+                  "houses": [],
+                  "meta": {
+                    "calculationProfile": "western-modern-v1",
+                    "engine": "gbc-astro",
+                    "engineVersion": "0.1.0",
+                    "houseSystem": "placidus",
+                    "zodiac": "tropical"
+                  },
+                  "schemaVersion": "1.0.0",
+                  "subject": {
+                    "birthTimeKnown": true,
+                    "localDateTime": "1996-06-14T04:12:00",
+                    "timezone": "Europe/Lisbon"
+                  },
+                  "warnings": []
+                },
+                "schema": {}
+              }
+            },
+            "description": "Canonical natal chart object (NatalChart.to_dict()). Returned directly \u2014 not wrapped in a {chart: ...} envelope."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Calculate a natal chart",
+        "tags": [
+          "charts"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gbc-astro"
+version = "0.1.0"
+description = "Deterministic astrology calculation engine for GetBirthChart."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [{ name = "GetBirthChart" }]
+dependencies = []
+
+[project.optional-dependencies]
+swiss = ["pyswisseph>=2.10"]
+validation = ["skyfield>=1.54", "jplephem>=2.24", "numpy>=2.0"]
+api = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+]
+dev = [
+  "hypothesis>=6.100",
+  "mypy>=1.10",
+  "pytest>=8.0",
+  "ruff>=0.5",
+  "httpx>=0.27",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+]
+
+[project.scripts]
+gbc = "gbc_astro.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+  "UP017", # Keep datetime.timezone.utc so local verification still works on Python 3.9.
+  "UP042", # Keep str+Enum for compatibility with the current local runtime.
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -1,0 +1,7 @@
+$ PYTHONPATH=src python3 -m unittest tests.unit.test_zodiac
+..
+----------------------------------------------------------------------
+Ran 2 tests
+
+OK
+

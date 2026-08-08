@@ -1,0 +1,3 @@
+$ PYTHONPATH=/private/tmp/gbc_deps:src python3 -m pytest -q tests/unit/test_aspects.py
+....                                                                     [100%]
+

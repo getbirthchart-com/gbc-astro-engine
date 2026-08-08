@@ -1,0 +1,7 @@
+$ PYTHONPATH=src python3 -m unittest tests.unit.test_circular
+....
+----------------------------------------------------------------------
+Ran 4 tests
+
+OK
+

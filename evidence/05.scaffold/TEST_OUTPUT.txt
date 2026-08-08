@@ -1,0 +1,15 @@
+$ PYTHONPATH=src python3 -m unittest discover -s tests
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 0.001s
+
+OK
+
+$ PYTHONPATH=src python3 -m gbc_astro benchmark --cases 10000 --seed 42
+{
+  "cases": 10000,
+  "reason": "Differential benchmark requires a trusted reference provider corpus.",
+  "seed": 42,
+  "status": "blocked"
+}
+

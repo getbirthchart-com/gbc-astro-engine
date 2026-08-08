@@ -1,0 +1,25 @@
+$ PYTHONPATH=/private/tmp/gbc_deps:src python3 -m gbc_astro benchmark --cases 10000 --seed 42 --house-system equal --swiss-ephe-path /private/tmp/gbc_swisseph
+{
+  "cases": 10000,
+  "errors": {},
+  "houseSystem": "equal",
+  "maxMs": 1.643750000000055,
+  "p50Ms": 0.3145420000003618,
+  "p95Ms": 0.4074579999999717,
+  "p99Ms": 0.44099999999999695,
+  "provider": "swiss",
+  "runtimeMs": 3410.7879590000002,
+  "seed": 42,
+  "status": "pass",
+  "successes": 10000
+}
+
+$ /private/tmp/gbc_tools/bin/ruff check .
+All checks passed!
+
+$ PYTHONPATH=/private/tmp/gbc_deps:src python3 -m mypy src
+Success: no issues found in 37 source files
+
+$ PYTHONPATH=/private/tmp/gbc_deps:src python3 -m pytest -q
+..ss................................                                     [100%]
+34 passed, 2 skipped in 0.13s

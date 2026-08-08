@@ -1,0 +1,50 @@
+"""Stable package constants."""
+
+ENGINE_NAME = "gbc-astro"
+ENGINE_VERSION = "0.1.0"
+SCHEMA_VERSION = "1.0.0"
+
+BODY_IDS = (
+    "sun",
+    "moon",
+    "mercury",
+    "venus",
+    "mars",
+    "jupiter",
+    "saturn",
+    "uranus",
+    "neptune",
+    "pluto",
+    "true_node",
+    "mean_node",
+    "chiron",
+)
+
+CLASSICAL_BALANCE_BODIES = (
+    "sun",
+    "moon",
+    "mercury",
+    "venus",
+    "mars",
+    "jupiter",
+    "saturn",
+    "uranus",
+    "neptune",
+    "pluto",
+)
+
+SIGN_IDS = (
+    "aries",
+    "taurus",
+    "gemini",
+    "cancer",
+    "leo",
+    "virgo",
+    "libra",
+    "scorpio",
+    "sagittarius",
+    "capricorn",
+    "aquarius",
+    "pisces",
+)
+

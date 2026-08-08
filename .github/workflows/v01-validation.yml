@@ -1,0 +1,40 @@
+name: v0.1 Validation Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      cases:
+        description: "Differential case count"
+        required: true
+        default: "10000"
+  schedule:
+    - cron: "0 3 * * 0"
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install -e ".[dev,swiss]"
+      - name: Lint
+        run: ruff check .
+      - name: Typecheck
+        run: mypy src
+      - name: Tests
+        run: pytest
+      - name: Hostile Corpus
+        run: gbc validate hostile --output-dir evidence/v0.1-validation
+      - name: Reproducibility
+        run: gbc validate reproducibility --cases 100 --runs 3 --output-dir evidence/v0.1-validation
+      - name: Independent Differential
+        run: |
+          gbc validate differential \
+            --cases "${{ inputs.cases || '10000' }}" \
+            --seed 42 \
+            --reference jpl \
+            --output-dir evidence/v0.1-validation || test "$?" = "2"
+

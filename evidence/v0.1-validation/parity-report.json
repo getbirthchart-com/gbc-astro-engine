@@ -1,0 +1,203 @@
+{
+  "angles": {
+    "ascMaxDelta": null,
+    "cases": 0,
+    "mcMaxDelta": null,
+    "outsideTolerance": null,
+    "reference": null,
+    "status": "BLOCKED",
+    "unresolved": "Independent astrology-geometry reference/fixtures are not available for ASC/MC/DSC/IC, Placidus cusps, and planet house assignments."
+  },
+  "astronomy": {
+    "bodies": {
+      "jupiter": {
+        "latitudeMaxDelta": 2.255823963404069e-06,
+        "longitudeMaxDelta": 0.00011349375023428365,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 2.475333071016994e-06
+      },
+      "mars": {
+        "latitudeMaxDelta": 8.436732111737066e-05,
+        "longitudeMaxDelta": 0.00040148718380805803,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 0.0013087405500167293
+      },
+      "mercury": {
+        "latitudeMaxDelta": 0.00017026106792739082,
+        "longitudeMaxDelta": 0.0011122772832408145,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 9.50951628682084e-05
+      },
+      "moon": {
+        "latitudeMaxDelta": 0.0006573929116058252,
+        "longitudeMaxDelta": 0.00781827189609885,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 0.000364234490438875
+      },
+      "neptune": {
+        "latitudeMaxDelta": 5.3729872723368155e-06,
+        "longitudeMaxDelta": 1.8919191049349138e-05,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 0.0002430936873609943
+      },
+      "pluto": {
+        "latitudeMaxDelta": 1.9799290740252218e-06,
+        "longitudeMaxDelta": 1.1862479311730567e-05,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 8.959992219703672e-05
+      },
+      "saturn": {
+        "latitudeMaxDelta": 1.0774707981345277e-05,
+        "longitudeMaxDelta": 5.9535635330121295e-05,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 0.0010585248133366254
+      },
+      "sun": {
+        "latitudeMaxDelta": 2.904622494813669e-07,
+        "longitudeMaxDelta": 0.0005211014954511484,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 9.798195548249566e-07
+      },
+      "uranus": {
+        "latitudeMaxDelta": 0.00011959233431976801,
+        "longitudeMaxDelta": 4.530587240481054e-05,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 0.0005942276134488292
+      },
+      "venus": {
+        "latitudeMaxDelta": 0.00011662573488857575,
+        "longitudeMaxDelta": 0.000635463248954693,
+        "outsideTolerance": 0,
+        "speedMaxDelta": 0.0004112585931903556
+      }
+    },
+    "cases": 10000,
+    "jplHealth": {
+      "dataPath": "/private/tmp/gbc_jpl/de440s.bsp",
+      "dataVersion": "DE440S",
+      "reference": "jpl-de440",
+      "status": "ok",
+      "supportedBodies": [
+        "sun",
+        "moon",
+        "mercury",
+        "venus",
+        "mars",
+        "jupiter",
+        "saturn",
+        "uranus",
+        "neptune",
+        "pluto"
+      ],
+      "supportedDateRange": [
+        "1849-12-25",
+        "2150-01-21"
+      ]
+    },
+    "outsideTolerance": 0,
+    "reference": "jpl-de440 DE440S",
+    "referenceFailures": 0,
+    "retrogradeMismatches": 0,
+    "status": "PASS",
+    "successCount": 10000,
+    "toleranceProfile": {
+      "id": "astronomy-jpl-parity-v1",
+      "innerPlanetLongitudeDeg": 0.002,
+      "latitudeDeg": 0.002,
+      "marsLongitudeDeg": 0.001,
+      "moonLatitudeDeg": 0.01,
+      "moonLongitudeDeg": 0.01,
+      "moonSpeedDegPerDay": 0.001,
+      "outerPlanetLongitudeDeg": 0.001,
+      "rationale": "Compares Swiss apparent geocentric tropical ecliptic positions against JPL DE440S through Skyfield apparent geocentric ecliptic-of-date. Tolerances allow small residual provider/model differences observed before validation: Moon is looser because lunar model/frame residuals are larger; longitude speed is a JPL central finite difference over the same apparent ecliptic-of-date longitude used for position comparison, with one-sided evaluation near UTC day boundaries. Retrograde state is categorical except near stations.",
+      "speedDegPerDay": 0.002,
+      "stationSpeedThresholdDegPerDay": 0.001,
+      "sunLongitudeDeg": 0.001,
+      "version": "0.1.0"
+    },
+    "unresolved": 0
+  },
+  "blockedReason": "Independent astrology-geometry reference/fixtures are not available for ASC/MC/DSC/IC, Placidus cusps, and planet house assignments.",
+  "bugsFixed": [
+    "Implemented independent JPL/Skyfield astronomy reference path for Sun-Pluto without Swiss calls.",
+    "Added deterministic curated 100-case astronomy prefix covering anchor years/months, leap days, Moon boundaries, Mercury/Venus stations, and UTC day boundaries.",
+    "Preserved PEP 495 fold in deterministic astronomy parity case generation.",
+    "Changed JPL speed comparison to finite difference over the same apparent ecliptic-of-date longitude used for position comparison.",
+    "Rejected silent Swiss Ephemeris fallback when FLG_SWIEPH is not returned.",
+    "Updated Swiss golden fixture values after provisioning real sepl/semo/seas data files."
+  ],
+  "engineVersion": "0.1.0",
+  "houses": {
+    "cases": 0,
+    "conventionDifferences": null,
+    "houseAssignmentMismatches": null,
+    "outsideTolerance": null,
+    "placidusCuspMaxDelta": null,
+    "reference": null,
+    "status": "BLOCKED",
+    "unresolved": "Independent astrology-geometry reference/fixtures are not available for ASC/MC/DSC/IC, Placidus cusps, and planet house assignments."
+  },
+  "internalGates": {
+    "benchmarks": {
+      "equal": {
+        "cases": 10000,
+        "errors": {},
+        "houseSystem": "equal",
+        "maxMs": 1.0175840000000158,
+        "p50Ms": 0.24466599999994898,
+        "p95Ms": 0.27549999999987307,
+        "p99Ms": 0.3292080000001363,
+        "provider": "swiss",
+        "runtimeMs": 2505.2462499999997,
+        "seed": 42,
+        "status": "pass",
+        "successes": 10000
+      },
+      "placidus": {
+        "cases": 10000,
+        "errors": {},
+        "houseSystem": "placidus",
+        "maxMs": 2.7380830000000023,
+        "p50Ms": 0.2415000000000056,
+        "p95Ms": 0.27137500000007364,
+        "p99Ms": 0.36470800000000525,
+        "provider": "swiss",
+        "runtimeMs": 2500.641125,
+        "seed": 42,
+        "status": "pass",
+        "successes": 10000
+      },
+      "wholeSign": {
+        "cases": 10000,
+        "errors": {},
+        "houseSystem": "whole_sign",
+        "maxMs": 0.9421249999999604,
+        "p50Ms": 0.24366600000003125,
+        "p95Ms": 0.279417000000004,
+        "p99Ms": 0.35087500000008376,
+        "provider": "swiss",
+        "runtimeMs": 2509.933542,
+        "seed": 42,
+        "status": "pass",
+        "successes": 10000
+      }
+    },
+    "compileall": "PASS",
+    "goldenSwiss": "PASS: 2 passed with full Swiss data",
+    "hostileCorpus": "PASS: 100 cases",
+    "mypy": "PASS",
+    "productionEphemerisSetup": "PASS: documented; Swiss and JPL health checks OK; GBC_JPL_EPHEMERIS_PATH smoke PASS",
+    "pytest": "PASS: 47 passed, 2 skipped",
+    "reproducibility": "PASS: 75 cases x 3 runs",
+    "ruff": "PASS"
+  },
+  "productionDecision": "BLOCKED",
+  "provider": "swiss",
+  "providerVersion": "2.10.03",
+  "remainingLimitations": [
+    "Independent angle and Placidus house reference corpus is not available.",
+    "External Astro.com/Astro-Seek-style spot-check corpus is not captured.",
+    "DE440S compact kernel uses barycenter targets for Mars and outer planets; residuals are measured and documented."
+  ],
+  "status": "BLOCKED"
+}

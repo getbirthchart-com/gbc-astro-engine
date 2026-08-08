@@ -1,0 +1,26 @@
+.DS_Store
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Licensed ephemeris data. Never commit: Swiss Ephemeris and JPL kernels carry
+# redistribution terms. Provision them at deploy time per
+# docs/PRODUCTION_EPHEMERIS_SETUP.md and point GBC_SWISS_EPHE_PATH /
+# GBC_JPL_EPHEMERIS_PATH at that directory.
+*.se1
+*.se2
+*.se3
+*.bsp
+ephemeris/

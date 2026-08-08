@@ -1,0 +1,84 @@
+"""Profile-driven aspect classification."""
+
+from __future__ import annotations
+
+from itertools import combinations
+
+from gbc_astro.astronomy.circular import normalize_longitude, shortest_angular_distance
+from gbc_astro.models.aspect import Aspect
+from gbc_astro.models.enums import AspectPhase
+from gbc_astro.models.position import BodyPosition
+from gbc_astro.profiles.model import AspectProfile, AspectRule
+
+
+def classify_aspect(
+    body_a: BodyPosition,
+    body_b: BodyPosition,
+    profile: AspectProfile,
+) -> Aspect | None:
+    actual_angle = shortest_angular_distance(body_a.longitude, body_b.longitude)
+    best_rule: AspectRule | None = None
+    best_orb: float | None = None
+    for rule in profile.rules:
+        orb = abs(actual_angle - rule.exact_angle)
+        if orb <= rule.orb and (best_orb is None or orb < best_orb):
+            best_rule = rule
+            best_orb = orb
+
+    if best_rule is None or best_orb is None:
+        return None
+
+    phase = _aspect_phase(
+        body_a,
+        body_b,
+        best_rule.exact_angle,
+        best_orb,
+        profile.exact_epsilon_deg,
+    )
+    return Aspect(
+        body_a=body_a.body_id,
+        body_b=body_b.body_id,
+        aspect_type=best_rule.aspect_type,
+        exact_angle=best_rule.exact_angle,
+        actual_angle=actual_angle,
+        orb=best_orb,
+        phase=phase.value,
+    )
+
+
+def calculate_aspects(
+    bodies: dict[str, BodyPosition],
+    profile: AspectProfile,
+) -> tuple[Aspect, ...]:
+    aspects = []
+    for body_a, body_b in combinations(bodies.values(), 2):
+        aspect = classify_aspect(body_a, body_b, profile)
+        if aspect is not None:
+            aspects.append(aspect)
+    return tuple(aspects)
+
+
+def _aspect_phase(
+    body_a: BodyPosition,
+    body_b: BodyPosition,
+    exact_angle: float,
+    current_orb: float,
+    exact_epsilon_deg: float,
+) -> AspectPhase:
+    if current_orb <= exact_epsilon_deg:
+        return AspectPhase.EXACT
+    if body_a.speed_longitude is None or body_b.speed_longitude is None:
+        return AspectPhase.INDETERMINATE
+
+    # Compare the absolute orb after a short deterministic timestep. This uses
+    # relative angular motion and avoids relying on naive longitude ordering.
+    timestep_days = 1e-3
+    future_a = normalize_longitude(body_a.longitude + body_a.speed_longitude * timestep_days)
+    future_b = normalize_longitude(body_b.longitude + body_b.speed_longitude * timestep_days)
+    future_separation = shortest_angular_distance(future_a, future_b)
+    future_orb = abs(future_separation - exact_angle)
+    if future_orb + exact_epsilon_deg < current_orb:
+        return AspectPhase.APPLYING
+    if future_orb > current_orb + exact_epsilon_deg:
+        return AspectPhase.SEPARATING
+    return AspectPhase.INDETERMINATE

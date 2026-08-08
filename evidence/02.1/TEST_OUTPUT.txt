@@ -1,0 +1,11 @@
+$ PYTHONPATH=src python3 -m gbc_astro natal --date 1992-11-03 --time 14:35:00 --timezone Asia/Ho_Chi_Minh --lat 21.0285 --lng 105.8542 --json
+{
+  "error": {
+    "code": "PROVIDER_DEPENDENCY_MISSING",
+    "details": {
+      "install": "python -m pip install \"gbc-astro[swiss]\""
+    },
+    "message": "Swiss Ephemeris provider requires the optional 'pyswisseph' dependency."
+  }
+}
+

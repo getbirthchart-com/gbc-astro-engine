@@ -1,0 +1,9 @@
+$ PYTHONPATH=/private/tmp/gbc_deps:src python3 -m pytest -q tests/differential/test_compare_natal.py
+..                                                                       [100%]
+
+$ /private/tmp/gbc_tools/bin/ruff check .
+All checks passed!
+
+$ PYTHONPATH=/private/tmp/gbc_deps:src python3 -m mypy src
+Success: no issues found in 40 source files
+

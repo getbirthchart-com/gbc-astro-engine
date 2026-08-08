@@ -1,0 +1,7 @@
+$ PYTHONPATH=src python3 -m unittest discover -s tests
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 0.001s
+
+OK
+

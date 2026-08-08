@@ -1,0 +1,24 @@
+$ python3 --version
+Python 3.9.6
+
+$ which pytest
+pytest not found
+
+$ which ruff
+ruff not found
+
+$ which mypy
+mypy not found
+
+$ PYTHONPATH=/private/tmp/gbc_deps:src python3 -m pytest -q
+ss................................                                       [100%]
+32 passed, 2 skipped in 0.15s
+
+$ /private/tmp/gbc_tools/bin/ruff check .
+All checks passed!
+
+$ PYTHONPATH=/private/tmp/gbc_deps:src python3 -m mypy src
+Success: no issues found in 37 source files
+
+$ PYTHONPYCACHEPREFIX=/private/tmp/gbc_pycache PYTHONPATH=src python3 -m compileall -q src tests
+PASS

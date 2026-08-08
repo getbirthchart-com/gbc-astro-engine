@@ -1,0 +1,2 @@
+"""Provider-backed golden tests."""
+

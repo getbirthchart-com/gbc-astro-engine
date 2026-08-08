@@ -1,0 +1,7 @@
+$ GBC_SWISS_EPHE_PATH=/private/tmp/gbc_swisseph PYTHONPATH=/private/tmp/gbc_deps:src python3 -m pytest -q tests/golden/test_swiss_natal.py
+..                                                                       [100%]
+2 passed in 0.12s
+
+$ PYTHONPATH=/private/tmp/gbc_deps:src python3 -m gbc_astro natal --date 1992-11-03 --time 14:35:00 --timezone Asia/Ho_Chi_Minh --lat 21.0285 --lng 105.8542 --house-system placidus --swiss-ephe-path /private/tmp/gbc_swisseph --json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['schemaVersion'], d['meta']['ephemerisProvider'], d['bodies']['sun']['sign'], d['bodies']['chiron']['sign'], d['angles']['ascendant']['sign'], len(d['aspects']))"
+1.0.0 swiss scorpio leo pisces 18
+

@@ -1,0 +1,3 @@
+$ GBC_SWISS_EPHE_PATH=/private/tmp/gbc_swisseph PYTHONPATH=/private/tmp/gbc_deps:src python3 -m pytest -q tests/unit/test_houses.py tests/golden/test_swiss_natal.py
+.....                                                                    [100%]
+
