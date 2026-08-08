@@ -31,6 +31,14 @@ from gbc_astro.api.models import (
     RelocationRequest,
     TransformRequest,
 )
+from gbc_astro.api.responses import (
+    AstrocartographyResponse,
+    CapabilitiesResponse,
+    EphemerisResponse,
+    NatalChartResponse,
+    PatternsResponse,
+    TransformedChartResponse,
+)
 from gbc_astro.constants import BODY_IDS
 from gbc_astro.engine import AstrologyEngine
 from gbc_astro.errors import InvalidCalculationProfileError
@@ -97,7 +105,7 @@ def _ok(payload: dict[str, Any], label: str, started: float) -> JSONResponse:
     "/draconic",
     summary="Re-zero the zodiac on the lunar node",
     response_description="The node lands on exactly 0 degrees Aries by construction.",
-    responses=_ERRORS,
+    responses={**_ERRORS, 200: {"model": TransformedChartResponse}},
 )
 def calculate_draconic(body: TransformRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -112,7 +120,7 @@ def calculate_draconic(body: TransformRequest, engine: EngineDep) -> JSONRespons
         "Every longitude multiplied by n. Aspects are recomputed, not carried "
         "over: collapsing an aspect family onto conjunctions is the technique."
     ),
-    responses=_ERRORS,
+    responses={**_ERRORS, 200: {"model": TransformedChartResponse}},
 )
 def calculate_harmonic(body: TransformRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -131,7 +139,7 @@ def calculate_harmonic(body: TransformRequest, engine: EngineDep) -> JSONRespons
         "Body longitudes are unchanged, so aspects are identical. Only the "
         "angles, cusps and house placements differ."
     ),
-    responses=_ERRORS,
+    responses={**_ERRORS, 200: {"model": NatalChartResponse}},
 )
 def calculate_relocated(body: RelocationRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -149,7 +157,7 @@ def calculate_relocated(body: RelocationRequest, engine: EngineDep) -> JSONRespo
     "/progressions",
     summary="Secondary progressions: one day of motion per year of life",
     response_description="An ordinary chart cast for the progressed instant.",
-    responses=_ERRORS,
+    responses={**_ERRORS, 200: {"model": TransformedChartResponse}},
 )
 def calculate_progressions(body: DirectionRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -165,7 +173,7 @@ def calculate_progressions(body: DirectionRequest, engine: EngineDep) -> JSONRes
         "A rotation: directed points hold their natal aspects exactly, so only "
         "contacts to the natal chart carry information."
     ),
-    responses=_ERRORS,
+    responses={**_ERRORS, 200: {"model": TransformedChartResponse}},
 )
 def calculate_solar_arc(body: DirectionRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -181,7 +189,7 @@ def calculate_solar_arc(body: DirectionRequest, engine: EngineDep) -> JSONRespon
         "Stelliums, grand trines, T-squares, grand crosses, yods and kites, with "
         "the widest leg orb of each."
     ),
-    responses=_ERRORS,
+    responses={**_ERRORS, 200: {"model": PatternsResponse}},
 )
 def calculate_patterns(body: PatternRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -202,7 +210,7 @@ def calculate_patterns(body: PatternRequest, engine: EngineDep) -> JSONResponse:
         "In-mundo lines: the body actually crosses the meridian or horizon. MC "
         "and IC are meridians, Ascendant and Descendant are curves."
     ),
-    responses=_ERRORS,
+    responses={**_ERRORS, 200: {"model": AstrocartographyResponse}},
 )
 def calculate_astrocartography(
     body: AstrocartographyRequest, engine: EngineDep
@@ -233,7 +241,7 @@ def calculate_astrocartography(
         "Each row is exactly what a single-instant call returns; this is a "
         "convenience, not a second calculation path."
     ),
-    responses=_ERRORS,
+    responses={**_ERRORS, 200: {"model": EphemerisResponse}},
 )
 def generate_ephemeris_table(body: EphemerisRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -257,6 +265,7 @@ def generate_ephemeris_table(body: EphemerisRequest, engine: EngineDep) -> JSONR
         "Bodies, house systems and ayanamsas, with optional bodies probed rather "
         "than assumed. Ask here instead of discovering through an error."
     ),
+    responses={200: {"model": CapabilitiesResponse}},
 )
 def capabilities(engine: EngineDep) -> JSONResponse:
     optional = engine.optional_bodies()

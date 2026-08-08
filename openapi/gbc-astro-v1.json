@@ -1,6 +1,147 @@
 {
   "components": {
     "schemas": {
+      "AcgLinePayload": {
+        "additionalProperties": true,
+        "properties": {
+          "angle": {
+            "description": "mc, ic, ascendant or descendant.",
+            "title": "Angle",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "detail": {
+            "additionalProperties": true,
+            "title": "Detail",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "description": "meridian for the MC and IC lines, which are straight; horizon for the rising and setting lines, which are not.",
+            "title": "Kind",
+            "type": "string"
+          },
+          "pointCount": {
+            "title": "Pointcount",
+            "type": "integer"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/AcgPointPayload"
+            },
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "body",
+          "angle",
+          "kind",
+          "pointCount",
+          "points"
+        ],
+        "title": "AcgLinePayload",
+        "type": "object"
+      },
+      "AcgPointPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "title": "AcgPointPayload",
+        "type": "object"
+      },
+      "AngleInteractionPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "actualAngle": {
+            "title": "Actualangle",
+            "type": "number"
+          },
+          "angle": {
+            "title": "Angle",
+            "type": "string"
+          },
+          "angleChart": {
+            "title": "Anglechart",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "bodyChart": {
+            "title": "Bodychart",
+            "type": "string"
+          },
+          "exactAngle": {
+            "title": "Exactangle",
+            "type": "number"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "bodyChart",
+          "angle",
+          "angleChart",
+          "type",
+          "exactAngle",
+          "actualAngle",
+          "orb"
+        ],
+        "title": "AngleInteractionPayload",
+        "type": "object"
+      },
+      "AnglePayload": {
+        "additionalProperties": true,
+        "properties": {
+          "degreeInSign": {
+            "title": "Degreeinsign",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "sign": {
+            "title": "Sign",
+            "type": "string"
+          }
+        },
+        "required": [
+          "longitude",
+          "sign",
+          "degreeInSign"
+        ],
+        "title": "AnglePayload",
+        "type": "object"
+      },
       "ApiErrorBody": {
         "properties": {
           "code": {
@@ -45,6 +186,101 @@
           "error"
         ],
         "title": "ApiErrorEnvelope",
+        "type": "object"
+      },
+      "AspectPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "actualAngle": {
+            "title": "Actualangle",
+            "type": "number"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "exactAngle": {
+            "title": "Exactangle",
+            "type": "number"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "phase": {
+            "description": "applying, separating, exact, or indeterminate. Indeterminate is a real answer, not a failure: two natal charts share no timeline, so cross-aspects between them have no direction of travel.",
+            "title": "Phase",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "type",
+          "exactAngle",
+          "actualAngle",
+          "orb",
+          "phase"
+        ],
+        "title": "AspectPayload",
+        "type": "object"
+      },
+      "AstroEventPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "detail": {
+            "additionalProperties": true,
+            "title": "Detail",
+            "type": "object"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "instantUtc": {
+            "title": "Instantutc",
+            "type": "string"
+          },
+          "julianDay": {
+            "title": "Julianday",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "precisionSeconds": {
+            "description": "How tightly the root was bracketed. Instants come from bisection, never from the nearest ephemeris sample.",
+            "title": "Precisionseconds",
+            "type": "number"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "body",
+          "instantUtc",
+          "julianDay",
+          "longitude",
+          "direction",
+          "precisionSeconds"
+        ],
+        "title": "AstroEventPayload",
         "type": "object"
       },
       "AstrocartographyRequest": {
@@ -100,6 +336,84 @@
         "title": "AstrocartographyRequest",
         "type": "object"
       },
+      "AstrocartographyResponse": {
+        "additionalProperties": true,
+        "description": "Where each body is angular on Earth for this chart's instant.\n\nA physical fact, so the lines do not move when the chart's zodiac changes.",
+        "properties": {
+          "chartInstant": {
+            "title": "Chartinstant",
+            "type": "string"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "engineVersion": {
+            "title": "Engineversion",
+            "type": "string"
+          },
+          "latitudeRange": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Latituderange",
+            "type": "array"
+          },
+          "latitudeStep": {
+            "title": "Latitudestep",
+            "type": "number"
+          },
+          "lineCount": {
+            "title": "Linecount",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/AcgLinePayload"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "obliquity": {
+            "title": "Obliquity",
+            "type": "number"
+          },
+          "siderealTimeDeg": {
+            "title": "Siderealtimedeg",
+            "type": "number"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "engine",
+          "engineVersion",
+          "method",
+          "chartInstant",
+          "siderealTimeDeg",
+          "obliquity",
+          "latitudeRange",
+          "latitudeStep",
+          "lineCount",
+          "lines"
+        ],
+        "title": "AstrocartographyResponse",
+        "type": "object"
+      },
       "Ayanamsa": {
         "description": "Named ayanamsas. Required for a sidereal chart, ignored otherwise.",
         "enum": [
@@ -111,6 +425,727 @@
         ],
         "title": "Ayanamsa",
         "type": "string"
+      },
+      "BodyPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "degreeInSign": {
+            "title": "Degreeinsign",
+            "type": "number"
+          },
+          "distance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance"
+          },
+          "house": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when the birth time is unknown, because there are no houses.",
+            "title": "House"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "retrograde": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrograde"
+          },
+          "sign": {
+            "title": "Sign",
+            "type": "string"
+          },
+          "speedLongitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speedlongitude"
+          }
+        },
+        "required": [
+          "longitude",
+          "latitude",
+          "sign",
+          "degreeInSign"
+        ],
+        "title": "BodyPayload",
+        "type": "object"
+      },
+      "CapabilitiesResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "ayanamsas": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Ayanamsas",
+            "type": "array"
+          },
+          "coreBodies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Corebodies",
+            "type": "array"
+          },
+          "houseSystems": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Housesystems",
+            "type": "array"
+          },
+          "numberedAsteroidFormat": {
+            "title": "Numberedasteroidformat",
+            "type": "string"
+          },
+          "optionalBodies": {
+            "items": {
+              "$ref": "#/components/schemas/OptionalBodyPayload"
+            },
+            "title": "Optionalbodies",
+            "type": "array"
+          },
+          "optionalBodyNames": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Optionalbodynames",
+            "type": "array"
+          }
+        },
+        "required": [
+          "coreBodies",
+          "optionalBodies",
+          "optionalBodyNames",
+          "houseSystems",
+          "ayanamsas",
+          "numberedAsteroidFormat"
+        ],
+        "title": "CapabilitiesResponse",
+        "type": "object"
+      },
+      "ChartMetaPayload": {
+        "additionalProperties": true,
+        "description": "Provenance. Every input that shaped the numbers, so a result is reproducible.",
+        "properties": {
+          "aspectProfile": {
+            "title": "Aspectprofile",
+            "type": "string"
+          },
+          "ayanamsa": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only when zodiac is sidereal.",
+            "title": "Ayanamsa"
+          },
+          "ayanamsaDegrees": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ayanamsadegrees"
+          },
+          "ayanamsaVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ayanamsaversion"
+          },
+          "calculationProfile": {
+            "title": "Calculationprofile",
+            "type": "string"
+          },
+          "dominantProfile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dominantprofile"
+          },
+          "dominantProfileVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dominantprofileversion"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "engineVersion": {
+            "title": "Engineversion",
+            "type": "string"
+          },
+          "ephemerisDataVersion": {
+            "title": "Ephemerisdataversion",
+            "type": "string"
+          },
+          "ephemerisProvider": {
+            "title": "Ephemerisprovider",
+            "type": "string"
+          },
+          "houseAlgorithmVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Housealgorithmversion"
+          },
+          "houseSystem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Housesystem"
+          },
+          "rulershipProfile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rulershipprofile"
+          },
+          "rulershipProfileVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rulershipprofileversion"
+          },
+          "timezoneDataVersion": {
+            "title": "Timezonedataversion",
+            "type": "string"
+          },
+          "zodiac": {
+            "title": "Zodiac",
+            "type": "string"
+          }
+        },
+        "required": [
+          "engine",
+          "engineVersion",
+          "ephemerisProvider",
+          "ephemerisDataVersion",
+          "timezoneDataVersion",
+          "calculationProfile",
+          "aspectProfile",
+          "zodiac"
+        ],
+        "title": "ChartMetaPayload",
+        "type": "object"
+      },
+      "ChartPatternPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "bodies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Bodies",
+            "type": "array"
+          },
+          "detail": {
+            "additionalProperties": true,
+            "title": "Detail",
+            "type": "object"
+          },
+          "id": {
+            "description": "Stable and derived from the figure itself, so the same pattern in the same chart always carries the same id.",
+            "title": "Id",
+            "type": "string"
+          },
+          "maxLegOrb": {
+            "description": "The widest leg in the figure, so a caller can judge how loose it is.",
+            "title": "Maxlegorb",
+            "type": "number"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "bodies",
+          "maxLegOrb"
+        ],
+        "title": "ChartPatternPayload",
+        "type": "object"
+      },
+      "ChartSubjectPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "altitudeM": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Altitudem"
+          },
+          "birthTimeKnown": {
+            "title": "Birthtimeknown",
+            "type": "boolean"
+          },
+          "calendar": {
+            "title": "Calendar",
+            "type": "string"
+          },
+          "julianDay": {
+            "title": "Julianday",
+            "type": "number"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "localDateTime": {
+            "title": "Localdatetime",
+            "type": "string"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "utcDateTime": {
+            "title": "Utcdatetime",
+            "type": "string"
+          }
+        },
+        "required": [
+          "localDateTime",
+          "timezone",
+          "utcDateTime",
+          "julianDay",
+          "latitude",
+          "longitude",
+          "birthTimeKnown",
+          "calendar"
+        ],
+        "title": "ChartSubjectPayload",
+        "type": "object"
+      },
+      "CompatibilityResponse": {
+        "additionalProperties": true,
+        "description": "A published scoring scheme, not a verdict.\n\nEvery contribution that produced the totals is itemised and every weight is\nin `profile`, so the number can be audited rather than trusted.",
+        "properties": {
+          "contributionCount": {
+            "title": "Contributioncount",
+            "type": "integer"
+          },
+          "contributions": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreContributionPayload"
+            },
+            "title": "Contributions",
+            "type": "array"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "profile": {
+            "additionalProperties": true,
+            "title": "Profile",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ScoreTotalsPayload"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "totals",
+          "contributionCount",
+          "contributions",
+          "profile"
+        ],
+        "title": "CompatibilityResponse",
+        "type": "object"
+      },
+      "CompositeChartResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "angles": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnglePayload"
+            },
+            "title": "Angles",
+            "type": "object"
+          },
+          "aspects": {
+            "items": {
+              "$ref": "#/components/schemas/AspectPayload"
+            },
+            "title": "Aspects",
+            "type": "array"
+          },
+          "bodies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BodyPayload"
+            },
+            "title": "Bodies",
+            "type": "object"
+          },
+          "houses": {
+            "items": {
+              "$ref": "#/components/schemas/HouseCuspPayload"
+            },
+            "title": "Houses",
+            "type": "array"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "midpoints": {
+            "items": {
+              "$ref": "#/components/schemas/MidpointPayload"
+            },
+            "title": "Midpoints",
+            "type": "array"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "angles",
+          "bodies",
+          "houses",
+          "aspects",
+          "midpoints"
+        ],
+        "title": "CompositeChartResponse",
+        "type": "object"
+      },
+      "DavisonChartResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "chart": {
+            "$ref": "#/components/schemas/NatalChartResponse",
+            "description": "An ordinary natal chart, because that is what a Davison chart is."
+          },
+          "derivedFrom": {
+            "$ref": "#/components/schemas/DavisonOriginPayload"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "chart",
+          "derivedFrom"
+        ],
+        "title": "DavisonChartResponse",
+        "type": "object"
+      },
+      "DavisonOriginPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "utcDateTime": {
+            "title": "Utcdatetime",
+            "type": "string"
+          }
+        },
+        "required": [
+          "utcDateTime",
+          "latitude",
+          "longitude"
+        ],
+        "title": "DavisonOriginPayload",
+        "type": "object"
+      },
+      "DerivedPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "bigThree": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Bigthree",
+            "type": "object"
+          },
+          "chartRuler": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RulerPlacementPayload"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when the chart has no Ascendant, so no rising sign is invented."
+          },
+          "dignities": {
+            "items": {
+              "$ref": "#/components/schemas/DignityPayload"
+            },
+            "title": "Dignities",
+            "type": "array"
+          },
+          "dispositors": {
+            "items": {
+              "$ref": "#/components/schemas/DispositorChainPayload"
+            },
+            "title": "Dispositors",
+            "type": "array"
+          },
+          "dominantPlanets": {
+            "items": {
+              "$ref": "#/components/schemas/DominantPlanetPayload"
+            },
+            "title": "Dominantplanets",
+            "type": "array"
+          },
+          "elements": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Elements",
+            "type": "object"
+          },
+          "finalDispositors": {
+            "description": "Empty is a real result: every chain closed in a loop.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Finaldispositors",
+            "type": "array"
+          },
+          "hemispheres": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Hemispheres",
+            "type": "object"
+          },
+          "houseRulers": {
+            "items": {
+              "$ref": "#/components/schemas/HouseRulerPayload"
+            },
+            "title": "Houserulers",
+            "type": "array"
+          },
+          "modalities": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Modalities",
+            "type": "object"
+          },
+          "moonPhase": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MoonPhasePayload"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              }
+            ],
+            "title": "Moonphase"
+          },
+          "mutualReceptions": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Mutualreceptions",
+            "type": "array"
+          },
+          "polarities": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Polarities",
+            "type": "object"
+          },
+          "quadrants": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Quadrants",
+            "type": "object"
+          }
+        },
+        "required": [
+          "bigThree",
+          "moonPhase",
+          "elements",
+          "modalities",
+          "polarities",
+          "hemispheres",
+          "quadrants"
+        ],
+        "title": "DerivedPayload",
+        "type": "object"
+      },
+      "DignityPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "exactExaltation": {
+            "default": false,
+            "title": "Exactexaltation",
+            "type": "boolean"
+          },
+          "sign": {
+            "title": "Sign",
+            "type": "string"
+          },
+          "state": {
+            "description": "domicile, exaltation, detriment, fall, peregrine or unrated. unrated is not peregrine: it marks a body the scheme assigns no rulership to at all, which is a different statement from a body that has dignities and is in none of them.",
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "sign",
+          "state"
+        ],
+        "title": "DignityPayload",
+        "type": "object"
       },
       "DirectionRequest": {
         "additionalProperties": false,
@@ -134,6 +1169,81 @@
           "target_instant"
         ],
         "title": "DirectionRequest",
+        "type": "object"
+      },
+      "DispositorChainPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "chain": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Chain",
+            "type": "array"
+          },
+          "finalDispositor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when the chain closes in a loop instead of a self-ruler.",
+            "title": "Finaldispositor"
+          },
+          "loop": {
+            "description": "The planets ruling each other's signs in a closed cycle. A chart can consist entirely of these and legitimately have no final dispositor anywhere.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Loop",
+            "type": "array"
+          }
+        },
+        "required": [
+          "body",
+          "chain"
+        ],
+        "title": "DispositorChainPayload",
+        "type": "object"
+      },
+      "DominantPlanetPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "components": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "The score broken into its parts. Published so a caller can see what made a planet dominant rather than being handed a number to trust; the weights themselves are in meta.dominantProfile.",
+            "title": "Components",
+            "type": "object"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "body",
+          "score",
+          "rank",
+          "components"
+        ],
+        "title": "DominantPlanetPayload",
         "type": "object"
       },
       "EphemerisRequest": {
@@ -182,6 +1292,168 @@
           "step_seconds"
         ],
         "title": "EphemerisRequest",
+        "type": "object"
+      },
+      "EphemerisResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "ayanamsa": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ayanamsa"
+          },
+          "bodies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Bodies",
+            "type": "array"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "engineVersion": {
+            "title": "Engineversion",
+            "type": "string"
+          },
+          "ephemerisDataVersion": {
+            "title": "Ephemerisdataversion",
+            "type": "string"
+          },
+          "ephemerisProvider": {
+            "title": "Ephemerisprovider",
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "range": {
+            "additionalProperties": true,
+            "title": "Range",
+            "type": "object"
+          },
+          "rowCount": {
+            "title": "Rowcount",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/EphemerisRowPayload"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          },
+          "zodiac": {
+            "title": "Zodiac",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "engine",
+          "engineVersion",
+          "ephemerisProvider",
+          "ephemerisDataVersion",
+          "zodiac",
+          "bodies",
+          "range",
+          "rowCount",
+          "rows"
+        ],
+        "title": "EphemerisResponse",
+        "type": "object"
+      },
+      "EphemerisRowPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "bodies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BodyPayload"
+            },
+            "title": "Bodies",
+            "type": "object"
+          },
+          "instantUtc": {
+            "title": "Instantutc",
+            "type": "string"
+          },
+          "julianDay": {
+            "title": "Julianday",
+            "type": "number"
+          }
+        },
+        "required": [
+          "instantUtc",
+          "julianDay",
+          "bodies"
+        ],
+        "title": "EphemerisRowPayload",
+        "type": "object"
+      },
+      "EventQueryPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "aspectAngle": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aspectangle"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "from": {
+            "title": "From",
+            "type": "string"
+          },
+          "targetLongitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetlongitude"
+          },
+          "to": {
+            "title": "To",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "body",
+          "from",
+          "to"
+        ],
+        "title": "EventQueryPayload",
         "type": "object"
       },
       "EventSearchRequest": {
@@ -251,6 +1523,50 @@
         "title": "EventSearchRequest",
         "type": "object"
       },
+      "EventSearchResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "eventCount": {
+            "title": "Eventcount",
+            "type": "integer"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AstroEventPayload"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "query": {
+            "$ref": "#/components/schemas/EventQueryPayload"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "query",
+          "eventCount",
+          "events"
+        ],
+        "title": "EventSearchResponse",
+        "type": "object"
+      },
       "HealthResponse": {
         "properties": {
           "api_version": {
@@ -285,6 +1601,100 @@
         "title": "HealthResponse",
         "type": "object"
       },
+      "HouseCuspPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "cuspLongitude": {
+            "title": "Cusplongitude",
+            "type": "number"
+          },
+          "degreeInSign": {
+            "title": "Degreeinsign",
+            "type": "number"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "sign": {
+            "title": "Sign",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "cuspLongitude",
+          "sign",
+          "degreeInSign"
+        ],
+        "title": "HouseCuspPayload",
+        "type": "object"
+      },
+      "HouseOverlayPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "bodyChart": {
+            "title": "Bodychart",
+            "type": "string"
+          },
+          "bodyLongitude": {
+            "title": "Bodylongitude",
+            "type": "number"
+          },
+          "house": {
+            "title": "House",
+            "type": "integer"
+          },
+          "houseChart": {
+            "title": "Housechart",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "bodyChart",
+          "houseChart",
+          "house",
+          "bodyLongitude"
+        ],
+        "title": "HouseOverlayPayload",
+        "type": "object"
+      },
+      "HouseRulerPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "coRulers": {
+            "description": "Classical rulers displaced by the modern table. Reported, but not used to walk a dispositor chain, which needs a single next step.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Corulers",
+            "type": "array"
+          },
+          "cuspSign": {
+            "title": "Cuspsign",
+            "type": "string"
+          },
+          "house": {
+            "title": "House",
+            "type": "integer"
+          },
+          "ruler": {
+            "$ref": "#/components/schemas/RulerPlacementPayload"
+          }
+        },
+        "required": [
+          "house",
+          "cuspSign",
+          "ruler"
+        ],
+        "title": "HouseRulerPayload",
+        "type": "object"
+      },
       "HouseSystem": {
         "description": "Every house system the engine supports.\n\nKept in step with `gbc_astro.houses.systems.HOUSE_SYSTEMS`; a test asserts\nthe two never drift, because an enum that silently lags the engine is worse\nthan none at all.",
         "enum": [
@@ -302,6 +1712,71 @@
         ],
         "title": "HouseSystem",
         "type": "string"
+      },
+      "MidpointPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "ambiguous": {
+            "description": "True at exactly 180 degrees, where the two midpoints are equally valid and the choice between them is arbitrary. Flagged rather than silently resolved.",
+            "title": "Ambiguous",
+            "type": "boolean"
+          },
+          "bodyId": {
+            "title": "Bodyid",
+            "type": "string"
+          },
+          "longitudeA": {
+            "title": "Longitudea",
+            "type": "number"
+          },
+          "longitudeB": {
+            "title": "Longitudeb",
+            "type": "number"
+          },
+          "separation": {
+            "title": "Separation",
+            "type": "number"
+          }
+        },
+        "required": [
+          "bodyId",
+          "longitudeA",
+          "longitudeB",
+          "separation",
+          "ambiguous"
+        ],
+        "title": "MidpointPayload",
+        "type": "object"
+      },
+      "MoonPhasePayload": {
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phaseAngle": {
+            "title": "Phaseangle",
+            "type": "number"
+          },
+          "waxing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waxing"
+          }
+        },
+        "required": [
+          "phaseAngle",
+          "name"
+        ],
+        "title": "MoonPhasePayload",
+        "type": "object"
       },
       "NatalChartRequest": {
         "additionalProperties": false,
@@ -445,6 +1920,110 @@
         "title": "NatalChartRequest",
         "type": "object"
       },
+      "NatalChartResponse": {
+        "additionalProperties": true,
+        "description": "The canonical natal chart, returned directly rather than in an envelope.",
+        "properties": {
+          "angles": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnglePayload"
+            },
+            "description": "Empty when the birth time is unknown. No substitute is used.",
+            "title": "Angles",
+            "type": "object"
+          },
+          "aspects": {
+            "items": {
+              "$ref": "#/components/schemas/AspectPayload"
+            },
+            "title": "Aspects",
+            "type": "array"
+          },
+          "bodies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BodyPayload"
+            },
+            "title": "Bodies",
+            "type": "object"
+          },
+          "derived": {
+            "$ref": "#/components/schemas/DerivedPayload"
+          },
+          "houses": {
+            "description": "Empty when the birth time is unknown.",
+            "items": {
+              "$ref": "#/components/schemas/HouseCuspPayload"
+            },
+            "title": "Houses",
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ChartMetaPayload"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/ChartSubjectPayload"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "subject",
+          "angles",
+          "bodies",
+          "houses",
+          "aspects",
+          "derived"
+        ],
+        "title": "NatalChartResponse",
+        "type": "object"
+      },
+      "OptionalBodyPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "available": {
+            "description": "Probed against the installed data files, not assumed.",
+            "title": "Available",
+            "type": "boolean"
+          },
+          "bodyId": {
+            "title": "Bodyid",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "bodyId",
+          "available",
+          "kind"
+        ],
+        "title": "OptionalBodyPayload",
+        "type": "object"
+      },
       "PatternRequest": {
         "additionalProperties": false,
         "properties": {
@@ -457,6 +2036,36 @@
           "natal"
         ],
         "title": "PatternRequest",
+        "type": "object"
+      },
+      "PatternsResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "patternCount": {
+            "title": "Patterncount",
+            "type": "integer"
+          },
+          "patterns": {
+            "description": "Empty is a common and correct result. Contained figures are suppressed: every grand cross holds two T-squares and every kite holds a grand trine.",
+            "items": {
+              "$ref": "#/components/schemas/ChartPatternPayload"
+            },
+            "title": "Patterns",
+            "type": "array"
+          },
+          "profile": {
+            "additionalProperties": true,
+            "description": "The pattern profile, including every orb that decided a match.",
+            "title": "Profile",
+            "type": "object"
+          }
+        },
+        "required": [
+          "patternCount",
+          "patterns",
+          "profile"
+        ],
+        "title": "PatternsResponse",
         "type": "object"
       },
       "ReadinessResponse": {
@@ -629,6 +2238,55 @@
         "title": "RelocationRequest",
         "type": "object"
       },
+      "ReturnHitPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "chart": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NatalChartResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "instantUtc": {
+            "title": "Instantutc",
+            "type": "string"
+          },
+          "julianDay": {
+            "title": "Julianday",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "ordinal": {
+            "title": "Ordinal",
+            "type": "integer"
+          },
+          "precisionSeconds": {
+            "title": "Precisionseconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ordinal",
+          "instantUtc",
+          "julianDay",
+          "longitude",
+          "direction",
+          "precisionSeconds"
+        ],
+        "title": "ReturnHitPayload",
+        "type": "object"
+      },
       "ReturnRequest": {
         "additionalProperties": false,
         "description": "A natal subject, a body, and the window to search for its returns.",
@@ -673,6 +2331,288 @@
         "title": "ReturnRequest",
         "type": "object"
       },
+      "ReturnSearchResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "hitCount": {
+            "title": "Hitcount",
+            "type": "integer"
+          },
+          "hits": {
+            "description": "All of them, in order. A body stationing near its natal degree crosses it three times and each crossing is a real return. An empty list means the window was searched exhaustively and holds none.",
+            "items": {
+              "$ref": "#/components/schemas/ReturnHitPayload"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "natalLongitude": {
+            "title": "Natallongitude",
+            "type": "number"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "window": {
+            "$ref": "#/components/schemas/WindowPayload"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "body",
+          "natalLongitude",
+          "window",
+          "hitCount",
+          "hits"
+        ],
+        "title": "ReturnSearchResponse",
+        "type": "object"
+      },
+      "RulerPlacementPayload": {
+        "additionalProperties": true,
+        "description": "A ruling planet and where it actually sits, not just its name.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "house": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "House"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "retrograde": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrograde"
+          },
+          "sign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "RulerPlacementPayload",
+        "type": "object"
+      },
+      "ScoreContributionPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "aspectWeight": {
+            "title": "Aspectweight",
+            "type": "number"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "orbFactor": {
+            "title": "Orbfactor",
+            "type": "number"
+          },
+          "pairWeight": {
+            "title": "Pairweight",
+            "type": "number"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "kind",
+          "a",
+          "b",
+          "type",
+          "orb",
+          "aspectWeight",
+          "pairWeight",
+          "orbFactor",
+          "value"
+        ],
+        "title": "ScoreContributionPayload",
+        "type": "object"
+      },
+      "ScoreTotalsPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "activity": {
+            "title": "Activity",
+            "type": "number"
+          },
+          "activityBand": {
+            "title": "Activityband",
+            "type": "string"
+          },
+          "balance": {
+            "title": "Balance",
+            "type": "number"
+          },
+          "balanceBand": {
+            "title": "Balanceband",
+            "type": "string"
+          },
+          "challenging": {
+            "title": "Challenging",
+            "type": "number"
+          },
+          "supportive": {
+            "title": "Supportive",
+            "type": "number"
+          }
+        },
+        "required": [
+          "supportive",
+          "challenging",
+          "activity",
+          "balance",
+          "activityBand",
+          "balanceBand"
+        ],
+        "title": "ScoreTotalsPayload",
+        "type": "object"
+      },
+      "SynastryResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "aBodiesInBHouses": {
+            "items": {
+              "$ref": "#/components/schemas/HouseOverlayPayload"
+            },
+            "title": "Abodiesinbhouses",
+            "type": "array"
+          },
+          "angleInteractions": {
+            "items": {
+              "$ref": "#/components/schemas/AngleInteractionPayload"
+            },
+            "title": "Angleinteractions",
+            "type": "array"
+          },
+          "bBodiesInAHouses": {
+            "items": {
+              "$ref": "#/components/schemas/HouseOverlayPayload"
+            },
+            "title": "Bbodiesinahouses",
+            "type": "array"
+          },
+          "chartA": {
+            "$ref": "#/components/schemas/NatalChartResponse"
+          },
+          "chartB": {
+            "$ref": "#/components/schemas/NatalChartResponse"
+          },
+          "crossAspects": {
+            "description": "Phase is always indeterminate here. Two natal charts are two frozen instants and share no timeline, so applying and separating have nothing to describe. Use a Davison chart for a real direction of travel.",
+            "items": {
+              "$ref": "#/components/schemas/AspectPayload"
+            },
+            "title": "Crossaspects",
+            "type": "array"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "chartA",
+          "chartB",
+          "crossAspects",
+          "aBodiesInBHouses",
+          "bBodiesInAHouses",
+          "angleInteractions"
+        ],
+        "title": "SynastryResponse",
+        "type": "object"
+      },
       "TransformRequest": {
         "additionalProperties": false,
         "description": "A natal subject plus, where the transform needs one, its parameter.",
@@ -700,6 +2640,232 @@
           "natal"
         ],
         "title": "TransformRequest",
+        "type": "object"
+      },
+      "TransformedChartResponse": {
+        "additionalProperties": true,
+        "description": "Draconic, harmonic, secondary progressions and solar arc share one shape.",
+        "properties": {
+          "angles": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnglePayload"
+            },
+            "title": "Angles",
+            "type": "object"
+          },
+          "aspects": {
+            "items": {
+              "$ref": "#/components/schemas/AspectPayload"
+            },
+            "title": "Aspects",
+            "type": "array"
+          },
+          "bodies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BodyPayload"
+            },
+            "title": "Bodies",
+            "type": "object"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/ChartSubjectPayload"
+          },
+          "transform": {
+            "title": "Transform",
+            "type": "string"
+          },
+          "transformVersion": {
+            "title": "Transformversion",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "transform",
+          "transformVersion",
+          "meta",
+          "subject",
+          "bodies",
+          "angles",
+          "aspects"
+        ],
+        "title": "TransformedChartResponse",
+        "type": "object"
+      },
+      "TransitAspectPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "actualAngle": {
+            "title": "Actualangle",
+            "type": "number"
+          },
+          "exactAngle": {
+            "title": "Exactangle",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "natalBody": {
+            "title": "Natalbody",
+            "type": "string"
+          },
+          "natalTarget": {
+            "title": "Nataltarget",
+            "type": "string"
+          },
+          "natalTargetKind": {
+            "description": "body or angle.",
+            "title": "Nataltargetkind",
+            "type": "string"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "phase": {
+            "description": "Real here, unlike synastry: the transiting body moves while the natal point stays put, so applying and separating describe something that is actually happening.",
+            "title": "Phase",
+            "type": "string"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "transitBody": {
+            "title": "Transitbody",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "transitBody",
+          "natalTarget",
+          "natalTargetKind",
+          "natalBody",
+          "type",
+          "exactAngle",
+          "actualAngle",
+          "orb",
+          "phase",
+          "score",
+          "rank"
+        ],
+        "title": "TransitAspectPayload",
+        "type": "object"
+      },
+      "TransitChartResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "targetInstant": {
+            "title": "Targetinstant",
+            "type": "string"
+          },
+          "topAspects": {
+            "description": "The highest-ranked contacts under the published ranking profile.",
+            "items": {
+              "$ref": "#/components/schemas/TransitAspectPayload"
+            },
+            "title": "Topaspects",
+            "type": "array"
+          },
+          "transitBodies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BodyPayload"
+            },
+            "title": "Transitbodies",
+            "type": "object"
+          },
+          "transitHousePlacements": {
+            "items": {
+              "$ref": "#/components/schemas/TransitHousePlacementPayload"
+            },
+            "title": "Transithouseplacements",
+            "type": "array"
+          },
+          "transitToNatalAspects": {
+            "items": {
+              "$ref": "#/components/schemas/TransitAspectPayload"
+            },
+            "title": "Transittonatalaspects",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "targetInstant",
+          "transitBodies",
+          "transitToNatalAspects",
+          "topAspects",
+          "transitHousePlacements"
+        ],
+        "title": "TransitChartResponse",
+        "type": "object"
+      },
+      "TransitHousePlacementPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "natalHouse": {
+            "title": "Natalhouse",
+            "type": "integer"
+          },
+          "transitBody": {
+            "title": "Transitbody",
+            "type": "string"
+          }
+        },
+        "required": [
+          "transitBody",
+          "natalHouse",
+          "longitude"
+        ],
+        "title": "TransitHousePlacementPayload",
         "type": "object"
       },
       "TransitRequest": {
@@ -746,6 +2912,57 @@
         "title": "TransitRequest",
         "type": "object"
       },
+      "WarningPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "fieldsAffected": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fieldsaffected",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "message",
+          "fieldsAffected"
+        ],
+        "title": "WarningPayload",
+        "type": "object"
+      },
+      "WindowPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "end": {
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "WindowPayload",
+        "type": "object"
+      },
       "Zodiac": {
         "enum": [
           "tropical",
@@ -761,7 +2978,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.1.0"
+    "x-gbc-engine-version": "1.2.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -835,7 +3052,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PatternsResponse"
+                }
               }
             },
             "description": "Stelliums, grand trines, T-squares, grand crosses, yods and kites, with the widest leg orb of each."
@@ -904,7 +3123,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CapabilitiesResponse"
+                }
               }
             },
             "description": "Bodies, house systems and ayanamsas, with optional bodies probed rather than assumed. Ask here instead of discovering through an error."
@@ -933,7 +3154,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CompatibilityResponse"
+                }
               }
             },
             "description": "Three totals -- supportive, challenging and activity -- with every contact that produced them. Deliberately not a percentage."
@@ -1012,7 +3235,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CompositeChartResponse"
+                }
               }
             },
             "description": "Canonical composite JSON: shortest-arc midpoint positions, with the methodology named under meta and any ambiguity reported in warnings."
@@ -1091,7 +3316,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DavisonChartResponse"
+                }
               }
             },
             "description": "Canonical Davison JSON: an ordinary chart for the midpoint moment and midpoint place of the two births, so its speeds, houses and applying/separating phases are real rather than constructed."
@@ -1170,7 +3397,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TransformedChartResponse"
+                }
               }
             },
             "description": "The node lands on exactly 0 degrees Aries by construction."
@@ -1249,7 +3478,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TransformedChartResponse"
+                }
               }
             },
             "description": "Every longitude multiplied by n. Aspects are recomputed, not carried over: collapsing an aspect family onto conjunctions is the technique."
@@ -1338,7 +3569,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.1.0",
+                    "engineVersion": "1.2.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },
@@ -1350,7 +3581,9 @@
                   },
                   "warnings": []
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/NatalChartResponse"
+                }
               }
             },
             "description": "Canonical natal chart object (NatalChart.to_dict()). Returned directly \u2014 not wrapped in a {chart: ...} envelope."
@@ -1429,7 +3662,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/NatalChartResponse"
+                }
               }
             },
             "description": "Body longitudes are unchanged, so aspects are identical. Only the angles, cusps and house placements differ."
@@ -1508,7 +3743,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SynastryResponse"
+                }
               }
             },
             "description": "Canonical synastry JSON: cross aspects, two-way house overlays and angle interactions, returned directly rather than wrapped."
@@ -1587,7 +3824,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EphemerisResponse"
+                }
               }
             },
             "description": "Each row is exactly what a single-instant call returns; this is a convenience, not a second calculation path."
@@ -1666,7 +3905,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EventSearchResponse"
+                }
               }
             },
             "description": "Events located by bracketed root finding refined by bisection, with the achieved precision reported per event."
@@ -1745,7 +3986,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TransformedChartResponse"
+                }
               }
             },
             "description": "An ordinary chart cast for the progressed instant."
@@ -1824,7 +4067,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnSearchResponse"
+                }
               }
             },
             "description": "All exact returns, not the first. A body stationing near its natal degree returns three times and every one is reported."
@@ -1903,7 +4148,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TransformedChartResponse"
+                }
               }
             },
             "description": "A rotation: directed points hold their natal aspects exactly, so only contacts to the natal chart carry information."
@@ -1982,7 +4229,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TransitChartResponse"
+                }
               }
             },
             "description": "Transit positions, transit-to-natal aspects with real applying and separating phases, and transit placements in the natal houses."
@@ -2061,7 +4310,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AstrocartographyResponse"
+                }
               }
             },
             "description": "In-mundo lines: the body actually crosses the meridian or horizon. MC and IC are meridians, Ascendant and Descendant are curves."

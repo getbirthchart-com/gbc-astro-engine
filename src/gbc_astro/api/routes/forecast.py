@@ -18,6 +18,11 @@ from gbc_astro.api.models import (
     ReturnRequest,
     TransitRequest,
 )
+from gbc_astro.api.responses import (
+    EventSearchResponse,
+    ReturnSearchResponse,
+    TransitChartResponse,
+)
 from gbc_astro.engine import AstrologyEngine
 from gbc_astro.errors import InvalidCalculationProfileError
 from gbc_astro.models.chart import NatalChart
@@ -70,7 +75,7 @@ def _instant(value: str, field: str) -> datetime:
         "Transit positions, transit-to-natal aspects with real applying and "
         "separating phases, and transit placements in the natal houses."
     ),
-    responses=_ERROR_RESPONSES,
+    responses={**_ERROR_RESPONSES, 200: {"model": TransitChartResponse}},
 )
 def calculate_transits(body: TransitRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -92,7 +97,7 @@ def calculate_transits(body: TransitRequest, engine: EngineDep) -> JSONResponse:
         "All exact returns, not the first. A body stationing near its natal "
         "degree returns three times and every one is reported."
     ),
-    responses=_ERROR_RESPONSES,
+    responses={**_ERROR_RESPONSES, 200: {"model": ReturnSearchResponse}},
 )
 def calculate_returns(body: ReturnRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -115,7 +120,7 @@ def calculate_returns(body: ReturnRequest, engine: EngineDep) -> JSONResponse:
         "Events located by bracketed root finding refined by bisection, with the "
         "achieved precision reported per event."
     ),
-    responses=_ERROR_RESPONSES,
+    responses={**_ERROR_RESPONSES, 200: {"model": EventSearchResponse}},
 )
 def search_events(body: EventSearchRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()

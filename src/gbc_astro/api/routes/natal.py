@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from gbc_astro.api.dependencies import EngineDep, engine_for_zodiac
 from gbc_astro.api.models import ApiErrorEnvelope, NatalChartRequest
+from gbc_astro.api.responses import NatalChartResponse
 
 logger = logging.getLogger("gbc_astro.api")
 
@@ -23,6 +24,7 @@ router = APIRouter(prefix="/v1/charts", tags=["charts"])
     response_description="Canonical natal chart JSON from AstrologyEngine.natal(...).",
     responses={
         200: {
+            "model": NatalChartResponse,
             "description": (
                 "Canonical natal chart object (NatalChart.to_dict()). "
                 "Returned directly — not wrapped in a {chart: ...} envelope."
@@ -33,7 +35,7 @@ router = APIRouter(prefix="/v1/charts", tags=["charts"])
                         "schemaVersion": "1.0.0",
                         "meta": {
                             "engine": "gbc-astro",
-                            "engineVersion": "1.1.0",
+                            "engineVersion": "1.2.0",
                             "calculationProfile": "western-modern-v1",
                             "houseSystem": "placidus",
                             "zodiac": "tropical",

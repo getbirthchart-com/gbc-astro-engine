@@ -15,6 +15,12 @@ from fastapi.responses import JSONResponse
 
 from gbc_astro.api.dependencies import EngineDep, engine_for_zodiac
 from gbc_astro.api.models import ApiErrorEnvelope, NatalChartRequest, RelationshipRequest
+from gbc_astro.api.responses import (
+    CompatibilityResponse,
+    CompositeChartResponse,
+    DavisonChartResponse,
+    SynastryResponse,
+)
 from gbc_astro.engine import AstrologyEngine
 from gbc_astro.models.chart import NatalChart
 
@@ -56,7 +62,7 @@ def _natal(engine: AstrologyEngine, request: NatalChartRequest) -> NatalChart:
         "Canonical synastry JSON: cross aspects, two-way house overlays and "
         "angle interactions, returned directly rather than wrapped."
     ),
-    responses=_ERROR_RESPONSES,
+    responses={**_ERROR_RESPONSES, 200: {"model": SynastryResponse}},
 )
 def calculate_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -73,7 +79,7 @@ def calculate_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResp
         "Three totals -- supportive, challenging and activity -- with every "
         "contact that produced them. Deliberately not a percentage."
     ),
-    responses=_ERROR_RESPONSES,
+    responses={**_ERROR_RESPONSES, 200: {"model": CompatibilityResponse}},
 )
 def calculate_compatibility(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -91,7 +97,7 @@ def calculate_compatibility(body: RelationshipRequest, engine: EngineDep) -> JSO
         "midpoint place of the two births, so its speeds, houses and "
         "applying/separating phases are real rather than constructed."
     ),
-    responses=_ERROR_RESPONSES,
+    responses={**_ERROR_RESPONSES, 200: {"model": DavisonChartResponse}},
 )
 def calculate_davison(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
@@ -108,7 +114,7 @@ def calculate_davison(body: RelationshipRequest, engine: EngineDep) -> JSONRespo
         "Canonical composite JSON: shortest-arc midpoint positions, with the "
         "methodology named under meta and any ambiguity reported in warnings."
     ),
-    responses=_ERROR_RESPONSES,
+    responses={**_ERROR_RESPONSES, 200: {"model": CompositeChartResponse}},
 )
 def calculate_composite(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
