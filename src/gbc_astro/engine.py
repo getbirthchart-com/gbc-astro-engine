@@ -50,6 +50,7 @@ from gbc_astro.models.relationship import (
     RelationshipScore,
     SynastryChart,
 )
+from gbc_astro.models.transform import TransformedChart
 from gbc_astro.profiles.defaults import RELATIONSHIP_WESTERN_V1, WESTERN_MODERN_V1
 from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
 from gbc_astro.profiles.scoring import SYNASTRY_SCORING_V1, ScoringProfile
@@ -67,6 +68,8 @@ from gbc_astro.search.events import (
     find_sign_ingresses,
     find_stations,
 )
+from gbc_astro.transforms.draconic import calculate_draconic
+from gbc_astro.transforms.harmonic import calculate_harmonic
 from gbc_astro.zodiac.sidereal import (
     AyanamsaCalculator,
     longitude_to_sidereal,
@@ -395,6 +398,22 @@ class AstrologyEngine:
             },
             events=events,
         )
+
+    def draconic(self, chart: NatalChart) -> TransformedChart:
+        """Re-zero the zodiac on the lunar node.
+
+        The node lands at exactly 0 Aries by construction, which is the
+        definition of the transform and therefore assertable exactly.
+        """
+        return calculate_draconic(chart, self.profile)
+
+    def harmonic(self, chart: NatalChart, harmonic: int) -> TransformedChart:
+        """The harmonic-n chart: every longitude multiplied by n, modulo 360.
+
+        Not a rotation. Aspects are deliberately not preserved -- collapsing one
+        aspect family onto conjunctions is what a harmonic chart is for.
+        """
+        return calculate_harmonic(chart, harmonic, self.profile)
 
     def _get_ayanamsa_calculator(self) -> AyanamsaCalculator:
         if self._ayanamsa_calculator is None:

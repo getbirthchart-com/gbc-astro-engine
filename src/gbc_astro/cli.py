@@ -122,6 +122,16 @@ def _build_parser() -> argparse.ArgumentParser:
     events.add_argument("--swiss-ephe-path")
     events.add_argument("--json", action="store_true")
 
+    for name, help_text in (
+        ("draconic", "Re-zero the zodiac on the lunar node."),
+        ("harmonic", "The harmonic-n chart: every longitude multiplied by n."),
+    ):
+        transform = subcommands.add_parser(name, help=help_text)
+        _add_natal_arguments(transform)
+        if name == "harmonic":
+            transform.add_argument("--n", type=int, required=True, help="Harmonic number.")
+        transform.add_argument("--json", action="store_true")
+
     benchmark = subcommands.add_parser("benchmark")
     benchmark.add_argument("--cases", type=int, default=10000)
     benchmark.add_argument("--seed", type=int, default=42)
@@ -290,6 +300,29 @@ def _forecast(args: argparse.Namespace) -> int:
     return 0
 
 
+def _transform(args: argparse.Namespace) -> int:
+    engine = _engine_for(args)
+    chart = engine.natal(
+        local_datetime=(args.date if args.unknown_time else f"{args.date}T{args.time}"),
+        timezone=args.timezone,
+        latitude=args.lat,
+        longitude=args.lng,
+        house_system=args.house_system,
+        unknown_time=args.unknown_time,
+        fold=args.fold,
+    )
+    result = (
+        engine.draconic(chart)
+        if args.command == "draconic"
+        else engine.harmonic(chart, args.n)
+    )
+    if args.json:
+        print(result.to_json(indent=2))
+    else:
+        print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    return 0
+
+
 def _relationship(args: argparse.Namespace) -> int:
     if args.swiss_ephe_path:
         engine = AstrologyEngine(
@@ -411,6 +444,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _relationship(args)
         if args.command in {"transits", "returns", "events"}:
             return _forecast(args)
+        if args.command in {"draconic", "harmonic"}:
+            return _transform(args)
         if args.command == "benchmark":
             return _benchmark(args)
         if args.command == "validate":
