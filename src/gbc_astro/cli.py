@@ -29,6 +29,13 @@ from gbc_astro.validation.astronomy import (
     run_jpl_astronomy_parity,
     write_astronomy_parity_report,
 )
+from gbc_astro.validation.chiron import (
+    DEFAULT_FIXTURE_PATH as CHIRON_FIXTURE_PATH,
+)
+from gbc_astro.validation.chiron import (
+    load_chiron_fixture,
+    run_chiron_parity,
+)
 from gbc_astro.validation.corpus import load_validation_cases
 from gbc_astro.validation.fixtures import (
     DeterministicValidationHouseCalculator,
@@ -89,6 +96,11 @@ def _build_parser() -> argparse.ArgumentParser:
     geometry.add_argument("--seed", type=int, default=42)
     geometry.add_argument("--swiss-ephe-path")
     geometry.add_argument("--output-dir", default="evidence/v0.1-validation")
+
+    chiron = validate_subcommands.add_parser("chiron-parity")
+    chiron.add_argument("--fixture-path", default=CHIRON_FIXTURE_PATH)
+    chiron.add_argument("--swiss-ephe-path")
+    chiron.add_argument("--output-dir", default="evidence/v0.1-validation")
 
     hostile = validate_subcommands.add_parser("hostile")
     hostile.add_argument("--cases-path", default="tests/fixtures/hostile_natal_cases.json")
@@ -252,6 +264,8 @@ def _validate(args: argparse.Namespace) -> int:
         return _validate_astronomy_parity(args)
     if args.validate_command == "geometry-parity":
         return _validate_geometry_parity(args)
+    if args.validate_command == "chiron-parity":
+        return _validate_chiron_parity(args)
     raise ValueError(f"Unsupported validation command: {args.validate_command}")
 
 
@@ -427,6 +441,63 @@ def _validate_geometry_parity(args: argparse.Namespace) -> int:
     _write_text(output_dir / "PLACIDUS_PARITY.md", _placidus_parity_markdown(report))
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["status"] == "PASS" else 1
+
+
+def _validate_chiron_parity(args: argparse.Namespace) -> int:
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    fixture = load_chiron_fixture(args.fixture_path)
+    report = run_chiron_parity(fixture, swiss_ephemeris_path=args.swiss_ephe_path)
+
+    _write_json(output_dir / "chiron-parity.json", report)
+    _write_text(output_dir / "CHIRON_PARITY.md", _chiron_parity_markdown(report))
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0 if report["status"] == "PASS" else 1
+
+
+def _chiron_parity_markdown(report: dict[str, Any]) -> str:
+    reference = report["reference"]
+    date_range = report.get("range") or {}
+    return "\n".join(
+        (
+            "# Chiron Parity",
+            "",
+            f"Status: {report['status']}",
+            "",
+            f"Reference: `{reference['id']}` -- {reference['source']}, {reference['target']}",
+            f"Frame: {reference['frame']}",
+            f"Captured: {reference['capturedAt']}",
+            "",
+            f"Samples: {report['sampleCount']}",
+            f"Range: {date_range.get('start', '?')} to {date_range.get('stop', '?')}",
+            "",
+            "| Metric | p95 (deg) | max (deg) | max (arcsec) | tolerance (deg) |",
+            "|---|---:|---:|---:|---:|",
+            f"| Longitude | {report['longitude']['p95Deg']:.3e} | "
+            f"{report['longitude']['maxDeg']:.3e} | {report['longitude']['maxArcsec']:.4f} | "
+            f"{report['tolerance']['longitudeDeg']:.1e} |",
+            f"| Latitude | {report['latitude']['p95Deg']:.3e} | "
+            f"{report['latitude']['maxDeg']:.3e} | {report['latitude']['maxArcsec']:.4f} | "
+            f"{report['tolerance']['latitudeDeg']:.1e} |",
+            "",
+            f"Outside tolerance: {report['outsideToleranceCount']}",
+            "",
+            "## Why a frozen fixture",
+            "",
+            "DE440S contains only the major planets, so the JPL track that validates",
+            "Sun through Pluto cannot reach Chiron. JPL Horizons publishes its own",
+            "small-body orbit solution for 2060 Chiron, independent of the Swiss",
+            "`seas_18.se1` integration under validation.",
+            "",
+            "The samples are committed and read offline, so this gate is deterministic",
+            "and needs no network access in CI. Regenerate with",
+            "`python tools/fetch_chiron_horizons.py`.",
+            "",
+            f"Tolerance rationale: {report['tolerance']['rationale']}",
+            "",
+        )
+    )
 
 
 def _angle_parity_markdown(report: dict[str, Any]) -> str:

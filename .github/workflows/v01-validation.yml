@@ -92,6 +92,9 @@ jobs:
             --seed 42 \
             --output-dir evidence/v0.1-validation
 
+      - name: Chiron Parity (frozen JPL Horizons reference)
+        run: gbc validate chiron-parity --output-dir evidence/v0.1-validation
+
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4

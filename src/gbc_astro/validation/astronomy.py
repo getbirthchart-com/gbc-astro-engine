@@ -28,7 +28,11 @@ ASTRONOMY_BODIES = (
     "uranus",
     "neptune",
     "pluto",
+    "true_node",
+    "mean_node",
 )
+
+NODE_BODIES = ("true_node", "mean_node")
 
 
 @dataclass(frozen=True)
@@ -46,8 +50,13 @@ class AstronomyToleranceProfile:
     speed_deg_per_day: float
     moon_speed_deg_per_day: float
     station_speed_threshold_deg_per_day: float
+    node_longitude_deg: float
+    node_latitude_deg: float
+    node_speed_deg_per_day: float
 
     def longitude_tolerance(self, body: str) -> float:
+        if body in NODE_BODIES:
+            return self.node_longitude_deg
         if body == "sun":
             return self.sun_longitude_deg
         if body == "moon":
@@ -59,11 +68,15 @@ class AstronomyToleranceProfile:
         return self.outer_planet_longitude_deg
 
     def speed_tolerance(self, body: str) -> float:
+        if body in NODE_BODIES:
+            return self.node_speed_deg_per_day
         if body == "moon":
             return self.moon_speed_deg_per_day
         return self.speed_deg_per_day
 
     def latitude_tolerance(self, body: str) -> float:
+        if body in NODE_BODIES:
+            return self.node_latitude_deg
         if body == "moon":
             return self.moon_latitude_deg
         return self.latitude_deg
@@ -80,7 +93,14 @@ ASTRONOMY_JPL_PARITY_V1 = AstronomyToleranceProfile(
         "are larger; longitude speed is a JPL central finite difference over "
         "the same apparent ecliptic-of-date longitude used for position comparison, "
         "with one-sided evaluation near UTC day boundaries. Retrograde state is "
-        "categorical except near stations."
+        "categorical except near stations. The lunar nodes are compared against "
+        "independently derived values rather than a JPL body: the true node from "
+        "Skyfield osculating elements of the Moon's geocentric orbit, the mean node "
+        "from the Meeus mean-element polynomial plus nutation in longitude. Measured "
+        "agreement over the corpus is 0.46 arcsecond for the true node and 0.21 for "
+        "the mean node, so 0.001 deg (3.6 arcsecond) leaves roughly eightfold "
+        "headroom. Node latitude is held at 1e-9 deg because both sides must place "
+        "the node exactly on the ecliptic by definition, not approximately."
     ),
     sun_longitude_deg=0.001,
     moon_longitude_deg=0.01,
@@ -92,6 +112,9 @@ ASTRONOMY_JPL_PARITY_V1 = AstronomyToleranceProfile(
     speed_deg_per_day=0.002,
     moon_speed_deg_per_day=0.001,
     station_speed_threshold_deg_per_day=0.001,
+    node_longitude_deg=0.001,
+    node_latitude_deg=1e-9,
+    node_speed_deg_per_day=0.001,
 )
 
 

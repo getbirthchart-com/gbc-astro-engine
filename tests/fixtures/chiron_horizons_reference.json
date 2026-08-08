@@ -1,0 +1,2524 @@
+{
+  "source": "JPL Horizons",
+  "sourceUrl": "https://ssd.jpl.nasa.gov/api/horizons.api",
+  "target": "2060 Chiron",
+  "command": "2060;",
+  "center": "500@399 (geocentric)",
+  "quantities": "31 (observer ecliptic longitude/latitude, ecliptic of date)",
+  "frame": "apparent geocentric ecliptic of date",
+  "capturedAt": "2026-08-08",
+  "range": {
+    "start": "1900-01-01",
+    "stop": "2026-12-31",
+    "steps": 500
+  },
+  "independentOfSwissEphemeris": true,
+  "note": "Frozen because DE440S contains no minor planets, so the JPL track cannot reach Chiron. Horizons uses its own small-body orbit solution, independent of the Swiss seas_18.se1 integration under validation. Regenerate with tools/fetch_chiron_horizons.py.",
+  "samples": [
+    {
+      "utc": "1900-01-01T00:00:00Z",
+      "longitudeDeg": 258.8961931,
+      "latitudeDeg": 4.7656986
+    },
+    {
+      "utc": "1900-04-03T18:28:48Z",
+      "longitudeDeg": 264.9930349,
+      "latitudeDeg": 5.6009148
+    },
+    {
+      "utc": "1900-07-05T12:57:36Z",
+      "longitudeDeg": 260.4926492,
+      "latitudeDeg": 6.1576906
+    },
+    {
+      "utc": "1900-10-06T07:26:24Z",
+      "longitudeDeg": 260.3751862,
+      "latitudeDeg": 5.6243797
+    },
+    {
+      "utc": "1901-01-07T01:55:12Z",
+      "longitudeDeg": 269.3748486,
+      "latitudeDeg": 5.4985789
+    },
+    {
+      "utc": "1901-04-09T20:24:00Z",
+      "longitudeDeg": 275.4454742,
+      "latitudeDeg": 6.2711744
+    },
+    {
+      "utc": "1901-07-11T14:52:48Z",
+      "longitudeDeg": 271.3887001,
+      "latitudeDeg": 6.8305497
+    },
+    {
+      "utc": "1901-10-12T09:21:36Z",
+      "longitudeDeg": 270.5509966,
+      "latitudeDeg": 6.223232
+    },
+    {
+      "utc": "1902-01-13T03:50:24Z",
+      "longitudeDeg": 278.7126161,
+      "latitudeDeg": 5.9836501
+    },
+    {
+      "utc": "1902-04-15T22:19:12Z",
+      "longitudeDeg": 284.6313413,
+      "latitudeDeg": 6.6829491
+    },
+    {
+      "utc": "1902-07-17T16:48:00Z",
+      "longitudeDeg": 280.934941,
+      "latitudeDeg": 7.2283302
+    },
+    {
+      "utc": "1902-10-18T11:16:48Z",
+      "longitudeDeg": 279.6226504,
+      "latitudeDeg": 6.591975
+    },
+    {
+      "utc": "1903-01-19T05:45:36Z",
+      "longitudeDeg": 287.0754248,
+      "latitudeDeg": 6.2758113
+    },
+    {
+      "utc": "1903-04-22T00:14:24Z",
+      "longitudeDeg": 292.7757858,
+      "latitudeDeg": 6.9037424
+    },
+    {
+      "utc": "1903-07-23T18:43:12Z",
+      "longitudeDeg": 289.3565761,
+      "latitudeDeg": 7.4227982
+    },
+    {
+      "utc": "1903-10-24T13:12:00Z",
+      "longitudeDeg": 287.7460098,
+      "latitudeDeg": 6.7832269
+    },
+    {
+      "utc": "1904-01-25T07:40:48Z",
+      "longitudeDeg": 294.6166072,
+      "latitudeDeg": 6.4207836
+    },
+    {
+      "utc": "1904-04-27T02:09:36Z",
+      "longitudeDeg": 300.0664247,
+      "latitudeDeg": 6.9844027
+    },
+    {
+      "utc": "1904-07-28T20:38:24Z",
+      "longitudeDeg": 296.8509737,
+      "latitudeDeg": 7.4689935
+    },
+    {
+      "utc": "1904-10-29T15:07:12Z",
+      "longitudeDeg": 295.0678754,
+      "latitudeDeg": 6.8400053
+    },
+    {
+      "utc": "1905-01-30T09:36:00Z",
+      "longitudeDeg": 301.4668349,
+      "latitudeDeg": 6.4540735
+    },
+    {
+      "utc": "1905-05-03T04:04:48Z",
+      "longitudeDeg": 306.6567758,
+      "latitudeDeg": 6.9616347
+    },
+    {
+      "utc": "1905-08-03T22:33:36Z",
+      "longitudeDeg": 303.5836542,
+      "latitudeDeg": 7.4072392
+    },
+    {
+      "utc": "1905-11-04T17:02:24Z",
+      "longitudeDeg": 301.7170162,
+      "latitudeDeg": 6.7954841
+    },
+    {
+      "utc": "1906-02-05T11:31:12Z",
+      "longitudeDeg": 307.7395504,
+      "latitudeDeg": 6.402528
+    },
+    {
+      "utc": "1906-05-09T06:00:00Z",
+      "longitudeDeg": 312.6698775,
+      "latitudeDeg": 6.861966
+    },
+    {
+      "utc": "1906-08-10T00:28:48Z",
+      "longitudeDeg": 309.6917767,
+      "latitudeDeg": 7.2662964
+    },
+    {
+      "utc": "1906-11-10T18:57:36Z",
+      "longitudeDeg": 307.8039241,
+      "latitudeDeg": 6.6748179
+    },
+    {
+      "utc": "1907-02-11T13:26:24Z",
+      "longitudeDeg": 313.528648,
+      "latitudeDeg": 6.2861921
+    },
+    {
+      "utc": "1907-05-15T07:55:12Z",
+      "longitudeDeg": 318.207306,
+      "latitudeDeg": 6.7042669
+    },
+    {
+      "utc": "1907-08-16T02:24:00Z",
+      "longitudeDeg": 315.2856187,
+      "latitudeDeg": 7.0667867
+    },
+    {
+      "utc": "1907-11-16T20:52:48Z",
+      "longitudeDeg": 313.4226429,
+      "latitudeDeg": 6.4964923
+    },
+    {
+      "utc": "1908-02-17T15:21:36Z",
+      "longitudeDeg": 318.913401,
+      "latitudeDeg": 6.1200104
+    },
+    {
+      "utc": "1908-05-20T09:50:24Z",
+      "longitudeDeg": 323.3501439,
+      "latitudeDeg": 6.5020802
+    },
+    {
+      "utc": "1908-08-21T04:19:12Z",
+      "longitudeDeg": 320.4570778,
+      "latitudeDeg": 6.8232556
+    },
+    {
+      "utc": "1908-11-21T22:48:00Z",
+      "longitudeDeg": 318.6507296,
+      "latitudeDeg": 6.2744003
+    },
+    {
+      "utc": "1909-02-22T17:16:48Z",
+      "longitudeDeg": 323.9601197,
+      "latitudeDeg": 5.915012
+    },
+    {
+      "utc": "1909-05-26T11:45:36Z",
+      "longitudeDeg": 328.1655956,
+      "latitudeDeg": 6.2654377
+    },
+    {
+      "utc": "1909-08-27T06:14:24Z",
+      "longitudeDeg": 325.2780308,
+      "latitudeDeg": 6.5462984
+    },
+    {
+      "utc": "1909-11-28T00:43:12Z",
+      "longitudeDeg": 323.5536643,
+      "latitudeDeg": 6.0187551
+    },
+    {
+      "utc": "1910-02-28T19:12:00Z",
+      "longitudeDeg": 328.72284,
+      "latitudeDeg": 5.6796609
+    },
+    {
+      "utc": "1910-06-01T13:40:48Z",
+      "longitudeDeg": 332.7079198,
+      "latitudeDeg": 6.0015104
+    },
+    {
+      "utc": "1910-09-02T08:09:36Z",
+      "longitudeDeg": 329.8089874,
+      "latitudeDeg": 6.2436364
+    },
+    {
+      "utc": "1910-12-04T02:38:24Z",
+      "longitudeDeg": 328.1846522,
+      "latitudeDeg": 5.737178
+    },
+    {
+      "utc": "1911-03-06T21:07:12Z",
+      "longitudeDeg": 333.248746,
+      "latitudeDeg": 5.4200904
+    },
+    {
+      "utc": "1911-06-07T15:36:00Z",
+      "longitudeDeg": 337.0228632,
+      "latitudeDeg": 5.7157844
+    },
+    {
+      "utc": "1911-09-08T10:04:48Z",
+      "longitudeDeg": 334.0995281,
+      "latitudeDeg": 5.920703
+    },
+    {
+      "utc": "1911-12-10T04:33:36Z",
+      "longitudeDeg": 332.5899275,
+      "latitudeDeg": 5.4353818
+    },
+    {
+      "utc": "1912-03-11T23:02:24Z",
+      "longitudeDeg": 337.5760099,
+      "latitudeDeg": 5.1409673
+    },
+    {
+      "utc": "1912-06-12T17:31:12Z",
+      "longitudeDeg": 341.1487483,
+      "latitudeDeg": 5.4120511
+    },
+    {
+      "utc": "1912-09-13T12:00:00Z",
+      "longitudeDeg": 338.1905918,
+      "latitudeDeg": 5.5816771
+    },
+    {
+      "utc": "1912-12-15T06:28:48Z",
+      "longitudeDeg": 336.8065028,
+      "latitudeDeg": 5.1174376
+    },
+    {
+      "utc": "1913-03-18T00:57:36Z",
+      "longitudeDeg": 341.7374265,
+      "latitudeDeg": 4.8457871
+    },
+    {
+      "utc": "1913-06-18T19:26:24Z",
+      "longitudeDeg": 345.1168286,
+      "latitudeDeg": 5.0932269
+    },
+    {
+      "utc": "1913-09-19T13:55:12Z",
+      "longitudeDeg": 342.1163447,
+      "latitudeDeg": 5.2293925
+    },
+    {
+      "utc": "1913-12-21T08:24:00Z",
+      "longitudeDeg": 340.8668922,
+      "latitudeDeg": 4.7865336
+    },
+    {
+      "utc": "1914-03-24T02:52:48Z",
+      "longitudeDeg": 345.7607871,
+      "latitudeDeg": 4.5370225
+    },
+    {
+      "utc": "1914-06-24T21:21:36Z",
+      "longitudeDeg": 348.9548898,
+      "latitudeDeg": 4.7614463
+    },
+    {
+      "utc": "1914-09-25T15:50:24Z",
+      "longitudeDeg": 345.9057301,
+      "latitudeDeg": 4.8659996
+    },
+    {
+      "utc": "1914-12-27T10:19:12Z",
+      "longitudeDeg": 344.7985582,
+      "latitudeDeg": 4.444856
+    },
+    {
+      "utc": "1915-03-30T04:48:00Z",
+      "longitudeDeg": 349.6705259,
+      "latitudeDeg": 4.2165883
+    },
+    {
+      "utc": "1915-06-30T23:16:48Z",
+      "longitudeDeg": 352.6854407,
+      "latitudeDeg": 4.4180614
+    },
+    {
+      "utc": "1915-10-01T17:45:36Z",
+      "longitudeDeg": 349.5836194,
+      "latitudeDeg": 4.4929367
+    },
+    {
+      "utc": "1916-01-02T12:14:24Z",
+      "longitudeDeg": 348.6243186,
+      "latitudeDeg": 4.0939141
+    },
+    {
+      "utc": "1916-04-04T06:43:12Z",
+      "longitudeDeg": 353.4870516,
+      "latitudeDeg": 3.8856271
+    },
+    {
+      "utc": "1916-07-06T01:12:00Z",
+      "longitudeDeg": 356.3287563,
+      "latitudeDeg": 4.063944
+    },
+    {
+      "utc": "1916-10-06T19:40:48Z",
+      "longitudeDeg": 353.1703436,
+      "latitudeDeg": 4.110971
+    },
+    {
+      "utc": "1917-01-07T14:09:36Z",
+      "longitudeDeg": 352.3652274,
+      "latitudeDeg": 3.7346648
+    },
+    {
+      "utc": "1917-04-10T08:38:24Z",
+      "longitudeDeg": 357.2286806,
+      "latitudeDeg": 3.5448529
+    },
+    {
+      "utc": "1917-07-12T03:07:12Z",
+      "longitudeDeg": 359.9024894,
+      "latitudeDeg": 3.6994904
+    },
+    {
+      "utc": "1917-10-12T21:36:00Z",
+      "longitudeDeg": 356.6851839,
+      "latitudeDeg": 3.7205253
+    },
+    {
+      "utc": "1918-01-13T16:04:48Z",
+      "longitudeDeg": 356.0386524,
+      "latitudeDeg": 3.3675829
+    },
+    {
+      "utc": "1918-04-16T10:33:36Z",
+      "longitudeDeg": 0.9131173,
+      "latitudeDeg": 3.1945856
+    },
+    {
+      "utc": "1918-07-18T05:02:24Z",
+      "longitudeDeg": 3.4232877,
+      "latitudeDeg": 3.3247391
+    },
+    {
+      "utc": "1918-10-18T23:31:12Z",
+      "longitudeDeg": 0.145592,
+      "latitudeDeg": 3.3216206
+    },
+    {
+      "utc": "1919-01-19T18:00:00Z",
+      "longitudeDeg": 359.663161,
+      "latitudeDeg": 2.9928005
+    },
+    {
+      "utc": "1919-04-22T12:28:48Z",
+      "longitudeDeg": 4.5564804,
+      "latitudeDeg": 2.8348169
+    },
+    {
+      "utc": "1919-07-24T06:57:36Z",
+      "longitudeDeg": 6.9088952,
+      "latitudeDeg": 2.9394411
+    },
+    {
+      "utc": "1919-10-25T01:26:24Z",
+      "longitudeDeg": 3.570184,
+      "latitudeDeg": 2.9140579
+    },
+    {
+      "utc": "1920-01-25T19:55:12Z",
+      "longitudeDeg": 3.2561418,
+      "latitudeDeg": 2.6102509
+    },
+    {
+      "utc": "1920-04-27T14:24:00Z",
+      "longitudeDeg": 8.176746,
+      "latitudeDeg": 2.4653339
+    },
+    {
+      "utc": "1920-07-29T08:52:48Z",
+      "longitudeDeg": 10.3757508,
+      "latitudeDeg": 2.5432308
+    },
+    {
+      "utc": "1920-10-30T03:21:36Z",
+      "longitudeDeg": 6.977009,
+      "latitudeDeg": 2.4975298
+    },
+    {
+      "utc": "1921-01-30T21:50:24Z",
+      "longitudeDeg": 6.8352227,
+      "latitudeDeg": 2.2197276
+    },
+    {
+      "utc": "1921-05-03T16:19:12Z",
+      "longitudeDeg": 11.7901734,
+      "latitudeDeg": 2.0858904
+    },
+    {
+      "utc": "1921-08-04T10:48:00Z",
+      "longitudeDeg": 13.8420272,
+      "latitudeDeg": 2.1356277
+    },
+    {
+      "utc": "1921-11-05T05:16:48Z",
+      "longitudeDeg": 10.3834196,
+      "latitudeDeg": 2.071697
+    },
+    {
+      "utc": "1922-02-05T23:45:36Z",
+      "longitudeDeg": 10.4183933,
+      "latitudeDeg": 1.8209363
+    },
+    {
+      "utc": "1922-05-09T18:14:24Z",
+      "longitudeDeg": 15.4153322,
+      "latitudeDeg": 1.6961041
+    },
+    {
+      "utc": "1922-08-10T12:43:12Z",
+      "longitudeDeg": 17.3255723,
+      "latitudeDeg": 1.7161432
+    },
+    {
+      "utc": "1922-11-11T07:12:00Z",
+      "longitudeDeg": 13.8090453,
+      "latitudeDeg": 1.6360619
+    },
+    {
+      "utc": "1923-02-12T01:40:48Z",
+      "longitudeDeg": 14.0235767,
+      "latitudeDeg": 1.4135469
+    },
+    {
+      "utc": "1923-05-15T20:09:36Z",
+      "longitudeDeg": 19.0708034,
+      "latitudeDeg": 1.2955259
+    },
+    {
+      "utc": "1923-08-16T14:38:24Z",
+      "longitudeDeg": 20.8458686,
+      "latitudeDeg": 1.2841546
+    },
+    {
+      "utc": "1923-11-17T09:07:12Z",
+      "longitudeDeg": 17.2719264,
+      "latitudeDeg": 1.1901441
+    },
+    {
+      "utc": "1924-02-18T03:36:00Z",
+      "longitudeDeg": 17.6693032,
+      "latitudeDeg": 0.9970571
+    },
+    {
+      "utc": "1924-05-20T22:04:48Z",
+      "longitudeDeg": 22.7748664,
+      "latitudeDeg": 0.8837075
+    },
+    {
+      "utc": "1924-08-21T16:33:36Z",
+      "longitudeDeg": 24.4226545,
+      "latitudeDeg": 0.8389617
+    },
+    {
+      "utc": "1924-11-22T11:02:24Z",
+      "longitudeDeg": 20.7919761,
+      "latitudeDeg": 0.7333299
+    },
+    {
+      "utc": "1925-02-23T05:31:12Z",
+      "longitudeDeg": 21.3741414,
+      "latitudeDeg": 0.5710085
+    },
+    {
+      "utc": "1925-05-27T00:00:00Z",
+      "longitudeDeg": 26.5482729,
+      "latitudeDeg": 0.4600577
+    },
+    {
+      "utc": "1925-08-27T18:28:48Z",
+      "longitudeDeg": 28.0770032,
+      "latitudeDeg": 0.3798925
+    },
+    {
+      "utc": "1925-11-28T12:57:36Z",
+      "longitudeDeg": 24.3897676,
+      "latitudeDeg": 0.2648962
+    },
+    {
+      "utc": "1926-03-01T07:26:24Z",
+      "longitudeDeg": 25.1585354,
+      "latitudeDeg": 0.1348416
+    },
+    {
+      "utc": "1926-06-02T01:55:12Z",
+      "longitudeDeg": 30.4120682,
+      "latitudeDeg": 0.0240438
+    },
+    {
+      "utc": "1926-09-02T20:24:00Z",
+      "longitudeDeg": 31.8321189,
+      "latitudeDeg": -0.0939227
+    },
+    {
+      "utc": "1926-12-04T14:52:48Z",
+      "longitudeDeg": 28.0868116,
+      "latitudeDeg": -0.2158695
+    },
+    {
+      "utc": "1927-03-07T09:21:36Z",
+      "longitudeDeg": 29.0433827,
+      "latitudeDeg": -0.3120844
+    },
+    {
+      "utc": "1927-06-08T03:50:24Z",
+      "longitudeDeg": 34.3895949,
+      "latitudeDeg": -0.4249001
+    },
+    {
+      "utc": "1927-09-08T22:19:12Z",
+      "longitudeDeg": 35.7121707,
+      "latitudeDeg": -0.5833444
+    },
+    {
+      "utc": "1927-12-10T16:48:00Z",
+      "longitudeDeg": 31.9069986,
+      "latitudeDeg": -0.7099096
+    },
+    {
+      "utc": "1928-03-12T11:16:48Z",
+      "longitudeDeg": 33.0514604,
+      "latitudeDeg": -0.770358
+    },
+    {
+      "utc": "1928-06-13T05:45:36Z",
+      "longitudeDeg": 38.5051293,
+      "latitudeDeg": -0.8874082
+    },
+    {
+      "utc": "1928-09-14T00:14:24Z",
+      "longitudeDeg": 39.7446809,
+      "latitudeDeg": -1.0892848
+    },
+    {
+      "utc": "1928-12-15T18:43:12Z",
+      "longitudeDeg": 35.8745884,
+      "latitudeDeg": -1.2182149
+    },
+    {
+      "utc": "1929-03-18T13:12:00Z",
+      "longitudeDeg": 37.2072036,
+      "latitudeDeg": -1.2406305
+    },
+    {
+      "utc": "1929-06-19T07:40:48Z",
+      "longitudeDeg": 42.7864341,
+      "latitudeDeg": -1.363908
+    },
+    {
+      "utc": "1929-09-20T02:09:36Z",
+      "longitudeDeg": 43.958929,
+      "latitudeDeg": -1.6127012
+    },
+    {
+      "utc": "1929-12-21T20:38:24Z",
+      "longitudeDeg": 40.0189601,
+      "latitudeDeg": -1.7417144
+    },
+    {
+      "utc": "1930-03-24T15:07:12Z",
+      "longitudeDeg": 41.5384257,
+      "latitudeDeg": -1.7234147
+    },
+    {
+      "utc": "1930-06-25T09:36:00Z",
+      "longitudeDeg": 47.2655041,
+      "latitudeDeg": -1.8546458
+    },
+    {
+      "utc": "1930-09-26T04:04:48Z",
+      "longitudeDeg": 48.391906,
+      "latitudeDeg": -2.1542552
+    },
+    {
+      "utc": "1930-12-27T22:33:36Z",
+      "longitudeDeg": 44.3735808,
+      "latitudeDeg": -2.2813126
+    },
+    {
+      "utc": "1931-03-30T17:02:24Z",
+      "longitudeDeg": 46.0792838,
+      "latitudeDeg": -2.2188296
+    },
+    {
+      "utc": "1931-07-01T11:31:12Z",
+      "longitudeDeg": 51.980137,
+      "latitudeDeg": -2.3594299
+    },
+    {
+      "utc": "1931-10-02T06:00:00Z",
+      "longitudeDeg": 53.0865015,
+      "latitudeDeg": -2.714156
+    },
+    {
+      "utc": "1932-01-03T00:28:48Z",
+      "longitudeDeg": 48.9801946,
+      "latitudeDeg": -2.8374567
+    },
+    {
+      "utc": "1932-04-04T18:57:36Z",
+      "longitudeDeg": 50.8683005,
+      "latitudeDeg": -2.7265272
+    },
+    {
+      "utc": "1932-07-06T13:26:24Z",
+      "longitudeDeg": 56.9753939,
+      "latitudeDeg": -2.8770813
+    },
+    {
+      "utc": "1932-10-07T07:55:12Z",
+      "longitudeDeg": 58.0954549,
+      "latitudeDeg": -3.2918576
+    },
+    {
+      "utc": "1933-01-08T02:24:00Z",
+      "longitudeDeg": 53.8889065,
+      "latitudeDeg": -3.4098681
+    },
+    {
+      "utc": "1933-04-10T20:52:48Z",
+      "longitudeDeg": 55.9549296,
+      "latitudeDeg": -3.2451605
+    },
+    {
+      "utc": "1933-07-12T15:21:36Z",
+      "longitudeDeg": 62.3059514,
+      "latitudeDeg": -3.4052758
+    },
+    {
+      "utc": "1933-10-13T09:50:24Z",
+      "longitudeDeg": 63.4844177,
+      "latitudeDeg": -3.885253
+    },
+    {
+      "utc": "1934-01-14T04:19:12Z",
+      "longitudeDeg": 59.1627414,
+      "latitudeDeg": -3.9973368
+    },
+    {
+      "utc": "1934-04-16T22:48:00Z",
+      "longitudeDeg": 61.3980473,
+      "latitudeDeg": -3.7719019
+    },
+    {
+      "utc": "1934-07-18T17:16:48Z",
+      "longitudeDeg": 68.0395788,
+      "latitudeDeg": -3.9396424
+    },
+    {
+      "utc": "1934-10-19T11:45:36Z",
+      "longitudeDeg": 69.3330784,
+      "latitudeDeg": -4.4901163
+    },
+    {
+      "utc": "1935-01-20T06:14:24Z",
+      "longitudeDeg": 64.8797883,
+      "latitudeDeg": -4.596507
+    },
+    {
+      "utc": "1935-04-23T00:43:12Z",
+      "longitudeDeg": 67.2698672,
+      "latitudeDeg": -4.3018163
+    },
+    {
+      "utc": "1935-07-24T19:12:00Z",
+      "longitudeDeg": 74.2560113,
+      "latitudeDeg": -4.4725826
+    },
+    {
+      "utc": "1935-10-25T13:40:48Z",
+      "longitudeDeg": 75.7419769,
+      "latitudeDeg": -5.0984341
+    },
+    {
+      "utc": "1936-01-26T08:09:36Z",
+      "longitudeDeg": 71.1367686,
+      "latitudeDeg": -5.20112
+    },
+    {
+      "utc": "1936-04-28T02:38:24Z",
+      "longitudeDeg": 73.6592529,
+      "latitudeDeg": -4.8263529
+    },
+    {
+      "utc": "1936-07-29T21:07:12Z",
+      "longitudeDeg": 81.053295,
+      "latitudeDeg": -4.9921338
+    },
+    {
+      "utc": "1936-10-30T15:36:00Z",
+      "longitudeDeg": 82.8329444,
+      "latitudeDeg": -5.6963024
+    },
+    {
+      "utc": "1937-01-31T10:04:48Z",
+      "longitudeDeg": 78.0581125,
+      "latitudeDeg": -5.7998986
+    },
+    {
+      "utc": "1937-05-04T04:33:36Z",
+      "longitudeDeg": 80.6740416,
+      "latitudeDeg": -5.3318854
+    },
+    {
+      "utc": "1937-08-04T23:02:24Z",
+      "longitudeDeg": 88.5484637,
+      "latitudeDeg": -5.479185
+    },
+    {
+      "utc": "1937-11-05T17:31:12Z",
+      "longitudeDeg": 90.7568222,
+      "latitudeDeg": -6.2607694
+    },
+    {
+      "utc": "1938-02-06T12:00:00Z",
+      "longitudeDeg": 85.798243,
+      "latitudeDeg": -6.3730691
+    },
+    {
+      "utc": "1938-05-10T06:28:48Z",
+      "longitudeDeg": 88.4488577,
+      "latitudeDeg": -5.7966361
+    },
+    {
+      "utc": "1938-08-11T00:57:36Z",
+      "longitudeDeg": 96.8787916,
+      "latitudeDeg": -5.9046786
+    },
+    {
+      "utc": "1938-11-11T19:26:24Z",
+      "longitudeDeg": 99.6929149,
+      "latitudeDeg": -6.7543728
+    },
+    {
+      "utc": "1939-02-12T13:55:12Z",
+      "longitudeDeg": 94.553518,
+      "latitudeDeg": -6.887721
+    },
+    {
+      "utc": "1939-05-16T08:24:00Z",
+      "longitudeDeg": 97.1432388,
+      "latitudeDeg": -6.1868155
+    },
+    {
+      "utc": "1939-08-17T02:52:48Z",
+      "longitudeDeg": 106.2000494,
+      "latitudeDeg": -6.2255454
+    },
+    {
+      "utc": "1939-11-17T21:21:36Z",
+      "longitudeDeg": 109.8441684,
+      "latitudeDeg": -7.1194086
+    },
+    {
+      "utc": "1940-02-18T15:50:24Z",
+      "longitudeDeg": 104.5607864,
+      "latitudeDeg": -7.289842
+    },
+    {
+      "utc": "1940-05-21T10:19:12Z",
+      "longitudeDeg": 106.9438901,
+      "latitudeDeg": -6.4517496
+    },
+    {
+      "utc": "1940-08-22T04:48:00Z",
+      "longitudeDeg": 116.6721368,
+      "latitudeDeg": -6.3810023
+    },
+    {
+      "utc": "1940-11-22T23:16:48Z",
+      "longitudeDeg": 121.4154616,
+      "latitudeDeg": -7.2715672
+    },
+    {
+      "utc": "1941-02-23T17:45:36Z",
+      "longitudeDeg": 116.0932899,
+      "latitudeDeg": -7.4947342
+    },
+    {
+      "utc": "1941-05-27T12:14:24Z",
+      "longitudeDeg": 118.0519418,
+      "latitudeDeg": -6.5180696
+    },
+    {
+      "utc": "1941-08-28T06:43:12Z",
+      "longitudeDeg": 128.4383532,
+      "latitudeDeg": -6.2915688
+    },
+    {
+      "utc": "1941-11-29T01:12:00Z",
+      "longitudeDeg": 134.5637263,
+      "latitudeDeg": -7.1001563
+    },
+    {
+      "utc": "1942-03-01T19:40:48Z",
+      "longitudeDeg": 129.4223272,
+      "latitudeDeg": -7.3788629
+    },
+    {
+      "utc": "1942-06-02T14:09:36Z",
+      "longitudeDeg": 130.6562348,
+      "latitudeDeg": -6.2879865
+    },
+    {
+      "utc": "1942-09-03T08:38:24Z",
+      "longitudeDeg": 141.5728299,
+      "latitudeDeg": -5.8667274
+    },
+    {
+      "utc": "1942-12-05T03:07:12Z",
+      "longitudeDeg": 149.3094705,
+      "latitudeDeg": -6.4865082
+    },
+    {
+      "utc": "1943-03-07T21:36:00Z",
+      "longitudeDeg": 144.7200837,
+      "latitudeDeg": -6.7878508
+    },
+    {
+      "utc": "1943-06-08T16:04:48Z",
+      "longitudeDeg": 144.8659628,
+      "latitudeDeg": -5.649432
+    },
+    {
+      "utc": "1943-09-09T10:33:36Z",
+      "longitudeDeg": 156.0165127,
+      "latitudeDeg": -5.0286803
+    },
+    {
+      "utc": "1943-12-11T05:02:24Z",
+      "longitudeDeg": 165.4253797,
+      "latitudeDeg": -5.3537559
+    },
+    {
+      "utc": "1944-03-12T23:31:12Z",
+      "longitudeDeg": 161.8928409,
+      "latitudeDeg": -5.5863948
+    },
+    {
+      "utc": "1944-06-13T18:00:00Z",
+      "longitudeDeg": 160.616715,
+      "latitudeDeg": -4.5119161
+    },
+    {
+      "utc": "1944-09-14T12:28:48Z",
+      "longitudeDeg": 171.5110165,
+      "latitudeDeg": -3.754645
+    },
+    {
+      "utc": "1944-12-16T06:57:36Z",
+      "longitudeDeg": 182.3864466,
+      "latitudeDeg": -3.7348314
+    },
+    {
+      "utc": "1945-03-19T01:26:24Z",
+      "longitudeDeg": 180.4017956,
+      "latitudeDeg": -3.7643697
+    },
+    {
+      "utc": "1945-06-19T19:55:12Z",
+      "longitudeDeg": 177.565293,
+      "latitudeDeg": -2.8703966
+    },
+    {
+      "utc": "1945-09-20T14:24:00Z",
+      "longitudeDeg": 187.5894899,
+      "latitudeDeg": -2.1182141
+    },
+    {
+      "utc": "1945-12-22T08:52:48Z",
+      "longitudeDeg": 199.4510112,
+      "latitudeDeg": -1.8049129
+    },
+    {
+      "utc": "1946-03-25T03:21:36Z",
+      "longitudeDeg": 199.2729619,
+      "latitudeDeg": -1.5267023
+    },
+    {
+      "utc": "1946-06-25T21:50:24Z",
+      "longitudeDeg": 195.0656875,
+      "latitudeDeg": -0.86518
+    },
+    {
+      "utc": "1946-09-26T16:19:12Z",
+      "longitudeDeg": 203.6518005,
+      "latitudeDeg": -0.2931083
+    },
+    {
+      "utc": "1946-12-28T10:48:00Z",
+      "longitudeDeg": 215.8830514,
+      "latitudeDeg": 0.1753165
+    },
+    {
+      "utc": "1947-03-31T05:16:48Z",
+      "longitudeDeg": 217.4121249,
+      "latitudeDeg": 0.7634695
+    },
+    {
+      "utc": "1947-07-01T23:45:36Z",
+      "longitudeDeg": 212.3018808,
+      "latitudeDeg": 1.2359842
+    },
+    {
+      "utc": "1947-10-02T18:14:24Z",
+      "longitudeDeg": 219.11195,
+      "latitudeDeg": 1.5023395
+    },
+    {
+      "utc": "1948-01-03T12:43:12Z",
+      "longitudeDeg": 231.1409362,
+      "latitudeDeg": 1.9712462
+    },
+    {
+      "utc": "1948-04-05T07:12:00Z",
+      "longitudeDeg": 234.0122425,
+      "latitudeDeg": 2.7791057
+    },
+    {
+      "utc": "1948-07-07T01:40:48Z",
+      "longitudeDeg": 228.5212767,
+      "latitudeDeg": 3.152492
+    },
+    {
+      "utc": "1948-10-07T20:09:36Z",
+      "longitudeDeg": 233.5237162,
+      "latitudeDeg": 3.0876099
+    },
+    {
+      "utc": "1949-01-08T14:38:24Z",
+      "longitudeDeg": 244.9527674,
+      "latitudeDeg": 3.4495761
+    },
+    {
+      "utc": "1949-04-11T09:07:12Z",
+      "longitudeDeg": 248.7176117,
+      "latitudeDeg": 4.3617814
+    },
+    {
+      "utc": "1949-07-13T03:36:00Z",
+      "longitudeDeg": 243.2428285,
+      "latitudeDeg": 4.7073043
+    },
+    {
+      "utc": "1949-10-13T22:04:48Z",
+      "longitudeDeg": 246.6439826,
+      "latitudeDeg": 4.3667152
+    },
+    {
+      "utc": "1950-01-14T16:33:36Z",
+      "longitudeDeg": 257.273991,
+      "latitudeDeg": 4.5784085
+    },
+    {
+      "utc": "1950-04-17T11:02:24Z",
+      "longitudeDeg": 261.5445652,
+      "latitudeDeg": 5.5045567
+    },
+    {
+      "utc": "1950-07-19T05:31:12Z",
+      "longitudeDeg": 256.3000948,
+      "latitudeDeg": 5.8539247
+    },
+    {
+      "utc": "1950-10-20T00:00:00Z",
+      "longitudeDeg": 258.4194319,
+      "latitudeDeg": 5.3228631
+    },
+    {
+      "utc": "1951-01-20T18:28:48Z",
+      "longitudeDeg": 268.2054947,
+      "latitudeDeg": 5.3880915
+    },
+    {
+      "utc": "1951-04-23T12:57:36Z",
+      "longitudeDeg": 272.6972495,
+      "latitudeDeg": 6.2747924
+    },
+    {
+      "utc": "1951-07-25T07:26:24Z",
+      "longitudeDeg": 267.7623778,
+      "latitudeDeg": 6.6315783
+    },
+    {
+      "utc": "1951-10-26T01:55:12Z",
+      "longitudeDeg": 268.9202303,
+      "latitudeDeg": 5.9880238
+    },
+    {
+      "utc": "1952-01-26T20:24:00Z",
+      "longitudeDeg": 277.911255,
+      "latitudeDeg": 5.9328015
+    },
+    {
+      "utc": "1952-04-28T14:52:48Z",
+      "longitudeDeg": 282.4374207,
+      "latitudeDeg": 6.7559423
+    },
+    {
+      "utc": "1952-07-30T09:21:36Z",
+      "longitudeDeg": 277.8100926,
+      "latitudeDeg": 7.1114831
+    },
+    {
+      "utc": "1952-10-31T03:50:24Z",
+      "longitudeDeg": 278.2825746,
+      "latitudeDeg": 6.4125289
+    },
+    {
+      "utc": "1953-01-31T22:19:12Z",
+      "longitudeDeg": 286.5679343,
+      "latitudeDeg": 6.2687175
+    },
+    {
+      "utc": "1953-05-04T16:48:00Z",
+      "longitudeDeg": 291.0138051,
+      "latitudeDeg": 7.0212226
+    },
+    {
+      "utc": "1953-08-05T11:16:48Z",
+      "longitudeDeg": 286.6585141,
+      "latitudeDeg": 7.3650486
+    },
+    {
+      "utc": "1953-11-06T05:45:36Z",
+      "longitudeDeg": 286.6602744,
+      "latitudeDeg": 6.6475489
+    },
+    {
+      "utc": "1954-02-07T00:14:24Z",
+      "longitudeDeg": 294.3431906,
+      "latitudeDeg": 6.4442265
+    },
+    {
+      "utc": "1954-05-10T18:43:12Z",
+      "longitudeDeg": 298.6411695,
+      "latitudeDeg": 7.1281403
+    },
+    {
+      "utc": "1954-08-11T13:12:00Z",
+      "longitudeDeg": 294.5107921,
+      "latitudeDeg": 7.4512039
+    },
+    {
+      "utc": "1954-11-12T07:40:48Z",
+      "longitudeDeg": 294.2041842,
+      "latitudeDeg": 6.7375218
+    },
+    {
+      "utc": "1955-02-13T02:09:36Z",
+      "longitudeDeg": 301.3821777,
+      "latitudeDeg": 6.4980076
+    },
+    {
+      "utc": "1955-05-16T20:38:24Z",
+      "longitudeDeg": 305.4958893,
+      "latitudeDeg": 7.1189267
+    },
+    {
+      "utc": "1955-08-17T15:07:12Z",
+      "longitudeDeg": 301.544346,
+      "latitudeDeg": 7.4151025
+    },
+    {
+      "utc": "1955-11-18T09:36:00Z",
+      "longitudeDeg": 301.0478598,
+      "latitudeDeg": 6.7176825
+    },
+    {
+      "utc": "1956-02-19T04:04:48Z",
+      "longitudeDeg": 307.8091547,
+      "latitudeDeg": 6.4596991
+    },
+    {
+      "utc": "1956-05-21T22:33:36Z",
+      "longitudeDeg": 311.7195791,
+      "latitudeDeg": 7.0241087
+    },
+    {
+      "utc": "1956-08-22T17:02:24Z",
+      "longitudeDeg": 307.906496,
+      "latitudeDeg": 7.2896496
+    },
+    {
+      "utc": "1956-11-23T11:31:12Z",
+      "longitudeDeg": 307.3070339,
+      "latitudeDeg": 6.6152991
+    },
+    {
+      "utc": "1957-02-24T06:00:00Z",
+      "longitudeDeg": 313.7257228,
+      "latitudeDeg": 6.3515524
+    },
+    {
+      "utc": "1957-05-28T00:28:48Z",
+      "longitudeDeg": 317.4259372,
+      "latitudeDeg": 6.8657364
+    },
+    {
+      "utc": "1957-08-28T18:57:36Z",
+      "longitudeDeg": 313.7161922,
+      "latitudeDeg": 7.098755
+    },
+    {
+      "utc": "1957-11-29T13:26:24Z",
+      "longitudeDeg": 313.0776929,
+      "latitudeDeg": 6.450837
+    },
+    {
+      "utc": "1958-03-02T07:55:12Z",
+      "longitudeDeg": 319.2164192,
+      "latitudeDeg": 6.1902535
+    },
+    {
+      "utc": "1958-06-03T02:24:00Z",
+      "longitudeDeg": 322.7044618,
+      "latitudeDeg": 6.6596836
+    },
+    {
+      "utc": "1958-09-03T20:52:48Z",
+      "longitudeDeg": 319.0706757,
+      "latitudeDeg": 6.8595155
+    },
+    {
+      "utc": "1958-12-05T15:21:36Z",
+      "longitudeDeg": 318.4402577,
+      "latitudeDeg": 6.2395663
+    },
+    {
+      "utc": "1959-03-08T09:50:24Z",
+      "longitudeDeg": 324.350801,
+      "latitudeDeg": 5.9881256
+    },
+    {
+      "utc": "1959-06-09T04:19:12Z",
+      "longitudeDeg": 327.6293583,
+      "latitudeDeg": 6.4173085
+    },
+    {
+      "utc": "1959-09-09T22:48:00Z",
+      "longitudeDeg": 324.0485665,
+      "latitudeDeg": 6.5842842
+    },
+    {
+      "utc": "1959-12-11T17:16:48Z",
+      "longitudeDeg": 323.4622501,
+      "latitudeDeg": 5.9927648
+    },
+    {
+      "utc": "1960-03-13T11:45:36Z",
+      "longitudeDeg": 329.1865326,
+      "latitudeDeg": 5.7543589
+    },
+    {
+      "utc": "1960-06-14T06:14:24Z",
+      "longitudeDeg": 332.2592703,
+      "latitudeDeg": 6.1468634
+    },
+    {
+      "utc": "1960-09-15T00:43:12Z",
+      "longitudeDeg": 328.7141004,
+      "latitudeDeg": 6.2818593
+    },
+    {
+      "utc": "1960-12-16T19:12:00Z",
+      "longitudeDeg": 328.1979647,
+      "latitudeDeg": 5.7188482
+    },
+    {
+      "utc": "1961-03-19T13:40:48Z",
+      "longitudeDeg": 333.7710327,
+      "latitudeDeg": 5.4956786
+    },
+    {
+      "utc": "1961-06-20T08:09:36Z",
+      "longitudeDeg": 336.6425515,
+      "latitudeDeg": 5.8543832
+    },
+    {
+      "utc": "1961-09-21T02:38:24Z",
+      "longitudeDeg": 333.1182345,
+      "latitudeDeg": 5.958623
+    },
+    {
+      "utc": "1961-12-22T21:07:12Z",
+      "longitudeDeg": 332.6944028,
+      "latitudeDeg": 5.4239248
+    },
+    {
+      "utc": "1962-03-25T15:36:00Z",
+      "longitudeDeg": 338.1437782,
+      "latitudeDeg": 5.2171977
+    },
+    {
+      "utc": "1962-06-26T10:04:48Z",
+      "longitudeDeg": 340.8193354,
+      "latitudeDeg": 5.5441319
+    },
+    {
+      "utc": "1962-09-27T04:33:36Z",
+      "longitudeDeg": 337.3047915,
+      "latitudeDeg": 5.619207
+    },
+    {
+      "utc": "1962-12-28T23:02:24Z",
+      "longitudeDeg": 336.9891121,
+      "latitudeDeg": 5.1125414
+    },
+    {
+      "utc": "1963-03-31T17:31:12Z",
+      "longitudeDeg": 342.3391309,
+      "latitudeDeg": 4.922487
+    },
+    {
+      "utc": "1963-07-02T12:00:00Z",
+      "longitudeDeg": 344.8222452,
+      "latitudeDeg": 5.2192487
+    },
+    {
+      "utc": "1963-10-03T06:28:48Z",
+      "longitudeDeg": 341.3089761,
+      "latitudeDeg": 5.2666802
+    },
+    {
+      "utc": "1964-01-04T00:57:36Z",
+      "longitudeDeg": 341.1148893,
+      "latitudeDeg": 4.7878917
+    },
+    {
+      "utc": "1964-04-05T19:26:24Z",
+      "longitudeDeg": 346.383818,
+      "latitudeDeg": 4.6141043
+    },
+    {
+      "utc": "1964-07-07T13:55:12Z",
+      "longitudeDeg": 348.6797495,
+      "latitudeDeg": 4.8816074
+    },
+    {
+      "utc": "1964-10-08T08:24:00Z",
+      "longitudeDeg": 345.1604001,
+      "latitudeDeg": 4.9032539
+    },
+    {
+      "utc": "1965-01-09T02:52:48Z",
+      "longitudeDeg": 345.0991619,
+      "latitudeDeg": 4.4520663
+    },
+    {
+      "utc": "1965-04-11T21:21:36Z",
+      "longitudeDeg": 350.3033872,
+      "latitudeDeg": 4.2937957
+    },
+    {
+      "utc": "1965-07-13T15:50:24Z",
+      "longitudeDeg": 352.4152557,
+      "latitudeDeg": 4.5325624
+    },
+    {
+      "utc": "1965-10-14T10:19:12Z",
+      "longitudeDeg": 348.8858949,
+      "latitudeDeg": 4.530177
+    },
+    {
+      "utc": "1966-01-15T04:48:00Z",
+      "longitudeDeg": 348.9664996,
+      "latitudeDeg": 4.1066433
+    },
+    {
+      "utc": "1966-04-17T23:16:48Z",
+      "longitudeDeg": 354.1194888,
+      "latitudeDeg": 3.962578
+    },
+    {
+      "utc": "1966-07-19T17:45:36Z",
+      "longitudeDeg": 356.0514855,
+      "latitudeDeg": 4.1728756
+    },
+    {
+      "utc": "1966-10-20T12:14:24Z",
+      "longitudeDeg": 352.5087776,
+      "latitudeDeg": 4.1483021
+    },
+    {
+      "utc": "1967-01-21T06:43:12Z",
+      "longitudeDeg": 352.7402355,
+      "latitudeDeg": 3.7524427
+    },
+    {
+      "utc": "1967-04-24T01:12:00Z",
+      "longitudeDeg": 357.853336,
+      "latitudeDeg": 3.621202
+    },
+    {
+      "utc": "1967-07-25T19:40:48Z",
+      "longitudeDeg": 359.6091917,
+      "latitudeDeg": 3.8027991
+    },
+    {
+      "utc": "1967-10-26T14:09:36Z",
+      "longitudeDeg": 356.0524024,
+      "latitudeDeg": 3.7581418
+    },
+    {
+      "utc": "1968-01-27T08:38:24Z",
+      "longitudeDeg": 356.4414251,
+      "latitudeDeg": 3.3900814
+    },
+    {
+      "utc": "1968-04-29T03:07:12Z",
+      "longitudeDeg": 1.5249933,
+      "latitudeDeg": 3.2699678
+    },
+    {
+      "utc": "1968-07-30T21:36:00Z",
+      "longitudeDeg": 3.1083603,
+      "latitudeDeg": 3.4225933
+    },
+    {
+      "utc": "1968-10-31T16:04:48Z",
+      "longitudeDeg": 359.5369291,
+      "latitudeDeg": 3.3598917
+    },
+    {
+      "utc": "1969-02-01T10:33:36Z",
+      "longitudeDeg": 0.0900012,
+      "latitudeDeg": 3.0199614
+    },
+    {
+      "utc": "1969-05-05T05:02:24Z",
+      "longitudeDeg": 5.1524047,
+      "latitudeDeg": 2.9090983
+    },
+    {
+      "utc": "1969-08-05T23:31:12Z",
+      "longitudeDeg": 6.567694,
+      "latitudeDeg": 3.0322152
+    },
+    {
+      "utc": "1969-11-06T18:00:00Z",
+      "longitudeDeg": 2.9819981,
+      "latitudeDeg": 2.9537529
+    },
+    {
+      "utc": "1970-02-07T12:28:48Z",
+      "longitudeDeg": 3.7043237,
+      "latitudeDeg": 2.6421957
+    },
+    {
+      "utc": "1970-05-11T06:57:36Z",
+      "longitudeDeg": 8.7545285,
+      "latitudeDeg": 2.5386582
+    },
+    {
+      "utc": "1970-08-12T01:26:24Z",
+      "longitudeDeg": 10.0052428,
+      "latitudeDeg": 2.6315436
+    },
+    {
+      "utc": "1970-11-12T19:55:12Z",
+      "longitudeDeg": 6.4067677,
+      "latitudeDeg": 2.5396584
+    },
+    {
+      "utc": "1971-02-13T14:24:00Z",
+      "longitudeDeg": 7.3028356,
+      "latitudeDeg": 2.256838
+    },
+    {
+      "utc": "1971-05-17T08:52:48Z",
+      "longitudeDeg": 12.3482642,
+      "latitudeDeg": 2.1584835
+    },
+    {
+      "utc": "1971-08-18T03:21:36Z",
+      "longitudeDeg": 13.4394882,
+      "latitudeDeg": 2.2203375
+    },
+    {
+      "utc": "1971-11-18T21:50:24Z",
+      "longitudeDeg": 9.8287426,
+      "latitudeDeg": 2.1174394
+    },
+    {
+      "utc": "1972-02-19T16:19:12Z",
+      "longitudeDeg": 10.9022909,
+      "latitudeDeg": 1.8637397
+    },
+    {
+      "utc": "1972-05-22T10:48:00Z",
+      "longitudeDeg": 15.9509819,
+      "latitudeDeg": 1.7683546
+    },
+    {
+      "utc": "1972-08-23T05:16:48Z",
+      "longitudeDeg": 16.886822,
+      "latitudeDeg": 1.7981846
+    },
+    {
+      "utc": "1972-11-23T23:45:36Z",
+      "longitudeDeg": 13.2657002,
+      "latitudeDeg": 1.6868294
+    },
+    {
+      "utc": "1973-02-24T18:14:24Z",
+      "longitudeDeg": 14.5198163,
+      "latitudeDeg": 1.4626219
+    },
+    {
+      "utc": "1973-05-28T12:43:12Z",
+      "longitudeDeg": 19.5798281,
+      "latitudeDeg": 1.3679401
+    },
+    {
+      "utc": "1973-08-29T07:12:00Z",
+      "longitudeDeg": 20.3658078,
+      "latitudeDeg": 1.364604
+    },
+    {
+      "utc": "1973-11-30T01:40:48Z",
+      "longitudeDeg": 16.7342251,
+      "latitudeDeg": 1.2474082
+    },
+    {
+      "utc": "1974-03-02T20:09:36Z",
+      "longitudeDeg": 18.1723458,
+      "latitudeDeg": 1.0531483
+    },
+    {
+      "utc": "1974-06-03T14:38:24Z",
+      "longitudeDeg": 23.252675,
+      "latitudeDeg": 0.9567527
+    },
+    {
+      "utc": "1974-09-04T09:07:12Z",
+      "longitudeDeg": 23.8935605,
+      "latitudeDeg": 0.9189936
+    },
+    {
+      "utc": "1974-12-06T03:36:00Z",
+      "longitudeDeg": 20.2521938,
+      "latitudeDeg": 0.7986059
+    },
+    {
+      "utc": "1975-03-08T22:04:48Z",
+      "longitudeDeg": 21.8762826,
+      "latitudeDeg": 0.6348105
+    },
+    {
+      "utc": "1975-06-09T16:33:36Z",
+      "longitudeDeg": 26.9871167,
+      "latitudeDeg": 0.5342466
+    },
+    {
+      "utc": "1975-09-10T11:02:24Z",
+      "longitudeDeg": 27.4890668,
+      "latitudeDeg": 0.460513
+    },
+    {
+      "utc": "1975-12-12T05:31:12Z",
+      "longitudeDeg": 23.8363091,
+      "latitudeDeg": 0.339737
+    },
+    {
+      "utc": "1976-03-14T00:00:00Z",
+      "longitudeDeg": 25.6493684,
+      "latitudeDeg": 0.2069592
+    },
+    {
+      "utc": "1976-06-14T18:28:48Z",
+      "longitudeDeg": 30.8012822,
+      "latitudeDeg": 0.0997274
+    },
+    {
+      "utc": "1976-09-15T12:57:36Z",
+      "longitudeDeg": 31.1711809,
+      "latitudeDeg": -0.0117551
+    },
+    {
+      "utc": "1976-12-17T07:26:24Z",
+      "longitudeDeg": 27.5051729,
+      "latitudeDeg": -0.1301273
+    },
+    {
+      "utc": "1977-03-20T01:55:12Z",
+      "longitudeDeg": 29.5089638,
+      "latitudeDeg": -0.2310626
+    },
+    {
+      "utc": "1977-06-20T20:24:00Z",
+      "longitudeDeg": 34.715662,
+      "latitudeDeg": -0.3475871
+    },
+    {
+      "utc": "1977-09-21T14:52:48Z",
+      "longitudeDeg": 34.9605754,
+      "latitudeDeg": -0.4988414
+    },
+    {
+      "utc": "1977-12-23T09:21:36Z",
+      "longitudeDeg": 31.2789139,
+      "latitudeDeg": -0.6119126
+    },
+    {
+      "utc": "1978-03-26T03:50:24Z",
+      "longitudeDeg": 33.4765001,
+      "latitudeDeg": -0.6800218
+    },
+    {
+      "utc": "1978-06-26T22:19:12Z",
+      "longitudeDeg": 38.7530322,
+      "latitudeDeg": -0.8083695
+    },
+    {
+      "utc": "1978-09-27T16:48:00Z",
+      "longitudeDeg": 38.883091,
+      "latitudeDeg": -1.0018563
+    },
+    {
+      "utc": "1978-12-29T11:16:48Z",
+      "longitudeDeg": 35.1811497,
+      "latitudeDeg": -1.1065712
+    },
+    {
+      "utc": "1979-04-01T05:45:36Z",
+      "longitudeDeg": 37.576047,
+      "latitudeDeg": -1.1405395
+    },
+    {
+      "utc": "1979-07-03T00:14:24Z",
+      "longitudeDeg": 42.9410554,
+      "latitudeDeg": -1.2832552
+    },
+    {
+      "utc": "1979-10-03T18:43:12Z",
+      "longitudeDeg": 42.967318,
+      "latitudeDeg": -1.5217107
+    },
+    {
+      "utc": "1980-01-04T13:12:00Z",
+      "longitudeDeg": 39.2401774,
+      "latitudeDeg": -1.615017
+    },
+    {
+      "utc": "1980-04-06T07:40:48Z",
+      "longitudeDeg": 41.8348949,
+      "latitudeDeg": -1.6130075
+    },
+    {
+      "utc": "1980-07-08T02:09:36Z",
+      "longitudeDeg": 47.3108236,
+      "latitudeDeg": -1.7725181
+    },
+    {
+      "utc": "1980-10-08T20:38:24Z",
+      "longitudeDeg": 47.2487852,
+      "latitudeDeg": -2.0591647
+    },
+    {
+      "utc": "1981-01-09T15:07:12Z",
+      "longitudeDeg": 43.4880674,
+      "latitudeDeg": -2.1378606
+    },
+    {
+      "utc": "1981-04-12T09:36:00Z",
+      "longitudeDeg": 46.2869614,
+      "latitudeDeg": -2.097536
+    },
+    {
+      "utc": "1981-07-14T04:04:48Z",
+      "longitudeDeg": 51.9005166,
+      "latitudeDeg": -2.2759596
+    },
+    {
+      "utc": "1981-10-14T22:33:36Z",
+      "longitudeDeg": 51.7693646,
+      "latitudeDeg": -2.614579
+    },
+    {
+      "utc": "1982-01-15T17:02:24Z",
+      "longitudeDeg": 47.9653793,
+      "latitudeDeg": -2.675459
+    },
+    {
+      "utc": "1982-04-18T11:31:12Z",
+      "longitudeDeg": 50.9707468,
+      "latitudeDeg": -2.5936544
+    },
+    {
+      "utc": "1982-07-20T06:00:00Z",
+      "longitudeDeg": 56.7554154,
+      "latitudeDeg": -2.7927208
+    },
+    {
+      "utc": "1982-10-21T00:28:48Z",
+      "longitudeDeg": 56.5798678,
+      "latitudeDeg": -3.1876114
+    },
+    {
+      "utc": "1983-01-21T18:57:36Z",
+      "longitudeDeg": 52.7183847,
+      "latitudeDeg": -3.2275966
+    },
+    {
+      "utc": "1983-04-24T13:26:24Z",
+      "longitudeDeg": 55.9333754,
+      "latitudeDeg": -3.1000489
+    },
+    {
+      "utc": "1983-07-26T07:55:12Z",
+      "longitudeDeg": 61.9279735,
+      "latitudeDeg": -3.3207415
+    },
+    {
+      "utc": "1983-10-27T02:24:00Z",
+      "longitudeDeg": 61.7418053,
+      "latitudeDeg": -3.7768489
+    },
+    {
+      "utc": "1984-01-27T20:52:48Z",
+      "longitudeDeg": 57.8047138,
+      "latitudeDeg": -3.7930962
+    },
+    {
+      "utc": "1984-04-29T15:21:36Z",
+      "longitudeDeg": 61.2296769,
+      "latitudeDeg": -3.6142543
+    },
+    {
+      "utc": "1984-07-31T09:50:24Z",
+      "longitudeDeg": 67.483089,
+      "latitudeDeg": -3.8562504
+    },
+    {
+      "utc": "1984-11-01T04:19:12Z",
+      "longitudeDeg": 67.3299237,
+      "latitudeDeg": -4.3792083
+    },
+    {
+      "utc": "1985-02-01T22:48:00Z",
+      "longitudeDeg": 63.2941584,
+      "latitudeDeg": -4.3693823
+    },
+    {
+      "utc": "1985-05-05T17:16:48Z",
+      "longitudeDeg": 66.9272963,
+      "latitudeDeg": -4.1318529
+    },
+    {
+      "utc": "1985-08-06T11:45:36Z",
+      "longitudeDeg": 73.4972764,
+      "latitudeDeg": -4.3929894
+    },
+    {
+      "utc": "1985-11-07T06:14:24Z",
+      "longitudeDeg": 73.4368888,
+      "latitudeDeg": -4.9885956
+    },
+    {
+      "utc": "1986-02-08T00:43:12Z",
+      "longitudeDeg": 69.2729657,
+      "latitudeDeg": -4.9514986
+    },
+    {
+      "utc": "1986-05-11T19:12:00Z",
+      "longitudeDeg": 73.1074319,
+      "latitudeDeg": -4.6455031
+    },
+    {
+      "utc": "1986-08-12T13:40:48Z",
+      "longitudeDeg": 80.0643284,
+      "latitudeDeg": -4.9205885
+    },
+    {
+      "utc": "1986-11-13T08:09:36Z",
+      "longitudeDeg": 80.1767483,
+      "latitudeDeg": -5.5944597
+    },
+    {
+      "utc": "1987-02-14T02:38:24Z",
+      "longitudeDeg": 75.8492181,
+      "latitudeDeg": -5.5304284
+    },
+    {
+      "utc": "1987-05-17T21:07:12Z",
+      "longitudeDeg": 79.8687345,
+      "latitudeDeg": -5.1436173
+    },
+    {
+      "utc": "1987-08-18T15:36:00Z",
+      "longitudeDeg": 87.2945035,
+      "latitudeDeg": -5.4227685
+    },
+    {
+      "utc": "1987-11-19T10:04:48Z",
+      "longitudeDeg": 87.6902338,
+      "latitudeDeg": -6.1787775
+    },
+    {
+      "utc": "1988-02-20T04:33:36Z",
+      "longitudeDeg": 83.1560856,
+      "latitudeDeg": -6.0911021
+    },
+    {
+      "utc": "1988-05-22T23:02:24Z",
+      "longitudeDeg": 87.3291899,
+      "latitudeDeg": -5.6077152
+    },
+    {
+      "utc": "1988-08-23T17:31:12Z",
+      "longitudeDeg": 95.317462,
+      "latitudeDeg": -5.8745824
+    },
+    {
+      "utc": "1988-11-24T12:00:00Z",
+      "longitudeDeg": 96.1459983,
+      "latitudeDeg": -6.7117324
+    },
+    {
+      "utc": "1989-02-25T06:28:48Z",
+      "longitudeDeg": 91.3622109,
+      "latitudeDeg": -6.6079537
+    },
+    {
+      "utc": "1989-05-29T00:57:36Z",
+      "longitudeDeg": 95.6304506,
+      "latitudeDeg": -6.0094894
+    },
+    {
+      "utc": "1989-08-29T19:26:24Z",
+      "longitudeDeg": 104.2819181,
+      "latitudeDeg": -6.2380756
+    },
+    {
+      "utc": "1989-11-30T13:55:12Z",
+      "longitudeDeg": 105.7451186,
+      "latitudeDeg": -7.1456165
+    },
+    {
+      "utc": "1990-03-03T08:24:00Z",
+      "longitudeDeg": 100.6748715,
+      "latitudeDeg": -7.0388373
+    },
+    {
+      "utc": "1990-06-04T02:52:48Z",
+      "longitudeDeg": 104.9407578,
+      "latitudeDeg": -6.3057697
+    },
+    {
+      "utc": "1990-09-04T21:21:36Z",
+      "longitudeDeg": 114.3479447,
+      "latitudeDeg": -6.4586094
+    },
+    {
+      "utc": "1990-12-06T15:50:24Z",
+      "longitudeDeg": 116.7076113,
+      "latitudeDeg": -7.4066428
+    },
+    {
+      "utc": "1991-03-09T10:19:12Z",
+      "longitudeDeg": 111.3448558,
+      "latitudeDeg": -7.3166321
+    },
+    {
+      "utc": "1991-06-10T04:48:00Z",
+      "longitudeDeg": 115.4446239,
+      "latitudeDeg": -6.4336444
+    },
+    {
+      "utc": "1991-09-10T23:16:48Z",
+      "longitudeDeg": 125.6696939,
+      "latitudeDeg": -6.4616614
+    },
+    {
+      "utc": "1991-12-12T17:45:36Z",
+      "longitudeDeg": 129.2413932,
+      "latitudeDeg": -7.3907332
+    },
+    {
+      "utc": "1992-03-14T12:14:24Z",
+      "longitudeDeg": 123.6489272,
+      "latitudeDeg": -7.3394518
+    },
+    {
+      "utc": "1992-06-15T06:43:12Z",
+      "longitudeDeg": 127.3303424,
+      "latitudeDeg": -6.307733
+    },
+    {
+      "utc": "1992-09-16T01:12:00Z",
+      "longitudeDeg": 138.3539227,
+      "latitudeDeg": -6.1575903
+    },
+    {
+      "utc": "1992-12-17T19:40:48Z",
+      "longitudeDeg": 143.4673744,
+      "latitudeDeg": -6.9706333
+    },
+    {
+      "utc": "1993-03-20T14:09:36Z",
+      "longitudeDeg": 137.8350602,
+      "latitudeDeg": -6.9691373
+    },
+    {
+      "utc": "1993-06-21T08:38:24Z",
+      "longitudeDeg": 140.7360036,
+      "latitudeDeg": -5.8247763
+    },
+    {
+      "utc": "1993-09-22T03:07:12Z",
+      "longitudeDeg": 152.3981957,
+      "latitudeDeg": -5.459689
+    },
+    {
+      "utc": "1993-12-23T21:36:00Z",
+      "longitudeDeg": 159.2948896,
+      "latitudeDeg": -6.0331291
+    },
+    {
+      "utc": "1994-03-26T16:04:48Z",
+      "longitudeDeg": 153.9917349,
+      "latitudeDeg": -6.0542172
+    },
+    {
+      "utc": "1994-06-27T10:33:36Z",
+      "longitudeDeg": 155.6726571,
+      "latitudeDeg": -4.8878956
+    },
+    {
+      "utc": "1994-09-28T05:02:24Z",
+      "longitudeDeg": 167.6108935,
+      "latitudeDeg": -4.3217738
+    },
+    {
+      "utc": "1994-12-29T23:31:12Z",
+      "longitudeDeg": 176.3137576,
+      "latitudeDeg": -4.5510352
+    },
+    {
+      "utc": "1995-04-01T18:00:00Z",
+      "longitudeDeg": 171.8574149,
+      "latitudeDeg": -4.5076189
+    },
+    {
+      "utc": "1995-07-03T12:28:48Z",
+      "longitudeDeg": 171.9209687,
+      "latitudeDeg": -3.4577266
+    },
+    {
+      "utc": "1995-10-04T06:57:36Z",
+      "longitudeDeg": 183.5811265,
+      "latitudeDeg": -2.7851604
+    },
+    {
+      "utc": "1996-01-05T01:26:24Z",
+      "longitudeDeg": 193.79612,
+      "latitudeDeg": -2.6501916
+    },
+    {
+      "utc": "1996-04-06T19:55:12Z",
+      "longitudeDeg": 190.6877633,
+      "latitudeDeg": -2.4204802
+    },
+    {
+      "utc": "1996-07-08T14:24:00Z",
+      "longitudeDeg": 188.9711562,
+      "latitudeDeg": -1.6143092
+    },
+    {
+      "utc": "1996-10-09T08:52:48Z",
+      "longitudeDeg": 199.7197037,
+      "latitudeDeg": -0.9979372
+    },
+    {
+      "utc": "1997-01-10T03:21:36Z",
+      "longitudeDeg": 210.8944917,
+      "latitudeDeg": -0.5898351
+    },
+    {
+      "utc": "1997-04-12T21:50:24Z",
+      "longitudeDeg": 209.3796842,
+      "latitudeDeg": -0.0967806
+    },
+    {
+      "utc": "1997-07-14T16:19:12Z",
+      "longitudeDeg": 206.0818136,
+      "latitudeDeg": 0.42759
+    },
+    {
+      "utc": "1997-10-15T10:48:00Z",
+      "longitudeDeg": 215.4020042,
+      "latitudeDeg": 0.8260283
+    },
+    {
+      "utc": "1998-01-16T05:16:48Z",
+      "longitudeDeg": 226.9069064,
+      "latitudeDeg": 1.3528711
+    },
+    {
+      "utc": "1998-04-18T23:45:36Z",
+      "longitudeDeg": 226.8934759,
+      "latitudeDeg": 2.0898299
+    },
+    {
+      "utc": "1998-07-20T18:14:24Z",
+      "longitudeDeg": 222.4813472,
+      "latitudeDeg": 2.3938369
+    },
+    {
+      "utc": "1998-10-21T12:43:12Z",
+      "longitudeDeg": 230.1239942,
+      "latitudeDeg": 2.488115
+    },
+    {
+      "utc": "1999-01-22T07:12:00Z",
+      "longitudeDeg": 241.4411447,
+      "latitudeDeg": 2.9942949
+    },
+    {
+      "utc": "1999-04-25T01:40:48Z",
+      "longitudeDeg": 242.609304,
+      "latitudeDeg": 3.8883678
+    },
+    {
+      "utc": "1999-07-26T20:09:36Z",
+      "longitudeDeg": 237.5966722,
+      "latitudeDeg": 4.0694044
+    },
+    {
+      "utc": "1999-10-27T14:38:24Z",
+      "longitudeDeg": 243.5917369,
+      "latitudeDeg": 3.8661074
+    },
+    {
+      "utc": "2000-01-28T09:07:12Z",
+      "longitudeDeg": 254.3934555,
+      "latitudeDeg": 4.2701436
+    },
+    {
+      "utc": "2000-04-30T03:36:00Z",
+      "longitudeDeg": 256.372603,
+      "latitudeDeg": 5.2270693
+    },
+    {
+      "utc": "2000-07-31T22:04:48Z",
+      "longitudeDeg": 251.1523783,
+      "latitudeDeg": 5.3595373
+    },
+    {
+      "utc": "2000-11-01T16:33:36Z",
+      "longitudeDeg": 255.7142702,
+      "latitudeDeg": 4.9223754
+    },
+    {
+      "utc": "2001-02-02T11:02:24Z",
+      "longitudeDeg": 265.8497118,
+      "latitudeDeg": 5.1983125
+    },
+    {
+      "utc": "2001-05-06T05:31:12Z",
+      "longitudeDeg": 268.3199193,
+      "latitudeDeg": 6.149657
+    },
+    {
+      "utc": "2001-08-07T00:00:00Z",
+      "longitudeDeg": 263.1311234,
+      "latitudeDeg": 6.2708294
+    },
+    {
+      "utc": "2001-11-07T18:28:48Z",
+      "longitudeDeg": 266.5425758,
+      "latitudeDeg": 5.6771371
+    },
+    {
+      "utc": "2002-02-08T12:57:36Z",
+      "longitudeDeg": 275.9820455,
+      "latitudeDeg": 5.8331701
+    },
+    {
+      "utc": "2002-05-12T07:26:24Z",
+      "longitudeDeg": 278.7076935,
+      "latitudeDeg": 6.7399656
+    },
+    {
+      "utc": "2002-08-13T01:55:12Z",
+      "longitudeDeg": 273.6654478,
+      "latitudeDeg": 6.8613319
+    },
+    {
+      "utc": "2002-11-13T20:24:00Z",
+      "longitudeDeg": 276.2031413,
+      "latitudeDeg": 6.1768433
+    },
+    {
+      "utc": "2003-02-14T14:52:48Z",
+      "longitudeDeg": 284.9847952,
+      "latitudeDeg": 6.2357371
+    },
+    {
+      "utc": "2003-05-18T09:21:36Z",
+      "longitudeDeg": 287.8039048,
+      "latitudeDeg": 7.0803166
+    },
+    {
+      "utc": "2003-08-19T03:50:24Z",
+      "longitudeDeg": 282.9507775,
+      "latitudeDeg": 7.2007127
+    },
+    {
+      "utc": "2003-11-19T22:19:12Z",
+      "longitudeDeg": 284.8479223,
+      "latitudeDeg": 6.4731929
+    },
+    {
+      "utc": "2004-02-20T16:48:00Z",
+      "longitudeDeg": 293.0408658,
+      "latitudeDeg": 6.4599205
+    },
+    {
+      "utc": "2004-05-23T11:16:48Z",
+      "longitudeDeg": 295.8485093,
+      "latitudeDeg": 7.2374501
+    },
+    {
+      "utc": "2004-08-24T05:45:36Z",
+      "longitudeDeg": 291.1855485,
+      "latitudeDeg": 7.3515236
+    },
+    {
+      "utc": "2004-11-25T00:14:24Z",
+      "longitudeDeg": 292.6294063,
+      "latitudeDeg": 6.6123782
+    },
+    {
+      "utc": "2005-02-25T18:43:12Z",
+      "longitudeDeg": 300.309302,
+      "latitudeDeg": 6.5495083
+    },
+    {
+      "utc": "2005-05-29T13:12:00Z",
+      "longitudeDeg": 303.0383727,
+      "latitudeDeg": 7.2612329
+    },
+    {
+      "utc": "2005-08-30T07:40:48Z",
+      "longitudeDeg": 298.5498901,
+      "latitudeDeg": 7.3636262
+    },
+    {
+      "utc": "2005-12-01T02:09:36Z",
+      "longitudeDeg": 299.6823546,
+      "latitudeDeg": 6.6323145
+    },
+    {
+      "utc": "2006-03-03T20:38:24Z",
+      "longitudeDeg": 306.9240925,
+      "latitudeDeg": 6.5377876
+    },
+    {
+      "utc": "2006-06-04T15:07:12Z",
+      "longitudeDeg": 309.5316957,
+      "latitudeDeg": 7.1881177
+    },
+    {
+      "utc": "2006-09-05T09:36:00Z",
+      "longitudeDeg": 305.1952709,
+      "latitudeDeg": 7.2741497
+    },
+    {
+      "utc": "2006-12-07T04:04:48Z",
+      "longitudeDeg": 306.1257041,
+      "latitudeDeg": 6.5624757
+    },
+    {
+      "utc": "2007-03-09T22:33:36Z",
+      "longitudeDeg": 312.9947641,
+      "latitudeDeg": 6.4498374
+    },
+    {
+      "utc": "2007-06-10T17:02:24Z",
+      "longitudeDeg": 315.4560569,
+      "latitudeDeg": 7.0437676
+    },
+    {
+      "utc": "2007-09-11T11:31:12Z",
+      "longitudeDeg": 311.2482415,
+      "latitudeDeg": 7.110591
+    },
+    {
+      "utc": "2007-12-13T06:00:00Z",
+      "longitudeDeg": 312.0578768,
+      "latitudeDeg": 6.4249738
+    },
+    {
+      "utc": "2008-03-15T00:28:48Z",
+      "longitudeDeg": 318.6124331,
+      "latitudeDeg": 6.3042516
+    },
+    {
+      "utc": "2008-06-15T18:57:36Z",
+      "longitudeDeg": 320.9108473,
+      "latitudeDeg": 6.8466702
+    },
+    {
+      "utc": "2008-09-16T13:26:24Z",
+      "longitudeDeg": 316.8107256,
+      "latitudeDeg": 6.8924527
+    },
+    {
+      "utc": "2008-12-18T07:55:12Z",
+      "longitudeDeg": 317.5611315,
+      "latitudeDeg": 6.2365682
+    },
+    {
+      "utc": "2009-03-21T02:24:00Z",
+      "longitudeDeg": 323.8489098,
+      "latitudeDeg": 6.1145725
+    },
+    {
+      "utc": "2009-06-21T20:52:48Z",
+      "longitudeDeg": 325.9763657,
+      "latitudeDeg": 6.6100079
+    },
+    {
+      "utc": "2009-09-22T15:21:36Z",
+      "longitudeDeg": 321.9645125,
+      "latitudeDeg": 6.6338784
+    },
+    {
+      "utc": "2009-12-24T09:50:24Z",
+      "longitudeDeg": 322.7037252,
+      "latitudeDeg": 6.0094574
+    },
+    {
+      "utc": "2010-03-27T04:19:12Z",
+      "longitudeDeg": 328.7652556,
+      "latitudeDeg": 5.8909699
+    },
+    {
+      "utc": "2010-06-27T22:48:00Z",
+      "longitudeDeg": 330.7161392,
+      "latitudeDeg": 6.3430848
+    },
+    {
+      "utc": "2010-09-28T17:16:48Z",
+      "longitudeDeg": 326.7780244,
+      "latitudeDeg": 6.345034
+    },
+    {
+      "utc": "2010-12-30T11:45:36Z",
+      "longitudeDeg": 327.5418769,
+      "latitudeDeg": 5.7527233
+    },
+    {
+      "utc": "2011-04-02T06:14:24Z",
+      "longitudeDeg": 333.410905,
+      "latitudeDeg": 5.6407005
+    },
+    {
+      "utc": "2011-07-04T00:43:12Z",
+      "longitudeDeg": 335.1825315,
+      "latitudeDeg": 6.0525592
+    },
+    {
+      "utc": "2011-10-04T19:12:00Z",
+      "longitudeDeg": 331.3052788,
+      "latitudeDeg": 6.032968
+    },
+    {
+      "utc": "2012-01-05T13:40:48Z",
+      "longitudeDeg": 332.1230607,
+      "latitudeDeg": 5.4728937
+    },
+    {
+      "utc": "2012-04-07T08:09:36Z",
+      "longitudeDeg": 337.826598,
+      "latitudeDeg": 5.3689975
+    },
+    {
+      "utc": "2012-07-09T02:38:24Z",
+      "longitudeDeg": 339.4181304,
+      "latitudeDeg": 5.7429293
+    },
+    {
+      "utc": "2012-10-09T21:07:12Z",
+      "longitudeDeg": 335.5922875,
+      "latitudeDeg": 5.7026583
+    },
+    {
+      "utc": "2013-01-10T15:36:00Z",
+      "longitudeDeg": 336.4867991,
+      "latitudeDeg": 5.1746263
+    },
+    {
+      "utc": "2013-04-13T10:04:48Z",
+      "longitudeDeg": 342.048551,
+      "latitudeDeg": 5.079593
+    },
+    {
+      "utc": "2013-07-15T04:33:36Z",
+      "longitudeDeg": 343.4595644,
+      "latitudeDeg": 5.4174123
+    },
+    {
+      "utc": "2013-10-15T23:02:24Z",
+      "longitudeDeg": 339.6783427,
+      "latitudeDeg": 5.3575946
+    },
+    {
+      "utc": "2014-01-16T17:31:12Z",
+      "longitudeDeg": 340.6686001,
+      "latitudeDeg": 4.8613215
+    },
+    {
+      "utc": "2014-04-19T12:00:00Z",
+      "longitudeDeg": 346.1074555,
+      "latitudeDeg": 4.7751694
+    },
+    {
+      "utc": "2014-07-21T06:28:48Z",
+      "longitudeDeg": 347.3393909,
+      "latitudeDeg": 5.0781818
+    },
+    {
+      "utc": "2014-10-22T00:57:36Z",
+      "longitudeDeg": 343.5980955,
+      "latitudeDeg": 5.0002535
+    },
+    {
+      "utc": "2015-01-22T19:26:24Z",
+      "longitudeDeg": 344.6994363,
+      "latitudeDeg": 4.535402
+    },
+    {
+      "utc": "2015-04-25T13:55:12Z",
+      "longitudeDeg": 350.0322543,
+      "latitudeDeg": 4.4575685
+    },
+    {
+      "utc": "2015-07-27T08:24:00Z",
+      "longitudeDeg": 351.0862554,
+      "latitudeDeg": 4.7267631
+    },
+    {
+      "utc": "2015-10-28T02:52:48Z",
+      "longitudeDeg": 347.3827798,
+      "latitudeDeg": 4.632377
+    },
+    {
+      "utc": "2016-01-28T21:21:36Z",
+      "longitudeDeg": 348.6075688,
+      "latitudeDeg": 4.1986556
+    },
+    {
+      "utc": "2016-04-30T15:50:24Z",
+      "longitudeDeg": 353.8474821,
+      "latitudeDeg": 4.1281906
+    },
+    {
+      "utc": "2016-08-01T10:19:12Z",
+      "longitudeDeg": 354.7265469,
+      "latitudeDeg": 4.3641886
+    },
+    {
+      "utc": "2016-11-02T04:48:00Z",
+      "longitudeDeg": 351.0588244,
+      "latitudeDeg": 4.255321
+    },
+    {
+      "utc": "2017-02-02T23:16:48Z",
+      "longitudeDeg": 352.4174928,
+      "latitudeDeg": 3.8523625
+    },
+    {
+      "utc": "2017-05-06T17:45:36Z",
+      "longitudeDeg": 357.5763899,
+      "latitudeDeg": 3.7880179
+    },
+    {
+      "utc": "2017-08-07T12:14:24Z",
+      "longitudeDeg": 358.2821348,
+      "latitudeDeg": 3.9912702
+    },
+    {
+      "utc": "2017-11-08T06:43:12Z",
+      "longitudeDeg": 354.6509,
+      "latitudeDeg": 3.8699216
+    },
+    {
+      "utc": "2018-02-09T01:12:00Z",
+      "longitudeDeg": 356.1515928,
+      "latitudeDeg": 3.4975058
+    },
+    {
+      "utc": "2018-05-12T19:40:48Z",
+      "longitudeDeg": 1.2398874,
+      "latitudeDeg": 3.4376752
+    },
+    {
+      "utc": "2018-08-13T14:09:36Z",
+      "longitudeDeg": 1.7753575,
+      "latitudeDeg": 3.6084646
+    },
+    {
+      "utc": "2018-11-14T08:38:24Z",
+      "longitudeDeg": 358.180504,
+      "latitudeDeg": 3.4768585
+    },
+    {
+      "utc": "2019-02-15T03:07:12Z",
+      "longitudeDeg": 359.8308299,
+      "latitudeDeg": 3.1346059
+    },
+    {
+      "utc": "2019-05-18T21:36:00Z",
+      "longitudeDeg": 4.8574335,
+      "latitudeDeg": 3.0776275
+    },
+    {
+      "utc": "2019-08-19T16:04:48Z",
+      "longitudeDeg": 5.2251085,
+      "latitudeDeg": 3.2159436
+    },
+    {
+      "utc": "2019-11-20T10:33:36Z",
+      "longitudeDeg": 1.6679155,
+      "latitudeDeg": 3.0764765
+    },
+    {
+      "utc": "2020-02-21T05:02:24Z",
+      "longitudeDeg": 3.4729635,
+      "latitudeDeg": 2.7640573
+    },
+    {
+      "utc": "2020-05-23T23:31:12Z",
+      "longitudeDeg": 8.4468504,
+      "latitudeDeg": 2.7079576
+    },
+    {
+      "utc": "2020-08-24T18:00:00Z",
+      "longitudeDeg": 8.6494066,
+      "latitudeDeg": 2.8138441
+    },
+    {
+      "utc": "2020-11-25T12:28:48Z",
+      "longitudeDeg": 5.130619,
+      "latitudeDeg": 2.6688599
+    },
+    {
+      "utc": "2021-02-26T06:57:36Z",
+      "longitudeDeg": 7.0957186,
+      "latitudeDeg": 2.3859983
+    },
+    {
+      "utc": "2021-05-30T01:26:24Z",
+      "longitudeDeg": 12.0246652,
+      "latitudeDeg": 2.328707
+    },
+    {
+      "utc": "2021-08-30T19:55:12Z",
+      "longitudeDeg": 12.0655128,
+      "latitudeDeg": 2.4019435
+    },
+    {
+      "utc": "2021-12-01T14:24:00Z",
+      "longitudeDeg": 8.5857425,
+      "latitudeDeg": 2.25406
+    },
+    {
+      "utc": "2022-03-04T08:52:48Z",
+      "longitudeDeg": 10.7146883,
+      "latitudeDeg": 2.0003135
+    },
+    {
+      "utc": "2022-06-05T03:21:36Z",
+      "longitudeDeg": 15.6073235,
+      "latitudeDeg": 1.9396915
+    },
+    {
+      "utc": "2022-09-05T21:50:24Z",
+      "longitudeDeg": 15.4884226,
+      "latitudeDeg": 1.9799416
+    },
+    {
+      "utc": "2022-12-07T16:19:12Z",
+      "longitudeDeg": 12.0489481,
+      "latitudeDeg": 1.8317245
+    },
+    {
+      "utc": "2023-03-10T10:48:00Z",
+      "longitudeDeg": 14.3451444,
+      "latitudeDeg": 1.6067915
+    },
+    {
+      "utc": "2023-06-11T05:16:48Z",
+      "longitudeDeg": 19.2092354,
+      "latitudeDeg": 1.5404324
+    },
+    {
+      "utc": "2023-09-11T23:45:36Z",
+      "longitudeDeg": 18.93425,
+      "latitudeDeg": 1.5472672
+    },
+    {
+      "utc": "2023-12-13T18:14:24Z",
+      "longitudeDeg": 15.5344612,
+      "latitudeDeg": 1.4013779
+    },
+    {
+      "utc": "2024-03-15T12:43:12Z",
+      "longitudeDeg": 18.0019984,
+      "latitudeDeg": 1.2049092
+    },
+    {
+      "utc": "2024-06-16T07:12:00Z",
+      "longitudeDeg": 22.8459935,
+      "latitudeDeg": 1.1303911
+    },
+    {
+      "utc": "2024-09-17T01:40:48Z",
+      "longitudeDeg": 22.4171495,
+      "latitudeDeg": 1.1031015
+    },
+    {
+      "utc": "2024-12-18T20:09:36Z",
+      "longitudeDeg": 19.0580042,
+      "latitudeDeg": 0.9623706
+    },
+    {
+      "utc": "2025-03-21T14:38:24Z",
+      "longitudeDeg": 21.699648,
+      "latitudeDeg": 0.7940566
+    },
+    {
+      "utc": "2025-06-22T09:07:12Z",
+      "longitudeDeg": 26.5336263,
+      "latitudeDeg": 0.7088102
+    },
+    {
+      "utc": "2025-09-23T03:36:00Z",
+      "longitudeDeg": 25.9540972,
+      "latitudeDeg": 0.6465824
+    },
+    {
+      "utc": "2025-12-24T22:04:48Z",
+      "longitudeDeg": 22.6348501,
+      "latitudeDeg": 0.5138708
+    },
+    {
+      "utc": "2026-03-27T16:33:36Z",
+      "longitudeDeg": 25.4558275,
+      "latitudeDeg": 0.3735705
+    },
+    {
+      "utc": "2026-06-28T11:02:24Z",
+      "longitudeDeg": 30.2904167,
+      "latitudeDeg": 0.2748773
+    },
+    {
+      "utc": "2026-09-29T05:31:12Z",
+      "longitudeDeg": 29.564339,
+      "latitudeDeg": 0.1767014
+    },
+    {
+      "utc": "2026-12-31T00:00:00Z",
+      "longitudeDeg": 26.28461,
+      "latitudeDeg": 0.0550597
+    }
+  ]
+}

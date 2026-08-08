@@ -21,13 +21,56 @@ Reference: `jpl-de440` DE440S (Skyfield, independent of Swiss Ephemeris)
 | Uranus | 4.530587240481054e-05 |
 | Neptune | 1.8919191049349138e-05 |
 | Pluto | 1.1862479311730567e-05 |
+| True Node | 1.2636e-04 (0.455 arcsec) |
+| Mean Node | 5.708e-05 (0.206 arcsec) |
 
 Cases: 10000
-Retrograde mismatches: 0
+Bodies: 12
 Outside tolerance: 0
 Unresolved: 0
+Retrograde mismatches: 1, classified `STATION_BOUNDARY_CONVENTION`
+
+The single retrograde disagreement is the true node at a station, where the two
+sides report -4.6e-05 and +1.3e-04 deg/day. Both are three orders of magnitude
+below the 0.001 deg/day station threshold, so the sign of the speed carries no
+meaning there. It is classified, not unexplained; `unresolved` is empty.
+
+### Lunar nodes
+
+The nodes are not JPL bodies, so they are derived independently rather than
+looked up: the true node from Skyfield osculating elements of the Moon's
+geocentric orbit in the ecliptic frame of date, the mean node from the Meeus
+mean-element polynomial.
+
+The mean node initially disagreed with Swiss Ephemeris by up to 17 arcseconds.
+That was not noise and was not absorbed into a tolerance: the residual tracked
+the nutation cycle exactly. Swiss Ephemeris refers the node to the true equinox
+of date while the Meeus series refers it to the mean equinox, so nutation in
+longitude is now added. Agreement went to 0.03-0.13 arcsecond.
+
+Node latitude is required to be exactly zero on both sides, not merely small,
+because both nodes are ecliptic points by definition.
 
 Command: `gbc validate astronomy-parity --reference jpl-de440 --cases 10000 --seed 42`
+
+## Chiron
+
+Reference: `jpl-horizons-2060-chiron` (frozen fixture, captured 2026-08-08)
+
+DE440S carries only the major planets, so the JPL track cannot reach Chiron.
+JPL Horizons publishes its own small-body orbit solution for 2060 Chiron,
+independent of the Swiss `seas_18.se1` integration under validation. 501 samples
+spanning 1900-2026 are committed and read offline, so the gate is deterministic
+and needs no network access.
+
+| Metric | p95 (arcsec) | Max (arcsec) | Tolerance (deg) | Outside |
+|---|---:|---:|---:|---:|
+| Longitude | 0.217 | 0.442 | 1e-03 | 0 |
+| Latitude | - | 0.184 | 1e-03 | 0 |
+
+Command: `gbc validate chiron-parity`
+
+Detail: `CHIRON_PARITY.md`, `chiron-parity.json`.
 
 ## Angles and Houses
 
@@ -73,7 +116,7 @@ and fails the gate. There were none.
 - benchmark: PASS (10,000 cases each for Whole Sign, Equal, Placidus)
 - ruff: PASS
 - mypy: PASS (strict, 57 source files)
-- pytest: PASS (93 passed with Swiss data and skyfield present)
+- pytest: PASS (106 passed, 0 skipped, with Swiss + JPL data and skyfield present)
 - golden Swiss: PASS
 - compileall: PASS
 - production ephemeris setup: PASS
@@ -81,8 +124,11 @@ and fails the gate. There were none.
 ## Scope of this PASS
 
 This covers the v0.1 natal core only: tropical zodiac, Sun through Pluto plus
-nodes and Chiron, ASC/MC/DSC/IC, Whole Sign / Equal / Placidus, the five major
-aspects, and the derived natal primitives.
+both lunar nodes and Chiron, ASC/MC/DSC/IC, Whole Sign / Equal / Placidus, the
+five major aspects, and the derived natal primitives.
+
+Every body in the v0.1 contract now has an independent reference. Nothing in
+the natal chart rests on Swiss Ephemeris alone.
 
 It does not cover v0.2 relationship, v0.3 forecast/returns, or v1.0
 professional modules, none of which are implemented.

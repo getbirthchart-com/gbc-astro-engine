@@ -1,0 +1,37 @@
+{
+  "engineVersion": "0.1.0",
+  "latitude": {
+    "maxArcsec": 0.1842609612122459,
+    "maxDeg": 5.118360033673497e-05,
+    "p95Deg": 4.654632362388611e-05
+  },
+  "longitude": {
+    "maxArcsec": 0.44164238991015736,
+    "maxDeg": 0.00012267844164171038,
+    "p95Deg": 6.0325152134055315e-05
+  },
+  "outsideTolerance": [],
+  "outsideToleranceCount": 0,
+  "range": {
+    "start": "1900-01-01",
+    "steps": 500,
+    "stop": "2026-12-31"
+  },
+  "reference": {
+    "capturedAt": "2026-08-08",
+    "frame": "apparent geocentric ecliptic of date",
+    "id": "jpl-horizons-2060-chiron",
+    "independentOfSwissEphemeris": true,
+    "source": "JPL Horizons",
+    "target": "2060 Chiron"
+  },
+  "sampleCount": 501,
+  "status": "PASS",
+  "tolerance": {
+    "id": "chiron-horizons-parity-v1",
+    "latitudeDeg": 0.001,
+    "longitudeDeg": 0.001,
+    "rationale": "Compares Swiss apparent geocentric ecliptic-of-date Chiron against JPL Horizons QUANTITIES=31 for the same instants. The two rest on different orbit solutions for a minor planet whose osculating elements are perturbed by Saturn and Uranus, so looser agreement than the major planets would be unsurprising. Measured across the committed 1900-2026 corpus it is not: longitude agrees to 0.44 arcsecond at worst (p95 0.22) and latitude to 0.18. The threshold is 0.001 deg (3.6 arcsecond), about eightfold headroom over the observed maximum and the same figure used for the major planets. Loosening it requires new measured evidence recorded in evidence/v0.1-validation/CHIRON_PARITY.md.",
+    "version": "1.0.0"
+  }
+}

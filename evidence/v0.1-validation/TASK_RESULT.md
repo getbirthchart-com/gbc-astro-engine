@@ -17,10 +17,18 @@ Engine version:
 
 Astronomy reference:
 - `jpl-de440 DE440S`
-- Cases: 10000
+- Cases: 10000, bodies: 12 (Sun through Pluto plus both lunar nodes)
 - Outside tolerance: 0
-- Retrograde mismatches: 0
+- Retrograde mismatches: 1, classified STATION_BOUNDARY_CONVENTION (true node
+  at a station, both speeds ~1e-04 deg/day against a 1e-03 threshold)
 - Unresolved: 0
+- True node max delta: 0.455 arcsec; mean node: 0.206 arcsec
+
+Chiron reference:
+- `jpl-horizons-2060-chiron` (frozen fixture, 501 samples, 1900-2026)
+- Longitude max delta: 0.442 arcsec (p95 0.217)
+- Latitude max delta: 0.184 arcsec
+- Outside tolerance: 0
 
 Geometry reference:
 - `gbc-independent-geometry 1.0.0`
@@ -43,10 +51,13 @@ Why the corpus is 500 and not 10,000:
   which is satisfied separately by the JPL track.
 
 Known limitations:
-- Chiron is validated only through Swiss Ephemeris; the JPL track covers Sun
-  through Pluto. No independent Chiron reference exists in this release.
-- Nodes are not covered by the independent astronomy track.
 - Placidus beyond the polar circles is refused, not approximated.
+- The Chiron reference is a frozen capture rather than a live computation, so it
+  is only as current as `capturedAt` in the fixture.
+
+Previously listed limitations now closed:
+- Chiron is independently validated against JPL Horizons.
+- Both lunar nodes are independently validated within the JPL astronomy track.
 
 Production recommendation:
 - `APPROVED for v0.1 natal core`

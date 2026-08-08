@@ -118,6 +118,8 @@ class JplReferenceSource:
         "uranus",
         "neptune",
         "pluto",
+        "true_node",
+        "mean_node",
     )
 
     _target_by_body = {
@@ -132,6 +134,8 @@ class JplReferenceSource:
         "neptune": "neptune barycenter",
         "pluto": "pluto barycenter",
     }
+
+    _NODE_BODIES = ("true_node", "mean_node")
 
     def __init__(self, ephemeris_path: str | Path | None = None) -> None:
         configured = ephemeris_path or os.environ.get("GBC_JPL_EPHEMERIS_PATH")
@@ -155,6 +159,9 @@ class JplReferenceSource:
         self._load = skyfield_api.load
         self._timescale = self._load.timescale()
         self._ephemeris = self._load(str(path))
+        self._osculating_elements_of = import_module("skyfield.elementslib").osculating_elements_of
+        self._build_ecliptic_matrix = import_module("skyfield.framelib").build_ecliptic_matrix
+        self._earth_tilt = import_module("skyfield.nutationlib").earth_tilt
 
     def health_check(self) -> dict[str, object]:
         return {
@@ -185,7 +192,7 @@ class JplReferenceSource:
         )
 
     def body_position(self, body: str, instant_utc: datetime) -> ReferenceBodyPosition:
-        if body not in self._target_by_body:
+        if body not in self._target_by_body and body not in self._NODE_BODIES:
             raise UnsupportedBodyError(
                 "JPL reference source does not support this body.",
                 {"body": body, "reference": self.id},
@@ -228,10 +235,47 @@ class JplReferenceSource:
 
     def _longitude_latitude(self, body: str, instant_utc: datetime) -> tuple[float, float]:
         t = self._time(instant_utc)
+        if body in self._NODE_BODIES:
+            # Both lunar nodes lie on the ecliptic by definition, so latitude is
+            # exactly zero rather than a computed quantity.
+            return self._node_longitude(body, t), 0.0
         target = self._target_by_body[body]
         apparent = self._ephemeris["earth"].at(t).observe(self._ephemeris[target]).apparent()
         latitude, longitude, _distance = apparent.ecliptic_latlon(epoch="date")
         return float(longitude.degrees), float(latitude.degrees)
+
+    def _node_longitude(self, body: str, t: Any) -> float:
+        """Longitude of the ascending lunar node, referred to the true equinox of date.
+
+        `true_node` is the osculating node: the ascending node of the Moon's
+        instantaneous geocentric orbit, taken from Skyfield's osculating elements
+        in the ecliptic frame of date.
+
+        `mean_node` uses the mean-element polynomial for the Moon's ascending
+        node (Meeus, *Astronomical Algorithms*, ch. 47). That series is referred
+        to the *mean* equinox of date, while Swiss Ephemeris reports the node
+        against the *true* equinox, so nutation in longitude is added. Without
+        that term the two disagree by up to 17 arcseconds, tracking the nutation
+        cycle exactly; with it they agree to about 0.1 arcsecond.
+        """
+        if body == "true_node":
+            geocentric_moon = (self._ephemeris["moon"] - self._ephemeris["earth"]).at(t)
+            elements = self._osculating_elements_of(
+                geocentric_moon,
+                reference_frame=self._build_ecliptic_matrix(t),
+            )
+            return float(elements.longitude_of_ascending_node.degrees) % 360.0
+
+        centuries = (float(t.tt) - 2451545.0) / 36525.0
+        mean_node = (
+            125.0445479
+            - 1934.1362891 * centuries
+            + 0.0020754 * centuries**2
+            + centuries**3 / 467441.0
+            - centuries**4 / 60616000.0
+        )
+        nutation_in_longitude_arcsec = float(self._earth_tilt(t)[3])
+        return (mean_node + nutation_in_longitude_arcsec / 3600.0) % 360.0
 
     def _time(self, instant_utc: datetime) -> Any:
         return self._timescale.utc(

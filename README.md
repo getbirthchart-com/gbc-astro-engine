@@ -78,21 +78,28 @@ gbc natal \
 
 ## Validation
 
-v0.1 natal core has passed both independent parity tracks. Neither reference
-reuses the implementation it validates.
+v0.1 natal core has passed every independent parity track. No reference reuses
+the implementation it validates.
 
 ```bash
-# Planetary astronomy against JPL DE440S via Skyfield
+# Sun through Pluto plus both lunar nodes, against JPL DE440S via Skyfield
 gbc validate astronomy-parity --reference jpl-de440 --cases 10000 --seed 42
 
 # ASC/MC/Placidus against an independently derived geometry reference
 gbc validate geometry-parity --cases 500 --seed 42
+
+# Chiron against a frozen JPL Horizons capture (offline, no network)
+gbc validate chiron-parity
 ```
 
 | Track | Reference | Cases | Outside tolerance |
 |---|---|---:|---:|
-| Astronomy | `jpl-de440` DE440S | 10000 | 0 |
+| Astronomy (12 bodies) | `jpl-de440` DE440S | 10000 | 0 |
+| Chiron | `jpl-horizons-2060-chiron` | 501 | 0 |
 | Angles/houses | `gbc-independent-geometry` | 464 compared | 0 |
+
+Every body in the v0.1 contract has an independent reference; nothing in the
+natal chart rests on Swiss Ephemeris alone.
 
 Reports live in [`evidence/v0.1-validation/`](evidence/v0.1-validation/).
 Methodology: [`docs/HOUSE_REFERENCE_METHODOLOGY.md`](docs/HOUSE_REFERENCE_METHODOLOGY.md),
@@ -124,8 +131,8 @@ Not implemented (later releases):
 
 Known validation gaps within v0.1:
 
-- Chiron and the lunar nodes are validated only through Swiss Ephemeris; the
-  independent astronomy track covers Sun through Pluto
+- The Chiron reference is a frozen Horizons capture, so it is only as current as
+  the `capturedAt` date in `tests/fixtures/chiron_horizons_reference.json`
 - Placidus is refused beyond the polar circles rather than approximated
 
 No LLM, prose interpretation, hidden noon substitution, UTC-offset guessing, or

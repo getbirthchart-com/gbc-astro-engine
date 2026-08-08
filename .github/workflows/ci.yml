@@ -7,6 +7,7 @@ on:
 
 env:
   GBC_SWISS_EPHE_PATH: ${{ github.workspace }}/.ephemeris/swiss
+  GBC_JPL_EPHEMERIS_PATH: ${{ github.workspace }}/.ephemeris/jpl/de440s.bsp
 
 jobs:
   test:
@@ -21,21 +22,26 @@ jobs:
       # Without it the suite still passes, but the Swiss golden tests and the
       # geometry gate skip, which would make this workflow green while proving
       # nothing about the real calculation path.
-      - name: Cache Swiss Ephemeris data
-        id: swiss-cache
+      - name: Cache ephemeris data
+        id: ephe-cache
         uses: actions/cache@v4
         with:
-          path: .ephemeris/swiss
-          key: swiss-ephe-18-v1
+          path: .ephemeris
+          key: ephe-swiss18-de440s-v1
 
-      - name: Fetch Swiss Ephemeris data
-        if: steps.swiss-cache.outputs.cache-hit != 'true'
+      # DE440S is needed by the lunar-node reference tests, not only by the
+      # weekly validation workflow. Without it those tests would skip, and the
+      # skip guard below turns that into a failure rather than a quiet pass.
+      - name: Fetch ephemeris data
+        if: steps.ephe-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p .ephemeris/swiss
+          mkdir -p .ephemeris/swiss .ephemeris/jpl
           base=https://raw.githubusercontent.com/aloistr/swisseph/master/ephe
           for file in sepl_18.se1 semo_18.se1 seas_18.se1; do
             curl -fsSL -o ".ephemeris/swiss/$file" "$base/$file"
           done
+          curl -fsSL -o .ephemeris/jpl/de440s.bsp \
+            https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp
 
       - name: Install
         run: python -m pip install -e ".[dev,swiss,validation]"
@@ -48,6 +54,10 @@ jobs:
               exit 1
             }
           done
+          test -s "$GBC_JPL_EPHEMERIS_PATH" || {
+            echo "Missing de440s.bsp: the node reference tests would skip."
+            exit 1
+          }
 
       - name: Ruff
         run: ruff check .
@@ -75,3 +85,6 @@ jobs:
 
       - name: Geometry Parity Gate
         run: gbc validate geometry-parity --cases 120 --seed 42 --output-dir evidence/v0.1-validation
+
+      - name: Chiron Parity Gate
+        run: gbc validate chiron-parity --output-dir evidence/v0.1-validation

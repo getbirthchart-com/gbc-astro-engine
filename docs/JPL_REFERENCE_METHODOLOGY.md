@@ -108,3 +108,48 @@ differences, especially for compact-kernel barycenter targets.
 
 Large unexplained deltas are not resolved by loosening the profile; they must be
 classified before the report can pass.
+
+## Bodies Not Present in DE440S
+
+DE440S contains the Sun, the Moon, Earth and the planetary barycenters, and
+nothing else. Two parts of the v0.1 body contract therefore cannot be looked up
+in the kernel and are derived or captured instead.
+
+### Lunar nodes
+
+Neither node is a body. Both are derived independently of Swiss Ephemeris:
+
+- **True node** — the ascending node of the Moon's instantaneous geocentric
+  orbit, from Skyfield osculating elements in the ecliptic frame of date.
+- **Mean node** — the mean-element polynomial for the Moon's ascending node
+  (Meeus, *Astronomical Algorithms*, ch. 47), **plus nutation in longitude**.
+
+That nutation term is not cosmetic. Without it the mean node disagrees with
+Swiss Ephemeris by up to 17 arcseconds, and the residual tracks the nutation
+cycle exactly: the Meeus series is referred to the mean equinox of date, while
+Swiss Ephemeris reports the node against the true equinox. Adding the term
+brings agreement to roughly 0.1 arcsecond. The discrepancy was diagnosed rather
+than absorbed into a wider tolerance.
+
+Node latitude is required to be exactly zero on both sides, not merely small,
+because both nodes are ecliptic points by definition.
+
+The true node passes through stationary points where it briefly turns direct.
+The sign of a speed of order 1e-04 deg/day carries no meaning, so such cases are
+classified `STATION_BOUNDARY_CONVENTION` rather than counted as mismatches.
+
+### Chiron
+
+Chiron is a minor planet and is absent from DE440S. It is validated against a
+frozen capture from **JPL Horizons** (`COMMAND='2060;'`, `QUANTITIES=31`,
+geocentric, ecliptic of date), which rests on JPL's own small-body orbit
+solution and is independent of the Swiss `seas_18.se1` integration under
+validation.
+
+The capture is committed at `tests/fixtures/chiron_horizons_reference.json` and
+read offline, so the gate is deterministic and needs no network access in CI.
+Regenerate it with `python tools/fetch_chiron_horizons.py`; the fixture records
+`capturedAt` so staleness is visible.
+
+Run it with `gbc validate chiron-parity`. Report:
+`evidence/v0.1-validation/CHIRON_PARITY.md`.
