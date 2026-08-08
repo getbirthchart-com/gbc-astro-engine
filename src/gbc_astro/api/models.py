@@ -179,6 +179,28 @@ class HealthResponse(BaseModel):
     api_version: str
 
 
+class ReadinessResponse(BaseModel):
+    """Whether the service can actually calculate, not merely whether it is up.
+
+    `/health` answering `ok` says the process is alive. It says nothing about
+    whether ephemeris data was provisioned, and a container missing that data
+    starts happily and then fails every chart request. This endpoint runs a real
+    calculation so a deploy fails at the readiness probe instead of in front of
+    users.
+    """
+
+    status: Literal["ready", "degraded", "not_ready"]
+    engine: str
+    engine_version: str
+    api_version: str
+    provider: str | None = None
+    provider_version: str | None = None
+    ephemeris_path: str | None = None
+    unavailable_capabilities: list[str] = Field(default_factory=list)
+    missing_required_data: list[str] = Field(default_factory=list)
+    detail: str | None = None
+
+
 class ApiErrorBody(BaseModel):
     code: str
     message: str

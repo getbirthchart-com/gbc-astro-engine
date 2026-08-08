@@ -278,6 +278,98 @@
         "title": "NatalChartRequest",
         "type": "object"
       },
+      "ReadinessResponse": {
+        "description": "Whether the service can actually calculate, not merely whether it is up.\n\n`/health` answering `ok` says the process is alive. It says nothing about\nwhether ephemeris data was provisioned, and a container missing that data\nstarts happily and then fails every chart request. This endpoint runs a real\ncalculation so a deploy fails at the readiness probe instead of in front of\nusers.",
+        "properties": {
+          "api_version": {
+            "title": "Api Version",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "ephemeris_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ephemeris Path"
+          },
+          "missing_required_data": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Required Data",
+            "type": "array"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "provider_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Version"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "degraded",
+              "not_ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "unavailable_capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unavailable Capabilities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "status",
+          "engine",
+          "engine_version",
+          "api_version"
+        ],
+        "title": "ReadinessResponse",
+        "type": "object"
+      },
       "RelationshipRequest": {
         "additionalProperties": false,
         "description": "Two natal subjects for a synastry or composite chart.\n\nEach side carries the same fields as a natal request, so historical\ntimezone and DST interpretation stay with the engine on both sides.",
@@ -431,6 +523,38 @@
           }
         },
         "summary": "Service health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/ready": {
+      "get": {
+        "description": "Probe the ephemeris provider with a real calculation.\n\n`degraded` means optional bodies are unavailable -- typically Chiron without\n`seas_18.se1` -- while the core chart still calculates. It is reported as\nhealthy so a partial provision does not take the service down, but it is\nvisible so it does not go unnoticed either.",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            },
+            "description": "Whether this instance can calculate a chart. Returns 503 when ephemeris data is missing or the provider dependency is absent."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Service readiness",
         "tags": [
           "health"
         ]

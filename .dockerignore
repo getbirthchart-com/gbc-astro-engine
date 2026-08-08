@@ -1,0 +1,24 @@
+.git
+.github
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.hypothesis
+__pycache__
+*.pyc
+*.egg-info
+dist
+build
+evidence
+tests
+tools
+docs
+GetBirthChart_Astrology_Engine_Spec
+.DS_Store
+# Never ship licensed ephemeris data inside the image.
+*.se1
+*.se2
+*.se3
+*.bsp
+ephemeris/

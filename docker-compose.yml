@@ -1,0 +1,31 @@
+# Local and single-host production runner.
+#
+# Ephemeris data is mounted, never baked into the image: Swiss Ephemeris files
+# and JPL kernels carry redistribution terms. Run scripts/fetch-ephemeris.sh
+# once to populate ./ephemeris, which is gitignored and dockerignored.
+
+services:
+  engine:
+    build: .
+    image: gbc-astro-engine:local
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      GBC_SWISS_EPHE_PATH: /opt/gbc/ephemeris/swiss
+      GBC_JPL_EPHEMERIS_PATH: /opt/gbc/ephemeris/jpl/de440s.bsp
+      # Left unset on purpose: CORS stays off unless explicitly configured,
+      # because the frontend calls this from its server, never from a browser.
+      # GBC_API_CORS_ORIGINS: https://getbirthchart.com
+    volumes:
+      - ./ephemeris:/opt/gbc/ephemeris:ro
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=4).status == 200 else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
