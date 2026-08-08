@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from gbc_astro.aspects.engine import calculate_aspects
@@ -13,6 +13,7 @@ from gbc_astro.charts.astrocartography import (
     DEFAULT_LATITUDE_STEP,
     calculate_astrocartography,
 )
+from gbc_astro.charts.ephemeris import DEFAULT_MAX_ROWS, generate_ephemeris
 from gbc_astro.constants import (
     BODY_IDS,
     ENGINE_NAME,
@@ -67,6 +68,10 @@ from gbc_astro.profiles.progression import (
 )
 from gbc_astro.profiles.scoring import SYNASTRY_SCORING_V1, ScoringProfile
 from gbc_astro.profiles.transit import TRANSIT_PROFILE_V1, TransitProfile
+from gbc_astro.providers.asteroids import (
+    BodyCapability,
+    available_optional_bodies,
+)
 from gbc_astro.providers.base import EphemerisProvider
 from gbc_astro.providers.normalization import normalize_body_position
 from gbc_astro.providers.swiss import SwissEphemerisProvider
@@ -516,6 +521,30 @@ class AstrologyEngine:
         result["chartInstant"] = chart.subject.utc_datetime
         result["obliquity"] = obliquity
         return result
+
+    def optional_bodies(self, extra: tuple[str, ...] = ()) -> tuple[BodyCapability, ...]:
+        """Which optional bodies this installation can actually calculate.
+
+        Probed, not guessed: a numbered asteroid works only when its data file
+        was provisioned, and asking is the only reliable way to know.
+        """
+        calculator = self._get_house_calculator()
+        return available_optional_bodies(
+            ephemeris_path=getattr(calculator, "ephemeris_path", None), extra=extra
+        )
+
+    def ephemeris(
+        self,
+        bodies: tuple[str, ...],
+        start: datetime,
+        end: datetime,
+        step: timedelta,
+        max_rows: int = DEFAULT_MAX_ROWS,
+    ) -> dict[str, Any]:
+        """A table of positions over a range, at a fixed step."""
+        return generate_ephemeris(
+            self._get_provider(), bodies, start, end, step, max_rows
+        )
 
     def _get_ayanamsa_calculator(self) -> AyanamsaCalculator:
         if self._ayanamsa_calculator is None:

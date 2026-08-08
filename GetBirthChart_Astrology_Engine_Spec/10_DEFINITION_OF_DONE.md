@@ -100,12 +100,25 @@ Evidence: `evidence/v0.3-forecast/TASK_RESULT.md`.
 ## v1.0 Professional DoD
 
 Every advanced module has:
-- [ ] explicit methodology
-- [ ] immutable versioned calculation profile
-- [ ] reference implementation/data
-- [ ] unit tests
-- [ ] golden tests
-- [ ] edge-case tests
-- [ ] schema integration
-- [ ] provenance
-- [ ] documented limitations
+- [x] explicit methodology
+- [x] immutable versioned calculation profile
+- [x] reference implementation/data
+- [x] unit tests
+- [x] golden tests
+- [x] edge-case tests
+- [x] schema integration
+- [x] provenance
+- [x] documented limitations
+
+All eleven modules implemented, each behind its own acceptance spec as Phase 13
+requires. Evidence per module:
+
+| Module | Evidence |
+|---|---|
+| Sidereal + ayanamsa | `evidence/v1.0-sidereal/` |
+| Extended house systems | `evidence/v1.0-house-systems/` |
+| Draconic, harmonic | `evidence/v1.0-transforms/` |
+| Progressions, solar arc | `evidence/v1.0-progressions/` |
+| Advanced patterns | `evidence/v1.0-patterns/` |
+| Relocation, astrocartography | `evidence/v1.0-relocation-acg/` |
+| Ephemeris generator, asteroids | `evidence/v1.0-ephemeris-asteroids/` |

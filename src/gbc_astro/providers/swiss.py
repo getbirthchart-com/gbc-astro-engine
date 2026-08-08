@@ -14,8 +14,13 @@ from typing import Any
 
 from gbc_astro.astronomy.provider_time import julian_day_ut
 from gbc_astro.constants import BODY_IDS
-from gbc_astro.errors import EphemerisOutOfRangeError, ProviderDependencyError, UnsupportedBodyError
+from gbc_astro.errors import EphemerisOutOfRangeError, ProviderDependencyError
 from gbc_astro.models.position import RawBodyPosition
+from gbc_astro.providers.asteroids import (
+    OPTIONAL_BODIES,
+    parse_numbered_asteroid,
+    swisseph_code,
+)
 from gbc_astro.providers.base import ProviderCapabilities
 from gbc_astro.providers.swiss_manifest import manifest_summary
 
@@ -58,7 +63,12 @@ class SwissEphemerisProvider:
         )
 
     def supports_body(self, body: str) -> bool:
-        return body in self._body_codes
+        if body in self._body_codes:
+            return True
+        # Optional bodies are resolved on demand: whether a numbered asteroid
+        # works depends on a data file being present, which is a provisioning
+        # question rather than a provider one.
+        return body in OPTIONAL_BODIES or parse_numbered_asteroid(body) is not None
 
     def health_check(self) -> dict[str, object]:
         manifest = manifest_summary(self.ephemeris_path)
@@ -88,16 +98,15 @@ class SwissEphemerisProvider:
         }
 
     def position(self, body: str, instant_utc: datetime) -> RawBodyPosition:
-        if body not in self._body_codes:
-            raise UnsupportedBodyError(
-                "The configured provider does not support this body.",
-                {"provider": self.id, "body": body},
-            )
+        code = self._body_codes.get(body)
+        if code is None:
+            # Raises UnsupportedBodyError for anything genuinely unknown.
+            code = swisseph_code(body, self._swe)
         utc_dt = instant_utc.astimezone(timezone.utc)
         jd_ut = julian_day_ut(utc_dt)
         flags = self._swe.FLG_SWIEPH | self._swe.FLG_SPEED
         try:
-            result, _retflag = self._swe.calc_ut(jd_ut, self._body_codes[body], flags)
+            result, _retflag = self._swe.calc_ut(jd_ut, code, flags)
         except Exception as exc:
             message = str(exc)
             if "not found" in message or "file" in message.lower():
