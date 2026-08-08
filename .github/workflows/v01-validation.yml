@@ -95,9 +95,18 @@ jobs:
       - name: Chiron Parity (frozen JPL Horizons reference)
         run: gbc validate chiron-parity --output-dir evidence/v0.1-validation
 
+      - name: House System Parity
+        run: gbc validate house-systems --cases 96 --output-dir evidence/v1.0-house-systems
+
+      - name: Ayanamsa Parity (Spica via Hipparcos)
+        run: gbc validate ayanamsa-parity --output-dir evidence/v1.0-sidereal
+
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v01-validation-evidence
-          path: evidence/v0.1-validation/
+          path: |
+            evidence/v0.1-validation/
+            evidence/v1.0-house-systems/
+            evidence/v1.0-sidereal/

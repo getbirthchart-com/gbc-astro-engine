@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
+from dataclasses import replace
 from typing import Annotated
 
 from fastapi import Depends, Request
@@ -40,3 +41,37 @@ def get_engine(request: Request) -> Iterator[AstrologyEngine]:
 
 
 EngineDep = Annotated[AstrologyEngine, Depends(get_engine)]
+
+
+def engine_for_zodiac(
+    engine: AstrologyEngine,
+    zodiac: str | None,
+    ayanamsa: str | None,
+) -> AstrologyEngine:
+    """Return an engine configured for the requested zodiac.
+
+    The zodiac is a property of the calculation profile, and a profile is
+    immutable, so a sidereal request needs its own engine. The provider and
+    house calculator are shared with the process engine, so this costs a
+    dataclass copy rather than reopening the ephemeris.
+    """
+    if zodiac is None or zodiac == "tropical":
+        return engine
+
+    profile = replace(
+        engine.profile,
+        id=f"{engine.profile.id}+sidereal-{ayanamsa}",
+        zodiac="sidereal",
+        ayanamsa=ayanamsa,
+    )
+    return AstrologyEngine(
+        provider=engine._get_provider(),
+        profile=profile,
+        house_calculator=engine._get_house_calculator(),
+        relationship_profile=engine.relationship_profile,
+        scoring_profile=engine.scoring_profile,
+        transit_profile=engine.transit_profile,
+        progression_profile=engine.progression_profile,
+        solar_arc_profile=engine.solar_arc_profile,
+        pattern_profile=engine.pattern_profile,
+    )

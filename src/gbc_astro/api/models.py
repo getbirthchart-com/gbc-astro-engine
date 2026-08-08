@@ -13,11 +13,39 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 
 class HouseSystem(str, Enum):
-    """House systems supported by AstrologyEngine.natal."""
+    """Every house system the engine supports.
+
+    Kept in step with `gbc_astro.houses.systems.HOUSE_SYSTEMS`; a test asserts
+    the two never drift, because an enum that silently lags the engine is worse
+    than none at all.
+    """
 
     placidus = "placidus"
+    koch = "koch"
+    porphyry = "porphyry"
+    campanus = "campanus"
+    regiomontanus = "regiomontanus"
+    alcabitius = "alcabitius"
+    topocentric = "topocentric"
+    morinus = "morinus"
+    meridian = "meridian"
     whole_sign = "whole_sign"
     equal = "equal"
+
+
+class Zodiac(str, Enum):
+    tropical = "tropical"
+    sidereal = "sidereal"
+
+
+class Ayanamsa(str, Enum):
+    """Named ayanamsas. Required for a sidereal chart, ignored otherwise."""
+
+    lahiri = "lahiri"
+    true_citra = "true_citra"
+    fagan_bradley = "fagan_bradley"
+    krishnamurti = "krishnamurti"
+    raman = "raman"
 
 
 class NatalChartRequest(BaseModel):
@@ -98,6 +126,27 @@ class NatalChartRequest(BaseModel):
             "omit and surface AMBIGUOUS_LOCAL_TIME when unresolved."
         ),
     )
+    zodiac: Zodiac | None = Field(
+        default=None,
+        description="Zodiac to report positions in. Defaults to tropical.",
+    )
+    ayanamsa: Ayanamsa | None = Field(
+        default=None,
+        description=(
+            "Required when zodiac is sidereal, rejected otherwise. No default is "
+            "applied: the schools disagree by over two degrees, which is enough to "
+            "move a planet into the neighbouring sign, so choosing one is the "
+            "caller's decision."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def validate_zodiac_pairing(self) -> NatalChartRequest:
+        if self.zodiac == Zodiac.sidereal and self.ayanamsa is None:
+            raise ValueError("ayanamsa is required when zodiac is 'sidereal'.")
+        if self.zodiac != Zodiac.sidereal and self.ayanamsa is not None:
+            raise ValueError("ayanamsa is only meaningful when zodiac is 'sidereal'.")
+        return self
 
     @field_validator("local_date")
     @classmethod
@@ -304,4 +353,89 @@ class EventSearchRequest(BaseModel):
     )
     aspect_angle: float | None = Field(
         default=None, description="Required for exact_aspect, in degrees."
+    )
+
+
+class TransformRequest(BaseModel):
+    """A natal subject plus, where the transform needs one, its parameter."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    natal: NatalChartRequest = Field(..., description="The natal subject.")
+    harmonic: int | None = Field(
+        default=None,
+        ge=1,
+        le=180,
+        description=(
+            "Required for the harmonic chart. Capped at 180 because positional "
+            "error multiplies by this factor."
+        ),
+    )
+
+
+class DirectionRequest(BaseModel):
+    """A natal subject and the instant to progress or direct it to."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    natal: NatalChartRequest = Field(..., description="The natal subject.")
+    target_instant: str = Field(
+        ...,
+        description="UTC instant, ISO 8601.",
+        json_schema_extra={"examples": ["2026-08-08T12:00:00Z"]},
+    )
+
+
+class RelocationRequest(BaseModel):
+    """A natal subject and the place to recast it for."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    natal: NatalChartRequest = Field(..., description="The natal subject.")
+    latitude: float = Field(..., ge=-90.0, le=90.0)
+    longitude: float = Field(..., ge=-180.0, le=180.0)
+    house_system: HouseSystem | None = Field(
+        default=None, description="Defaults to the natal chart's system."
+    )
+
+
+class PatternRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    natal: NatalChartRequest = Field(..., description="The natal subject.")
+
+
+class AstrocartographyRequest(BaseModel):
+    """A natal subject and the latitude sampling for the horizon curves."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    natal: NatalChartRequest = Field(..., description="The natal subject.")
+    bodies: list[str] | None = Field(
+        default=None, description="Defaults to every body in the chart."
+    )
+    latitude_min: float = Field(default=-66.0, ge=-90.0, le=90.0)
+    latitude_max: float = Field(default=66.0, ge=-90.0, le=90.0)
+    latitude_step: float = Field(default=2.0, gt=0.0, le=30.0)
+
+
+class EphemerisRequest(BaseModel):
+    """A body list and a time range to tabulate."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    bodies: list[str] = Field(..., min_length=1)
+    start: str = Field(..., description="UTC instant, ISO 8601.")
+    end: str = Field(..., description="UTC instant, ISO 8601.")
+    step_seconds: float = Field(
+        ..., gt=0.0, description="Step between rows, in seconds."
+    )
+    max_rows: int = Field(
+        default=10_000,
+        ge=1,
+        le=200_000,
+        description=(
+            "Refused rather than attempted beyond this. A step of seconds over a "
+            "range of centuries is almost always a mistake."
+        ),
     )

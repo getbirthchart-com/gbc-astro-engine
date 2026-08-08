@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from gbc_astro.api.dependencies import EngineDep
+from gbc_astro.api.dependencies import EngineDep, engine_for_zodiac
 from gbc_astro.api.models import ApiErrorEnvelope, NatalChartRequest
 
 logger = logging.getLogger("gbc_astro.api")
@@ -64,6 +64,11 @@ def calculate_natal(body: NatalChartRequest, engine: EngineDep) -> JSONResponse:
     """Call the existing AstrologyEngine.natal(...) and return canonical JSON."""
 
     started = time.perf_counter()
+    engine = engine_for_zodiac(
+        engine,
+        body.zodiac.value if body.zodiac else None,
+        body.ayanamsa.value if body.ayanamsa else None,
+    )
     chart = engine.natal(
         local_datetime=body.to_engine_local_datetime(),
         timezone=body.timezone,

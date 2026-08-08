@@ -10,7 +10,7 @@ from typing import Any
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from gbc_astro.api.dependencies import EngineDep
+from gbc_astro.api.dependencies import EngineDep, engine_for_zodiac
 from gbc_astro.api.models import (
     ApiErrorEnvelope,
     EventSearchRequest,
@@ -36,6 +36,11 @@ _ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
 
 
 def _natal(engine: AstrologyEngine, request: NatalChartRequest) -> NatalChart:
+    engine = engine_for_zodiac(
+        engine,
+        request.zodiac.value if request.zodiac else None,
+        request.ayanamsa.value if request.ayanamsa else None,
+    )
     return engine.natal(
         local_datetime=request.to_engine_local_datetime(),
         timezone=request.timezone,

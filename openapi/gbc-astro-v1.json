@@ -47,6 +47,139 @@
         "title": "ApiErrorEnvelope",
         "type": "object"
       },
+      "AstrocartographyRequest": {
+        "additionalProperties": false,
+        "description": "A natal subject and the latitude sampling for the horizon curves.",
+        "properties": {
+          "bodies": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to every body in the chart.",
+            "title": "Bodies"
+          },
+          "latitude_max": {
+            "default": 66.0,
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude Max",
+            "type": "number"
+          },
+          "latitude_min": {
+            "default": -66.0,
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude Min",
+            "type": "number"
+          },
+          "latitude_step": {
+            "default": 2.0,
+            "exclusiveMinimum": 0.0,
+            "maximum": 30.0,
+            "title": "Latitude Step",
+            "type": "number"
+          },
+          "natal": {
+            "$ref": "#/components/schemas/NatalChartRequest",
+            "description": "The natal subject."
+          }
+        },
+        "required": [
+          "natal"
+        ],
+        "title": "AstrocartographyRequest",
+        "type": "object"
+      },
+      "Ayanamsa": {
+        "description": "Named ayanamsas. Required for a sidereal chart, ignored otherwise.",
+        "enum": [
+          "lahiri",
+          "true_citra",
+          "fagan_bradley",
+          "krishnamurti",
+          "raman"
+        ],
+        "title": "Ayanamsa",
+        "type": "string"
+      },
+      "DirectionRequest": {
+        "additionalProperties": false,
+        "description": "A natal subject and the instant to progress or direct it to.",
+        "properties": {
+          "natal": {
+            "$ref": "#/components/schemas/NatalChartRequest",
+            "description": "The natal subject."
+          },
+          "target_instant": {
+            "description": "UTC instant, ISO 8601.",
+            "examples": [
+              "2026-08-08T12:00:00Z"
+            ],
+            "title": "Target Instant",
+            "type": "string"
+          }
+        },
+        "required": [
+          "natal",
+          "target_instant"
+        ],
+        "title": "DirectionRequest",
+        "type": "object"
+      },
+      "EphemerisRequest": {
+        "additionalProperties": false,
+        "description": "A body list and a time range to tabulate.",
+        "properties": {
+          "bodies": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Bodies",
+            "type": "array"
+          },
+          "end": {
+            "description": "UTC instant, ISO 8601.",
+            "title": "End",
+            "type": "string"
+          },
+          "max_rows": {
+            "default": 10000,
+            "description": "Refused rather than attempted beyond this. A step of seconds over a range of centuries is almost always a mistake.",
+            "maximum": 200000.0,
+            "minimum": 1.0,
+            "title": "Max Rows",
+            "type": "integer"
+          },
+          "start": {
+            "description": "UTC instant, ISO 8601.",
+            "title": "Start",
+            "type": "string"
+          },
+          "step_seconds": {
+            "description": "Step between rows, in seconds.",
+            "exclusiveMinimum": 0.0,
+            "title": "Step Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "bodies",
+          "start",
+          "end",
+          "step_seconds"
+        ],
+        "title": "EphemerisRequest",
+        "type": "object"
+      },
       "EventSearchRequest": {
         "additionalProperties": false,
         "description": "A numerical event search over a time window.",
@@ -149,9 +282,17 @@
         "type": "object"
       },
       "HouseSystem": {
-        "description": "House systems supported by AstrologyEngine.natal.",
+        "description": "Every house system the engine supports.\n\nKept in step with `gbc_astro.houses.systems.HOUSE_SYSTEMS`; a test asserts\nthe two never drift, because an enum that silently lags the engine is worse\nthan none at all.",
         "enum": [
           "placidus",
+          "koch",
+          "porphyry",
+          "campanus",
+          "regiomontanus",
+          "alcabitius",
+          "topocentric",
+          "morinus",
+          "meridian",
           "whole_sign",
           "equal"
         ],
@@ -190,6 +331,17 @@
             ],
             "description": "Optional altitude in meters.",
             "title": "Altitude M"
+          },
+          "ayanamsa": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ayanamsa"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required when zodiac is sidereal, rejected otherwise. No default is applied: the schools disagree by over two degrees, which is enough to move a planet into the neighbouring sign, so choosing one is the caller's decision."
           },
           "fold": {
             "anyOf": [
@@ -267,6 +419,17 @@
             "description": "When true, birth time is unknown. Angles/houses are omitted by the engine; local_time must be null.",
             "title": "Unknown Time",
             "type": "boolean"
+          },
+          "zodiac": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Zodiac"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Zodiac to report positions in. Defaults to tropical."
           }
         },
         "required": [
@@ -276,6 +439,20 @@
           "longitude"
         ],
         "title": "NatalChartRequest",
+        "type": "object"
+      },
+      "PatternRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "natal": {
+            "$ref": "#/components/schemas/NatalChartRequest",
+            "description": "The natal subject."
+          }
+        },
+        "required": [
+          "natal"
+        ],
+        "title": "PatternRequest",
         "type": "object"
       },
       "ReadinessResponse": {
@@ -408,6 +585,46 @@
         "title": "RelationshipRequest",
         "type": "object"
       },
+      "RelocationRequest": {
+        "additionalProperties": false,
+        "description": "A natal subject and the place to recast it for.",
+        "properties": {
+          "house_system": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HouseSystem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to the natal chart's system."
+          },
+          "latitude": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "natal": {
+            "$ref": "#/components/schemas/NatalChartRequest",
+            "description": "The natal subject."
+          }
+        },
+        "required": [
+          "natal",
+          "latitude",
+          "longitude"
+        ],
+        "title": "RelocationRequest",
+        "type": "object"
+      },
       "ReturnRequest": {
         "additionalProperties": false,
         "description": "A natal subject, a body, and the window to search for its returns.",
@@ -450,6 +667,35 @@
           "window_end"
         ],
         "title": "ReturnRequest",
+        "type": "object"
+      },
+      "TransformRequest": {
+        "additionalProperties": false,
+        "description": "A natal subject plus, where the transform needs one, its parameter.",
+        "properties": {
+          "harmonic": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required for the harmonic chart. Capped at 180 because positional error multiplies by this factor.",
+            "title": "Harmonic"
+          },
+          "natal": {
+            "$ref": "#/components/schemas/NatalChartRequest",
+            "description": "The natal subject."
+          }
+        },
+        "required": [
+          "natal"
+        ],
+        "title": "TransformRequest",
         "type": "object"
       },
       "TransitRequest": {
@@ -495,6 +741,14 @@
         ],
         "title": "TransitRequest",
         "type": "object"
+      },
+      "Zodiac": {
+        "enum": [
+          "tropical",
+          "sidereal"
+        ],
+        "title": "Zodiac",
+        "type": "string"
       }
     }
   },
@@ -557,6 +811,104 @@
         "summary": "Service readiness",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/v1/analysis/patterns": {
+      "post": {
+        "operationId": "calculate_patterns_v1_analysis_patterns_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatternRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Stelliums, grand trines, T-squares, grand crosses, yods and kites, with the widest leg orb of each."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Named configurations in a chart",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/v1/capabilities": {
+      "get": {
+        "operationId": "capabilities_v1_capabilities_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bodies, house systems and ayanamsas, with optional bodies probed rather than assumed. Ask here instead of discovering through an error."
+          }
+        },
+        "summary": "What this installation can actually calculate",
+        "tags": [
+          "data"
         ]
       }
     },
@@ -797,6 +1149,164 @@
         ]
       }
     },
+    "/v1/charts/draconic": {
+      "post": {
+        "operationId": "calculate_draconic_v1_charts_draconic_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransformRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "The node lands on exactly 0 degrees Aries by construction."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Re-zero the zodiac on the lunar node",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
+    "/v1/charts/harmonic": {
+      "post": {
+        "operationId": "calculate_harmonic_v1_charts_harmonic_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransformRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Every longitude multiplied by n. Aspects are recomputed, not carried over: collapsing an aspect family onto conjunctions is the technique."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "The harmonic-n chart",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
     "/v1/charts/natal": {
       "post": {
         "description": "Call the existing AstrologyEngine.natal(...) and return canonical JSON.",
@@ -898,6 +1408,85 @@
         ]
       }
     },
+    "/v1/charts/relocated": {
+      "post": {
+        "operationId": "calculate_relocated_v1_charts_relocated_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Body longitudes are unchanged, so aspects are identical. Only the angles, cusps and house placements differ."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Recast the same birth moment for a different place",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
     "/v1/charts/synastry": {
       "post": {
         "operationId": "calculate_synastry_v1_charts_synastry_post",
@@ -977,6 +1566,85 @@
         ]
       }
     },
+    "/v1/ephemeris": {
+      "post": {
+        "operationId": "generate_ephemeris_table_v1_ephemeris_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EphemerisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Each row is exactly what a single-instant call returns; this is a convenience, not a second calculation path."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "A table of positions over a range",
+        "tags": [
+          "data"
+        ]
+      }
+    },
     "/v1/forecast/events": {
       "post": {
         "operationId": "search_events_v1_forecast_events_post",
@@ -1051,6 +1719,85 @@
           }
         },
         "summary": "Locate ingresses, stations, exact longitudes or exact aspects",
+        "tags": [
+          "forecast"
+        ]
+      }
+    },
+    "/v1/forecast/progressions": {
+      "post": {
+        "operationId": "calculate_progressions_v1_forecast_progressions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "An ordinary chart cast for the progressed instant."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Secondary progressions: one day of motion per year of life",
         "tags": [
           "forecast"
         ]
@@ -1135,6 +1882,85 @@
         ]
       }
     },
+    "/v1/forecast/solar-arc": {
+      "post": {
+        "operationId": "calculate_solar_arc_v1_forecast_solar_arc_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "A rotation: directed points hold their natal aspects exactly, so only contacts to the natal chart carry information."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Direct every natal point by the progressed Sun's travel",
+        "tags": [
+          "forecast"
+        ]
+      }
+    },
     "/v1/forecast/transits": {
       "post": {
         "operationId": "calculate_transits_v1_forecast_transits_post",
@@ -1211,6 +2037,85 @@
         "summary": "Calculate a transit snapshot against a natal chart",
         "tags": [
           "forecast"
+        ]
+      }
+    },
+    "/v1/maps/astrocartography": {
+      "post": {
+        "operationId": "calculate_astrocartography_v1_maps_astrocartography_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AstrocartographyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "In-mundo lines: the body actually crosses the meridian or horizon. MC and IC are meridians, Ascendant and Descendant are curves."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Where each body sits on an angle across the Earth",
+        "tags": [
+          "maps"
         ]
       }
     }

@@ -221,6 +221,44 @@ Reports live in [`evidence/v0.1-validation/`](evidence/v0.1-validation/).
 Methodology: [`docs/HOUSE_REFERENCE_METHODOLOGY.md`](docs/HOUSE_REFERENCE_METHODOLOGY.md),
 [`docs/JPL_REFERENCE_METHODOLOGY.md`](docs/JPL_REFERENCE_METHODOLOGY.md).
 
+## Documentation
+
+| Topic | Document |
+|---|---|
+| HTTP API | [`docs/API.md`](docs/API.md) |
+| Frontend contract | [`docs/FRONTEND_API_HANDOFF.md`](docs/FRONTEND_API_HANDOFF.md), [`docs/FRONTEND_TRANSIT_HANDOFF.md`](docs/FRONTEND_TRANSIT_HANDOFF.md) |
+| Deployment | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), [`docs/PRODUCTION_EPHEMERIS_SETUP.md`](docs/PRODUCTION_EPHEMERIS_SETUP.md) |
+| Calculation profiles | [`docs/CALCULATION_PROFILES.md`](docs/CALCULATION_PROFILES.md) |
+| Transits | [`docs/TRANSITS.md`](docs/TRANSITS.md) |
+| Sidereal and ayanamsa | [`docs/SIDEREAL.md`](docs/SIDEREAL.md) |
+| House systems | [`docs/HOUSE_SYSTEMS.md`](docs/HOUSE_SYSTEMS.md) |
+| Draconic and harmonic | [`docs/TRANSFORMS.md`](docs/TRANSFORMS.md) |
+| Progressions and solar arc | [`docs/PROGRESSIONS.md`](docs/PROGRESSIONS.md) |
+| Chart patterns | [`docs/PATTERNS.md`](docs/PATTERNS.md) |
+| Relocation and astrocartography | [`docs/RELOCATION_AND_ACG.md`](docs/RELOCATION_AND_ACG.md) |
+| Ephemeris and asteroids | [`docs/EPHEMERIS_AND_ASTEROIDS.md`](docs/EPHEMERIS_AND_ASTEROIDS.md) |
+| Validation methodology | [`docs/JPL_REFERENCE_METHODOLOGY.md`](docs/JPL_REFERENCE_METHODOLOGY.md), [`docs/HOUSE_REFERENCE_METHODOLOGY.md`](docs/HOUSE_REFERENCE_METHODOLOGY.md) |
+| Ephemeris data | [`docs/EPHEMERIS_DATA.md`](docs/EPHEMERIS_DATA.md), [`docs/JPL_DATA.md`](docs/JPL_DATA.md) |
+
+## HTTP surface
+
+```
+GET  /health                        liveness
+GET  /ready                         readiness -- probes the ephemeris
+GET  /v1/capabilities               bodies, house systems, ayanamsas actually available
+
+POST /v1/charts/natal               tropical or sidereal, any of 11 house systems
+POST /v1/charts/{synastry,composite,davison,compatibility}
+POST /v1/charts/{draconic,harmonic,relocated}
+POST /v1/forecast/{transits,returns,events,progressions,solar-arc}
+POST /v1/analysis/patterns
+POST /v1/maps/astrocartography
+POST /v1/ephemeris
+```
+
+Every engine capability has a route, asserted by a test: a capability the
+frontend cannot reach is not implemented as far as the product is concerned.
+
 ## Current Implementation Boundary
 
 Implemented:

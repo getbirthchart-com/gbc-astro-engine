@@ -88,3 +88,14 @@ jobs:
 
       - name: Chiron Parity Gate
         run: gbc validate chiron-parity --output-dir evidence/v0.1-validation
+
+      - name: House System Gate
+        run: gbc validate house-systems --cases 24 --output-dir evidence/v1.0-house-systems
+
+      - name: Ayanamsa Parity Gate
+        run: gbc validate ayanamsa-parity --output-dir evidence/v1.0-sidereal
+
+      # A gate nobody runs is not a gate. This has already slipped twice, so the
+      # check is mechanical rather than remembered.
+      - name: Assert every validation gate is covered
+        run: python tools/check_gate_coverage.py
