@@ -55,4 +55,8 @@ class CalculationProfile:
     unknown_time_policy: str
     balance_bodies: tuple[str, ...]
     cusp_policy: str = "exact_cusp_belongs_to_following_house"
+    # Required when `zodiac` is "sidereal", ignored otherwise. No default is
+    # applied for a sidereal profile: the schools disagree by whole degrees, so
+    # picking one silently would be picking an answer.
+    ayanamsa: str | None = None
 

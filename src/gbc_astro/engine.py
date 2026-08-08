@@ -42,7 +42,7 @@ from gbc_astro.models.chart import (
 )
 from gbc_astro.models.forecast import EventSearchResult, ReturnSearchResult, TransitChart
 from gbc_astro.models.input import ChartInput
-from gbc_astro.models.position import BodyPosition
+from gbc_astro.models.position import AnglePosition, BodyPosition, HouseCusp
 from gbc_astro.models.relationship import (
     CompositeChart,
     DavisonChart,
@@ -66,6 +66,11 @@ from gbc_astro.search.events import (
     find_sign_ingresses,
     find_stations,
 )
+from gbc_astro.zodiac.sidereal import (
+    AyanamsaCalculator,
+    longitude_to_sidereal,
+    resolve_ayanamsa_profile,
+)
 
 
 class AstrologyEngine:
@@ -86,6 +91,7 @@ class AstrologyEngine:
         self.scoring_profile = scoring_profile
         self.transit_profile = transit_profile
         self._house_calculator = house_calculator
+        self._ayanamsa_calculator: AyanamsaCalculator | None = None
         self._validate_profile(profile)
 
     @property
@@ -157,6 +163,22 @@ class AstrologyEngine:
                 for body_id, body in bodies.items()
             }
 
+        ayanamsa_profile = None
+        ayanamsa_degrees = None
+        if self.profile.zodiac == "sidereal":
+            ayanamsa_profile = resolve_ayanamsa_profile(self.profile.ayanamsa or "")
+            ayanamsa_degrees = self._get_ayanamsa_calculator().value(
+                time_norm.julian_day, ayanamsa_profile
+            )
+            bodies = {
+                body_id: _to_sidereal_body(body, ayanamsa_degrees)
+                for body_id, body in bodies.items()
+            }
+            if house_calculation is not None:
+                house_calculation = _to_sidereal_geometry(
+                    house_calculation, ayanamsa_degrees
+                )
+
         derived = self._calculate_derived(bodies, house_calculation)
         aspects = calculate_aspects(bodies, self.profile.aspect_profile)
         meta = ChartMeta(
@@ -173,6 +195,9 @@ class AstrologyEngine:
             house_algorithm_version=(
                 house_calculation.algorithm_version if house_calculation else None
             ),
+            ayanamsa=ayanamsa_profile.id if ayanamsa_profile else None,
+            ayanamsa_version=ayanamsa_profile.version if ayanamsa_profile else None,
+            ayanamsa_degrees=ayanamsa_degrees,
         )
         subject = ChartSubject(
             local_datetime=chart_input.local_datetime.isoformat(),
@@ -351,6 +376,11 @@ class AstrologyEngine:
             events=events,
         )
 
+    def _get_ayanamsa_calculator(self) -> AyanamsaCalculator:
+        if self._ayanamsa_calculator is None:
+            self._ayanamsa_calculator = AyanamsaCalculator()
+        return self._ayanamsa_calculator
+
     def _get_armc_house_calculator(self) -> ArmcHouseCalculator:
         """Reuse the configured Swiss calculator so composite shares its ephemeris path."""
         calculator = self._get_house_calculator()
@@ -411,11 +441,66 @@ class AstrologyEngine:
 
     @staticmethod
     def _validate_profile(profile: CalculationProfile) -> None:
-        if profile.zodiac != "tropical":
+        if profile.zodiac not in {"tropical", "sidereal"}:
             raise InvalidCalculationProfileError(
-                "Only tropical zodiac is implemented in the current release boundary.",
-                {"zodiac": profile.zodiac},
+                "Unsupported zodiac.",
+                {"zodiac": profile.zodiac, "supported": ["tropical", "sidereal"]},
             )
+        if profile.zodiac == "sidereal":
+            # Resolving here means an unusable profile fails at construction
+            # rather than on the first chart.
+            resolve_ayanamsa_profile(profile.ayanamsa or "")
+
+
+def _to_sidereal_body(body: BodyPosition, ayanamsa: float) -> BodyPosition:
+    """Rotate one body into the sidereal zodiac.
+
+    Longitude, sign and degree change; latitude, distance, speed, retrograde and
+    house do not. A house number is a relationship between two longitudes that
+    both shift by the same amount, so it is invariant under the rotation.
+    """
+    zodiac = longitude_to_sidereal(body.longitude, ayanamsa)
+    return BodyPosition(
+        body_id=body.body_id,
+        longitude=zodiac.longitude,
+        latitude=body.latitude,
+        distance=body.distance,
+        speed_longitude=body.speed_longitude,
+        retrograde=body.retrograde,
+        sign=zodiac.sign,
+        degree_in_sign=zodiac.degree_in_sign,
+        house=body.house,
+    )
+
+
+def _to_sidereal_geometry(
+    calculation: HouseCalculation, ayanamsa: float
+) -> HouseCalculation:
+    """Rotate angles and cusps by the same ayanamsa the bodies used."""
+    angles = {}
+    for name, angle in calculation.angles.items():
+        zodiac = longitude_to_sidereal(angle.longitude, ayanamsa)
+        angles[name] = AnglePosition(
+            longitude=zodiac.longitude,
+            sign=zodiac.sign,
+            degree_in_sign=zodiac.degree_in_sign,
+        )
+    cusps = []
+    for cusp in calculation.houses:
+        zodiac = longitude_to_sidereal(cusp.cusp_longitude, ayanamsa)
+        cusps.append(
+            HouseCusp(
+                number=cusp.number,
+                cusp_longitude=zodiac.longitude,
+                sign=zodiac.sign,
+                degree_in_sign=zodiac.degree_in_sign,
+            )
+        )
+    return HouseCalculation(
+        angles=angles,
+        houses=tuple(cusps),
+        algorithm_version=calculation.algorithm_version,
+    )
 
 
 def _replace_house(body: BodyPosition, house: int) -> BodyPosition:

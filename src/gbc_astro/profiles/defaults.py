@@ -34,6 +34,21 @@ WESTERN_MODERN_V1 = CalculationProfile(
 )
 
 
+VEDIC_SIDEREAL_V1 = CalculationProfile(
+    id="vedic-sidereal-v1",
+    version="1.0.0",
+    zodiac="sidereal",
+    # Whole Sign is the near-universal choice in Vedic practice, and unlike
+    # Placidus it is defined at every latitude.
+    house_system="whole_sign",
+    node_type="true",
+    aspect_profile=MODERN_MAJOR_V1,
+    unknown_time_policy="local_date_start_with_uncertainty_warning",
+    balance_bodies=CLASSICAL_BALANCE_BODIES,
+    ayanamsa="lahiri",
+)
+
+
 RELATIONSHIP_WESTERN_V1 = RelationshipProfile(
     id="relationship-western-v1",
     version="1.0.0",

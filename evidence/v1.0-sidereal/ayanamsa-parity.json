@@ -1,0 +1,89 @@
+{
+  "driftFailures": [],
+  "engineVersion": "0.1.0",
+  "notes": [
+    "Only true Chitrapaksha has an observable definition. Lahiri, Fagan-Bradley, Krishnamurti and Raman are conventions that disagree with each other by up to 2.3 degrees, which is more than enough to move a planet into the neighbouring sign. Choosing between them is a school's decision, not a calculation, so the engine refuses to pick one for a sidereal profile that does not name it."
+  ],
+  "outsideToleranceCount": 0,
+  "precessionDrift": [
+    {
+      "arcsecPerYear": 50.27691231079497,
+      "ayanamsa": "fagan_bradley",
+      "expectedArcsecPerYear": 50.2877,
+      "withinTolerance": true
+    },
+    {
+      "arcsecPerYear": 50.27691718353724,
+      "ayanamsa": "krishnamurti",
+      "expectedArcsecPerYear": 50.2877,
+      "withinTolerance": true
+    },
+    {
+      "arcsecPerYear": 50.27691166036094,
+      "ayanamsa": "lahiri",
+      "expectedArcsecPerYear": 50.2877,
+      "withinTolerance": true
+    },
+    {
+      "arcsecPerYear": 50.27691718353724,
+      "ayanamsa": "raman",
+      "expectedArcsecPerYear": 50.2877,
+      "withinTolerance": true
+    },
+    {
+      "arcsecPerYear": 50.23024588201269,
+      "ayanamsa": "true_citra",
+      "expectedArcsecPerYear": 50.2877,
+      "withinTolerance": true
+    }
+  ],
+  "reference": {
+    "catalogue": "Hipparcos ICRS J2000 with proper motion and parallax",
+    "frame": "apparent geocentric ecliptic of date",
+    "hip": 65474,
+    "id": "hipparcos-spica-via-skyfield",
+    "independentOfSwissEphemeris": true,
+    "star": "Spica / Alpha Virginis"
+  },
+  "status": "PASS",
+  "tolerance": {
+    "precessionRateArcsecPerYear": 1.5,
+    "rationale": "True Chitrapaksha is the only ayanamsa with an observable definition, so it is the only one that can be checked absolutely. Measured agreement stays under 18 arcseconds; the threshold is 60, which is one arcminute and far below anything astrologically meaningful. Every other profile is a convention and is checked structurally instead: it must drift at the rate of general precession, because that is what an ayanamsa is.",
+    "trueCitraArcsec": 60.0
+  },
+  "trueCitraComparisons": [
+    {
+      "deltaArcsec": 17.40341432872583,
+      "engineAyanamsaDeg": 22.444752507474533,
+      "julianDay": 2415020.5,
+      "referenceAyanamsaDeg": 22.449586789232512,
+      "spicaLongitudeDeg": 202.4495867892325,
+      "utc": "1900-01-01T00:00:00Z"
+    },
+    {
+      "deltaArcsec": 3.320871274866022,
+      "engineAyanamsaDeg": 23.142277203749302,
+      "julianDay": 2433282.5,
+      "referenceAyanamsaDeg": 23.141354739506284,
+      "spicaLongitudeDeg": 203.14135473950628,
+      "utc": "1950-01-01T00:00:00Z"
+    },
+    {
+      "deltaArcsec": 13.937087762144529,
+      "engineAyanamsaDeg": 23.84001801490291,
+      "julianDay": 2451545.0,
+      "referenceAyanamsaDeg": 23.836146601635647,
+      "spicaLongitudeDeg": 203.83614660163565,
+      "utc": "2000-01-01T12:00:00Z"
+    },
+    {
+      "deltaArcsec": 5.422226762152604,
+      "engineAyanamsaDeg": 24.20290665689504,
+      "julianDay": 2461041.5,
+      "referenceAyanamsaDeg": 24.204412830995636,
+      "spicaLongitudeDeg": 204.20441283099564,
+      "utc": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "trueCitraMaxDeltaArcsec": 17.40341432872583
+}

@@ -35,6 +35,7 @@ from gbc_astro.validation.astronomy import (
     run_jpl_astronomy_parity,
     write_astronomy_parity_report,
 )
+from gbc_astro.validation.ayanamsa import run_ayanamsa_parity
 from gbc_astro.validation.chiron import (
     DEFAULT_FIXTURE_PATH as CHIRON_FIXTURE_PATH,
 )
@@ -149,6 +150,11 @@ def _build_parser() -> argparse.ArgumentParser:
     geometry.add_argument("--seed", type=int, default=42)
     geometry.add_argument("--swiss-ephe-path")
     geometry.add_argument("--output-dir", default="evidence/v0.1-validation")
+
+    ayanamsa = validate_subcommands.add_parser("ayanamsa-parity")
+    ayanamsa.add_argument("--jpl-ephemeris-path")
+    ayanamsa.add_argument("--swiss-ephe-path")
+    ayanamsa.add_argument("--output-dir", default="evidence/v1.0-sidereal")
 
     chiron = validate_subcommands.add_parser("chiron-parity")
     chiron.add_argument("--fixture-path", default=CHIRON_FIXTURE_PATH)
@@ -442,6 +448,8 @@ def _validate(args: argparse.Namespace) -> int:
         return _validate_geometry_parity(args)
     if args.validate_command == "chiron-parity":
         return _validate_chiron_parity(args)
+    if args.validate_command == "ayanamsa-parity":
+        return _validate_ayanamsa_parity(args)
     raise ValueError(f"Unsupported validation command: {args.validate_command}")
 
 
@@ -617,6 +625,75 @@ def _validate_geometry_parity(args: argparse.Namespace) -> int:
     _write_text(output_dir / "PLACIDUS_PARITY.md", _placidus_parity_markdown(report))
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["status"] == "PASS" else 1
+
+
+def _validate_ayanamsa_parity(args: argparse.Namespace) -> int:
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    report = run_ayanamsa_parity(
+        jpl_ephemeris_path=args.jpl_ephemeris_path,
+        swiss_ephemeris_path=args.swiss_ephe_path,
+    )
+    _write_json(output_dir / "ayanamsa-parity.json", report)
+    _write_text(output_dir / "AYANAMSA_PARITY.md", _ayanamsa_parity_markdown(report))
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0 if report["status"] == "PASS" else 1
+
+
+def _ayanamsa_parity_markdown(report: dict[str, Any]) -> str:
+    reference = report["reference"]
+    rows = [
+        f"| {c['utc'][:10]} | {c['spicaLongitudeDeg']:.6f} | {c['referenceAyanamsaDeg']:.6f} "
+        f"| {c['engineAyanamsaDeg']:.6f} | {c['deltaArcsec']:.3f} |"
+        for c in report["trueCitraComparisons"]
+    ]
+    drift = [
+        f"| {d['ayanamsa']} | {d['arcsecPerYear']:.4f} | "
+        f"{'PASS' if d['withinTolerance'] else 'FAIL'} |"
+        for d in report["precessionDrift"]
+    ]
+    return "\n".join(
+        (
+            "# Ayanamsa Parity",
+            "",
+            f"Status: {report['status']}",
+            "",
+            f"Reference: `{reference['id']}` -- {reference['star']} (HIP {reference['hip']})",
+            f"Catalogue: {reference['catalogue']}",
+            f"Frame: {reference['frame']}",
+            "",
+            "## True Chitrapaksha against Spica",
+            "",
+            "The only ayanamsa with an observable definition, and therefore the only",
+            "one that can be validated absolutely rather than structurally.",
+            "",
+            "| Epoch | Spica longitude | Reference ayanamsa | Engine | Delta (arcsec) |",
+            "|---|---:|---:|---:|---:|",
+            *rows,
+            "",
+            f"Max delta: {report['trueCitraMaxDeltaArcsec']:.3f} arcsec "
+            f"(tolerance {report['tolerance']['trueCitraArcsec']:.0f})",
+            f"Outside tolerance: {report['outsideToleranceCount']}",
+            "",
+            "## Precession drift",
+            "",
+            "Every ayanamsa must advance at the rate of general precession, because",
+            "that is what an ayanamsa is. IAU 2006 general precession in longitude is",
+            f"{report['tolerance'].get('expected', 50.2877)} arcsec/year.",
+            "",
+            "| Ayanamsa | Measured (arcsec/yr) | Result |",
+            "|---|---:|---|",
+            *drift,
+            "",
+            "## Notes",
+            "",
+            *[f"- {note}" for note in report["notes"]],
+            "",
+            f"Tolerance rationale: {report['tolerance']['rationale']}",
+            "",
+        )
+    )
 
 
 def _validate_chiron_parity(args: argparse.Namespace) -> int:

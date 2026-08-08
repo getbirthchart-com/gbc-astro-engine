@@ -39,8 +39,11 @@ class ChartMeta:
     aspect_profile: str
     zodiac: str
     house_algorithm_version: str | None
+    ayanamsa: str | None = None
+    ayanamsa_version: str | None = None
+    ayanamsa_degrees: float | None = None
 
-    def to_dict(self) -> dict[str, str | None]:
+    def to_dict(self) -> dict[str, str | float | None]:
         return {
             "engine": self.engine,
             "engineVersion": self.engine_version,
@@ -52,6 +55,15 @@ class ChartMeta:
             "aspectProfile": self.aspect_profile,
             "zodiac": self.zodiac,
             "houseAlgorithmVersion": self.house_algorithm_version,
+            **(
+                {
+                    "ayanamsa": self.ayanamsa,
+                    "ayanamsaVersion": self.ayanamsa_version,
+                    "ayanamsaDegrees": self.ayanamsa_degrees,
+                }
+                if self.ayanamsa is not None
+                else {}
+            ),
         }
 
 
