@@ -32,14 +32,21 @@ from gbc_astro.models.chart import (
 )
 from gbc_astro.models.input import ChartInput
 from gbc_astro.models.position import BodyPosition
-from gbc_astro.models.relationship import CompositeChart, DavisonChart, SynastryChart
+from gbc_astro.models.relationship import (
+    CompositeChart,
+    DavisonChart,
+    RelationshipScore,
+    SynastryChart,
+)
 from gbc_astro.profiles.defaults import RELATIONSHIP_WESTERN_V1, WESTERN_MODERN_V1
 from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
+from gbc_astro.profiles.scoring import SYNASTRY_SCORING_V1, ScoringProfile
 from gbc_astro.providers.base import EphemerisProvider
 from gbc_astro.providers.normalization import normalize_body_position
 from gbc_astro.providers.swiss import SwissEphemerisProvider
 from gbc_astro.relationship.composite import calculate_composite
 from gbc_astro.relationship.davison import calculate_davison
+from gbc_astro.relationship.scoring import calculate_relationship_score
 from gbc_astro.relationship.synastry import calculate_synastry
 
 
@@ -52,10 +59,12 @@ class AstrologyEngine:
         profile: CalculationProfile = WESTERN_MODERN_V1,
         house_calculator: HouseCalculator | None = None,
         relationship_profile: RelationshipProfile = RELATIONSHIP_WESTERN_V1,
+        scoring_profile: ScoringProfile = SYNASTRY_SCORING_V1,
     ) -> None:
         self._provider = provider
         self.profile = profile
         self.relationship_profile = relationship_profile
+        self.scoring_profile = scoring_profile
         self._house_calculator = house_calculator
         self._validate_profile(profile)
 
@@ -192,6 +201,20 @@ class AstrologyEngine:
         applying/separating phases are genuine rather than constructed.
         """
         return calculate_davison(chart_a, chart_b, self.relationship_profile, self.natal)
+
+    def compatibility(self, chart_a: NatalChart, chart_b: NatalChart) -> RelationshipScore:
+        """Score a pair under the configured scoring profile.
+
+        The only calculation in this engine with no independent reference: the
+        weights are an editorial opinion, not a measurement. Reported as three
+        totals rather than a percentage, and every contact that fed them is
+        listed so the figure can be shown rather than asserted.
+        """
+        return calculate_relationship_score(
+            self.synastry(chart_a, chart_b),
+            self.relationship_profile,
+            self.scoring_profile,
+        )
 
     def _get_armc_house_calculator(self) -> ArmcHouseCalculator:
         """Reuse the configured Swiss calculator so composite shares its ephemeris path."""

@@ -62,6 +62,23 @@ def calculate_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResp
 
 
 @router.post(
+    "/compatibility",
+    summary="Score a relationship under a versioned scoring profile",
+    response_description=(
+        "Three totals -- supportive, challenging and activity -- with every "
+        "contact that produced them. Deliberately not a percentage."
+    ),
+    responses=_ERROR_RESPONSES,
+)
+def calculate_compatibility(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
+    started = time.perf_counter()
+    result = engine.compatibility(_natal(engine, body.chart_a), _natal(engine, body.chart_b))
+    logger.info("compatibility_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
+    payload: dict[str, Any] = result.to_dict()
+    return JSONResponse(content=payload)
+
+
+@router.post(
     "/davison",
     summary="Calculate a Davison relationship chart",
     response_description=(

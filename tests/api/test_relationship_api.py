@@ -159,3 +159,33 @@ class DavisonRouteTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["error"]["code"], "UNKNOWN_BIRTH_TIME")
+
+
+@unittest.skipUnless(_swiss_available(), "Compatibility route needs Swiss Ephemeris data")
+class CompatibilityRouteTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = TestClient(create_app())
+
+    def test_returns_three_totals_and_a_full_breakdown(self) -> None:
+        response = self.client.post(
+            "/v1/charts/compatibility", json={"chart_a": CHART_A, "chart_b": CHART_B}
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+
+        totals = payload["totals"]
+        for key in ("supportive", "challenging", "activity", "balance"):
+            self.assertIn(key, totals)
+        self.assertEqual(len(payload["contributions"]), payload["contributionCount"])
+        self.assertEqual(payload["meta"]["scoringProfile"], "synastry-scoring-v1")
+
+    def test_publishes_no_percentage(self) -> None:
+        payload = self.client.post(
+            "/v1/charts/compatibility", json={"chart_a": CHART_A, "chart_b": CHART_B}
+        ).json()
+        self.assertNotIn("percent", payload["totals"])
+        self.assertNotIn("score", payload["totals"])
+
+    def test_route_is_published(self) -> None:
+        paths = self.client.get("/openapi.json").json()["paths"]
+        self.assertIn("/v1/charts/compatibility", paths)

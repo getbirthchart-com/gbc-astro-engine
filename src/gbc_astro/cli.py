@@ -16,7 +16,12 @@ from typing import Any
 from gbc_astro import ENGINE_VERSION, errors
 from gbc_astro.engine import AstrologyEngine
 from gbc_astro.houses.swiss import SwissHouseCalculator
-from gbc_astro.models.relationship import CompositeChart, DavisonChart, SynastryChart
+from gbc_astro.models.relationship import (
+    CompositeChart,
+    DavisonChart,
+    RelationshipScore,
+    SynastryChart,
+)
 from gbc_astro.profiles.defaults import WESTERN_MODERN_V1
 from gbc_astro.providers.swiss import SwissEphemerisProvider
 from gbc_astro.validation import (
@@ -69,6 +74,7 @@ def _build_parser() -> argparse.ArgumentParser:
         ("synastry", "Cross aspects, house overlays and angle interactions for two charts."),
         ("composite", "Shortest-arc midpoint composite of two charts."),
         ("davison", "Real chart for the midpoint moment and place of two births."),
+        ("compatibility", "Profile-scoped relationship score with full breakdown."),
     ):
         pair = subcommands.add_parser(name, help=help_text)
         for side in ("a", "b"):
@@ -195,12 +201,15 @@ def _relationship(args: argparse.Namespace) -> int:
         for side in ("a", "b")
     ]
 
+    result: SynastryChart | CompositeChart | DavisonChart | RelationshipScore
     if args.command == "synastry":
-        result: SynastryChart | CompositeChart | DavisonChart = engine.synastry(*charts)
+        result = engine.synastry(*charts)
     elif args.command == "composite":
         result = engine.composite(*charts)
-    else:
+    elif args.command == "davison":
         result = engine.davison(*charts)
+    else:
+        result = engine.compatibility(*charts)
     if args.json:
         print(result.to_json(indent=2))
     else:
@@ -287,7 +296,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.command == "natal":
             return _natal(args)
-        if args.command in {"synastry", "composite", "davison"}:
+        if args.command in {"synastry", "composite", "davison", "compatibility"}:
             return _relationship(args)
         if args.command == "benchmark":
             return _benchmark(args)

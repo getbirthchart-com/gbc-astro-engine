@@ -90,6 +90,37 @@ meaningful applying and separating phases.
 
 Geographic longitude wraps, so 179 East and 179 West average to 180, not 0.
 
+### Compatibility scoring
+
+```python
+score = engine.compatibility(a, b)
+```
+
+Three totals, never a percentage:
+
+| Field | Meaning |
+|---|---|
+| `supportive` | everything that scored positive |
+| `challenging` | everything that scored negative |
+| `activity` | their combined magnitude — **the headline figure** |
+| `balance` | the net, the less informative of the two |
+
+Activity leads because a couple with many hard contacts can be strongly bound
+while a couple with a few mild easy ones can be forgettable, and a single net
+figure erases that difference.
+
+No percentage is produced. A percentage implies an absolute scale and there is
+no defensible answer to what a hundred percent would mean.
+
+Every contact that fed the totals is listed with its aspect, orb and the three
+factors that were multiplied, and the whole scoring profile ships inside the
+result, so a score can always be shown rather than asserted.
+
+The weights are GetBirthChart's editorial opinion, not a measurement. This is
+the only calculation in the engine with **no independent reference** to validate
+against, and the result says so in its own `notes`. Changing an opinion means
+publishing a new profile version, so previously stored scores stay reproducible.
+
 ### Still not produced
 
 - **applying/separating on synastry cross aspects** — two natal charts share no
@@ -97,8 +128,8 @@ Geographic longitude wraps, so 179 East and 179 West average to 180, not 0.
   `cross_aspect_phase_policy` to `natal_speed_convention` to opt into the
   traditional reading; the chart then warns that it is a convention, not physics.
   For a physically real phase, use a Davison chart.
-- **compatibility scores** — the spec forbids a percentage in the deterministic
-  engine without a separately versioned scoring profile.
+- **house overlays are not scored** — each extra factor adds another set of
+  editorial weights, and overlays would need their own defensible table.
 
 ## CLI
 
@@ -172,13 +203,13 @@ Implemented:
 - synastry: cross aspects, two-way house overlays, angle interactions
 - composite: midpoint positions with angles and houses derived from the Midheaven
 - Davison: a real chart at the midpoint moment and place
+- compatibility scoring behind a versioned, fully published scoring profile
 - thin FastAPI HTTP adapter (`GET /health`,
-  `POST /v1/charts/{natal,synastry,composite,davison}`)
+  `POST /v1/charts/{natal,synastry,composite,davison,compatibility}`)
 - independent validation for astronomy, geometry and Chiron
 
 Not implemented (later releases):
 
-- compatibility scoring profiles
 - v0.3 transits, event search and returns
 - v1.0 progressions, solar arc, relocation, sidereal, draconic, harmonics,
   additional house systems, patterns, astrocartography, asteroids

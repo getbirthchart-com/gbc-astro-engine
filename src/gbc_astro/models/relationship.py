@@ -249,3 +249,82 @@ class DavisonChart:
 
     def to_json(self, indent: int | None = None) -> str:
         return json.dumps(self.to_dict(), indent=indent, sort_keys=True)
+
+
+@dataclass(frozen=True)
+class ScoreContribution:
+    """One scored contact, with every factor that produced it kept visible."""
+
+    kind: str
+    subject_a: str
+    subject_b: str
+    aspect_type: str
+    orb: float
+    aspect_weight: float
+    pair_weight: float
+    orb_factor: float
+    value: float
+
+    def to_dict(self) -> dict[str, float | str]:
+        return {
+            "kind": self.kind,
+            "a": self.subject_a,
+            "b": self.subject_b,
+            "type": self.aspect_type,
+            "orb": self.orb,
+            "aspectWeight": self.aspect_weight,
+            "pairWeight": self.pair_weight,
+            "orbFactor": self.orb_factor,
+            "value": self.value,
+        }
+
+
+@dataclass(frozen=True)
+class RelationshipScore:
+    """A profile-scoped relationship score, reported as three totals.
+
+    Deliberately not a percentage: a percentage implies an absolute scale, and
+    there is no defensible answer to what one hundred percent would mean.
+    """
+
+    schema_version: str
+    engine: str
+    engine_version: str
+    scoring_profile: str
+    scoring_profile_version: str
+    supportive: float
+    challenging: float
+    activity: float
+    balance: float
+    activity_band: str | None
+    balance_band: str | None
+    contribution_count: int
+    contributions: tuple[ScoreContribution, ...] = ()
+    profile_detail: dict[str, Any] = field(default_factory=dict)
+    notes: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schemaVersion": self.schema_version,
+            "meta": {
+                "engine": self.engine,
+                "engineVersion": self.engine_version,
+                "scoringProfile": self.scoring_profile,
+                "scoringProfileVersion": self.scoring_profile_version,
+            },
+            "totals": {
+                "supportive": self.supportive,
+                "challenging": self.challenging,
+                "activity": self.activity,
+                "balance": self.balance,
+                "activityBand": self.activity_band,
+                "balanceBand": self.balance_band,
+            },
+            "contributionCount": self.contribution_count,
+            "contributions": [item.to_dict() for item in self.contributions],
+            "profile": self.profile_detail,
+            "notes": list(self.notes),
+        }
+
+    def to_json(self, indent: int | None = None) -> str:
+        return json.dumps(self.to_dict(), indent=indent, sort_keys=True)

@@ -169,3 +169,76 @@ CLI `gbc davison`, HTTP `POST /v1/charts/davison`, and
 `AstrologyEngine.davison(...)`.
 
 Suite: 172 passed, 0 skipped.
+
+---
+
+# Addendum 2 — compatibility scoring
+
+`03_CALCULATION_SPEC.md` permits a score only behind a separately versioned
+scoring profile. `synastry-scoring-v1` is that profile.
+
+## What the market does
+
+Researched before choosing anything. Findings:
+
+- There is **no standard**. Almost every service keeps its formula private, and
+  two of them will disagree about the same couple.
+- The *structure* is nonetheless consistent everywhere: weight each contact by
+  aspect type, by which two bodies it joins, and by how tight the orb is.
+- The one widely cited system that publishes its reasoning is Cafe Astrology's,
+  which uses a +4..-4 per-contact scale and raw point totals, **not**
+  percentages. Its author states plainly that "none of these weights are
+  absolute" and that "total activity rather than final sum is the most telling
+  value".
+- The standard criticism is that changing one weight flips the result, which is
+  a fair description of any such system.
+
+Sources: cafeastrology.com/synastry-2.html,
+cafeastrology.com/compatibility-report-scores.html,
+en.wikipedia.org/wiki/Astrological_compatibility
+
+## What was built
+
+Structure follows the consensus. The numbers are GetBirthChart's own, declared
+in `gbc_astro/profiles/scoring.py` and shipped inside every result.
+
+Three totals, no percentage: `supportive`, `challenging`, and `activity` as the
+headline, with `balance` as the net. A percentage would imply an absolute scale
+that does not exist.
+
+Every contact appears in `contributions` with its aspect, orb, and the three
+factors multiplied to produce it, so the totals are reproducible by hand from
+the published breakdown. A test asserts exactly that.
+
+## A real bug the design caught
+
+The first implementation scored all four angles independently and produced
+`A.sun square B.ascendant` **and** `A.sun square B.descendant` as separate
+lines. The Descendant is always exactly opposite the Ascendant, so those are one
+geometric fact counted twice. Worse, a body conjunct the Descendant is opposite
+the Ascendant, so the same configuration scored `+3` and `-2` simultaneously.
+
+Angle contacts are now collapsed per axis. The surviving line is the conjunction
+when either end has one, since being conjunct the Descendant is its own thing
+rather than a weak opposition, and otherwise the axis's declared primary end.
+
+Effect on the worked example: 91 scored contacts fell to 74, and activity fell
+from 88.31 to 71.27. The difference was inflation, not signal.
+
+## Honest limits, stated in the output itself
+
+The result carries `notes` saying that the weights are an editorial opinion
+rather than a measurement, and that unlike every other calculation in this
+engine a score has **no independent reference** it can be validated against.
+Tests check the things that can be wrong regardless of opinion: totals match the
+published breakdown, no geometric fact is counted twice, the result does not
+depend on argument order, and changing the profile changes the score.
+
+House overlays are not scored in v1. Each additional factor adds another set of
+editorial weights, and overlays would need their own defensible table rather
+than an assumed one.
+
+Schema: score `1.0.0`. Surfaces: `engine.compatibility()`, `gbc compatibility`,
+`POST /v1/charts/compatibility`.
+
+Suite: 190 passed, 0 skipped.
