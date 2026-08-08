@@ -33,7 +33,7 @@ router = APIRouter(prefix="/v1/charts", tags=["charts"])
                         "schemaVersion": "1.0.0",
                         "meta": {
                             "engine": "gbc-astro",
-                            "engineVersion": "0.1.0",
+                            "engineVersion": "1.0.0",
                             "calculationProfile": "western-modern-v1",
                             "houseSystem": "placidus",
                             "zodiac": "tropical",

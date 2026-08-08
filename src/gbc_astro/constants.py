@@ -1,7 +1,7 @@
 """Stable package constants."""
 
 ENGINE_NAME = "gbc-astro"
-ENGINE_VERSION = "0.1.0"
+ENGINE_VERSION = "1.0.0"
 SCHEMA_VERSION = "1.0.0"
 SYNASTRY_SCHEMA_VERSION = "1.0.0"
 COMPOSITE_SCHEMA_VERSION = "1.1.0"
