@@ -412,11 +412,22 @@ class AstrocartographyRequest(BaseModel):
 
     natal: NatalChartRequest = Field(..., description="The natal subject.")
     bodies: list[str] | None = Field(
-        default=None, description="Defaults to every body in the chart."
+        default=None,
+        max_length=32,
+        description="Defaults to every body in the chart.",
     )
     latitude_min: float = Field(default=-66.0, ge=-90.0, le=90.0)
     latitude_max: float = Field(default=66.0, ge=-90.0, le=90.0)
-    latitude_step: float = Field(default=2.0, gt=0.0, le=30.0)
+    latitude_step: float = Field(
+        default=2.0,
+        ge=0.05,
+        le=30.0,
+        description=(
+            "Degrees between samples on the horizon curves. Floored at 0.05 "
+            "because the cost is points, not step size, and the total is also "
+            "budgeted server-side."
+        ),
+    )
 
 
 class EphemerisRequest(BaseModel):
@@ -424,7 +435,12 @@ class EphemerisRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    bodies: list[str] = Field(..., min_length=1)
+    bodies: list[str] = Field(
+        ...,
+        min_length=1,
+        max_length=32,
+        description="Bounded so one request cannot ask for thousands of lookups a row.",
+    )
     start: str = Field(..., description="UTC instant, ISO 8601.")
     end: str = Field(..., description="UTC instant, ISO 8601.")
     step_seconds: float = Field(

@@ -214,12 +214,15 @@ def calculate_astrocartography(
             {"latitudeMin": body.latitude_min, "latitudeMax": body.latitude_max},
         )
     configured, chart = _build(engine, body.natal)
-    result = configured.astrocartography(
-        chart,
-        bodies=tuple(body.bodies) if body.bodies else None,
-        latitude_range=(body.latitude_min, body.latitude_max),
-        latitude_step=body.latitude_step,
-    )
+    try:
+        result = configured.astrocartography(
+            chart,
+            bodies=tuple(body.bodies) if body.bodies else None,
+            latitude_range=(body.latitude_min, body.latitude_max),
+            latitude_step=body.latitude_step,
+        )
+    except ValueError as exc:
+        raise InvalidCalculationProfileError(str(exc), {"field": "latitude_step"}) from exc
     return _ok(result, "astrocartography", started)
 
 

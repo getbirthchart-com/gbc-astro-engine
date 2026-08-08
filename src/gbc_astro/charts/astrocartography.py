@@ -42,6 +42,13 @@ DEFAULT_LATITUDE_STEP = 2.0
 
 ANGLE_LINES = ("mc", "ic", "ascendant", "descendant")
 
+# A budget on total emitted points. Bounding the step alone is not enough: a
+# step of 0.001 over the default latitude band is 132,000 samples, and with
+# thirteen bodies on four lines that is 6.8 million points -- measured at 9.2
+# seconds and a 351 MB response from one unauthenticated request. The budget
+# bounds what actually costs, which is points, not step size.
+MAX_LINE_POINTS = 200_000
+
 
 @dataclass(frozen=True)
 class LinePoint:
@@ -132,6 +139,18 @@ def calculate_astrocartography(
         raise UnsupportedBodyError(
             "No equatorial position was supplied for these bodies.",
             {"bodies": missing},
+        )
+
+    span = latitude_range[1] - latitude_range[0]
+    if span <= 0.0:
+        raise ValueError("latitude_range must be increasing.")
+    sample_count = int(span / latitude_step) + 1
+    projected = sample_count * len(requested) * len(ANGLE_LINES)
+    if projected > MAX_LINE_POINTS:
+        raise ValueError(
+            f"This request would emit {projected} points, over the {MAX_LINE_POINTS} "
+            "budget. Widen latitude_step, narrow latitude_range, or request fewer "
+            "bodies."
         )
 
     latitudes: list[float] = []

@@ -57,6 +57,7 @@
                 "items": {
                   "type": "string"
                 },
+                "maxItems": 32,
                 "type": "array"
               },
               {
@@ -82,8 +83,9 @@
           },
           "latitude_step": {
             "default": 2.0,
-            "exclusiveMinimum": 0.0,
+            "description": "Degrees between samples on the horizon curves. Floored at 0.05 because the cost is points, not step size, and the total is also budgeted server-side.",
             "maximum": 30.0,
+            "minimum": 0.05,
             "title": "Latitude Step",
             "type": "number"
           },
@@ -139,9 +141,11 @@
         "description": "A body list and a time range to tabulate.",
         "properties": {
           "bodies": {
+            "description": "Bounded so one request cannot ask for thousands of lookups a row.",
             "items": {
               "type": "string"
             },
+            "maxItems": 32,
             "minItems": 1,
             "title": "Bodies",
             "type": "array"

@@ -38,7 +38,13 @@ def normalize_local_datetime(
         raise ValueError("local_datetime must be naive; timezone_id owns resolution.")
     try:
         tz = ZoneInfo(timezone_id)
-    except ZoneInfoNotFoundError as exc:
+    except (ZoneInfoNotFoundError, ValueError, TypeError) as exc:
+        # ZoneInfo raises ValueError, not ZoneInfoNotFoundError, for keys that
+        # look like paths -- "../../etc/passwd" among them. Python's zoneinfo
+        # blocks the traversal itself, so nothing is readable either way, but
+        # letting the ValueError escape turned a bad request into a 500 with a
+        # full stack trace in the logs. A malformed identifier is a client
+        # error whatever shape it takes.
         raise UnknownTimezoneError(
             "Timezone must be a valid IANA identifier.",
             {"timezone": timezone_id},
