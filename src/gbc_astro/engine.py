@@ -27,11 +27,14 @@ from gbc_astro.models.chart import (
 )
 from gbc_astro.models.input import ChartInput
 from gbc_astro.models.position import BodyPosition
-from gbc_astro.profiles.defaults import WESTERN_MODERN_V1
-from gbc_astro.profiles.model import CalculationProfile
+from gbc_astro.models.relationship import CompositeChart, SynastryChart
+from gbc_astro.profiles.defaults import RELATIONSHIP_WESTERN_V1, WESTERN_MODERN_V1
+from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
 from gbc_astro.providers.base import EphemerisProvider
 from gbc_astro.providers.normalization import normalize_body_position
 from gbc_astro.providers.swiss import SwissEphemerisProvider
+from gbc_astro.relationship.composite import calculate_composite
+from gbc_astro.relationship.synastry import calculate_synastry
 
 
 class AstrologyEngine:
@@ -42,9 +45,11 @@ class AstrologyEngine:
         provider: EphemerisProvider | None = None,
         profile: CalculationProfile = WESTERN_MODERN_V1,
         house_calculator: HouseCalculator | None = None,
+        relationship_profile: RelationshipProfile = RELATIONSHIP_WESTERN_V1,
     ) -> None:
         self._provider = provider
         self.profile = profile
+        self.relationship_profile = relationship_profile
         self._house_calculator = house_calculator
         self._validate_profile(profile)
 
@@ -155,6 +160,19 @@ class AstrologyEngine:
             derived=derived,
             warnings=tuple(warnings),
         )
+
+    def synastry(self, chart_a: NatalChart, chart_b: NatalChart) -> SynastryChart:
+        """Cross aspects, two-way house overlays and angle interactions.
+
+        Takes charts rather than birth data so both sides are known to have been
+        built under the same semantics; mixing zodiacs or schema versions is
+        refused rather than silently averaged.
+        """
+        return calculate_synastry(chart_a, chart_b, self.relationship_profile)
+
+    def composite(self, chart_a: NatalChart, chart_b: NatalChart) -> CompositeChart:
+        """Shortest-arc midpoint composite of two natal charts."""
+        return calculate_composite(chart_a, chart_b, self.relationship_profile)
 
     def _get_provider(self) -> EphemerisProvider:
         if self._provider is None:

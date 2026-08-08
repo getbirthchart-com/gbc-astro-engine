@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from gbc_astro.api.dependencies import API_VERSION, build_engine
 from gbc_astro.api.errors import register_exception_handlers
-from gbc_astro.api.routes import health, natal
+from gbc_astro.api.routes import health, natal, relationship
 from gbc_astro.constants import ENGINE_NAME, ENGINE_VERSION
 
 logger = logging.getLogger("gbc_astro.api")
@@ -70,6 +70,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(health.router)
     app.include_router(natal.router)
+    app.include_router(relationship.router)
     return app
 
 

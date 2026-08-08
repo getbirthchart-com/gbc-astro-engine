@@ -64,6 +64,23 @@ def _build_parser() -> argparse.ArgumentParser:
     natal.add_argument("--fold", type=int, choices=(0, 1), help="PEP 495 DST fold resolution.")
     natal.add_argument("--json", action="store_true", help="Emit canonical JSON.")
 
+    for name, help_text in (
+        ("synastry", "Cross aspects, house overlays and angle interactions for two charts."),
+        ("composite", "Shortest-arc midpoint composite of two charts."),
+    ):
+        pair = subcommands.add_parser(name, help=help_text)
+        for side in ("a", "b"):
+            pair.add_argument(f"--{side}-date", required=True, help="Local date, YYYY-MM-DD.")
+            pair.add_argument(f"--{side}-time", help="Local time, HH:MM[:SS].")
+            pair.add_argument(f"--{side}-unknown-time", action="store_true")
+            pair.add_argument(f"--{side}-timezone", required=True)
+            pair.add_argument(f"--{side}-lat", type=float, required=True)
+            pair.add_argument(f"--{side}-lng", type=float, required=True)
+            pair.add_argument(f"--{side}-fold", type=int, choices=(0, 1))
+        pair.add_argument("--house-system", default=WESTERN_MODERN_V1.house_system)
+        pair.add_argument("--swiss-ephe-path")
+        pair.add_argument("--json", action="store_true", help="Emit canonical JSON.")
+
     benchmark = subcommands.add_parser("benchmark")
     benchmark.add_argument("--cases", type=int, default=10000)
     benchmark.add_argument("--seed", type=int, default=42)
@@ -154,6 +171,53 @@ def _natal(args: argparse.Namespace) -> int:
     return 0
 
 
+def _relationship(args: argparse.Namespace) -> int:
+    if args.swiss_ephe_path:
+        engine = AstrologyEngine(
+            provider=SwissEphemerisProvider(ephemeris_path=args.swiss_ephe_path),
+            house_calculator=SwissHouseCalculator(ephemeris_path=args.swiss_ephe_path),
+        )
+    else:
+        engine = AstrologyEngine()
+
+    charts = [
+        engine.natal(
+            local_datetime=_pair_local_datetime(args, side),
+            timezone=getattr(args, f"{side}_timezone"),
+            latitude=getattr(args, f"{side}_lat"),
+            longitude=getattr(args, f"{side}_lng"),
+            house_system=args.house_system,
+            unknown_time=getattr(args, f"{side}_unknown_time"),
+            fold=getattr(args, f"{side}_fold"),
+        )
+        for side in ("a", "b")
+    ]
+
+    result = (
+        engine.synastry(charts[0], charts[1])
+        if args.command == "synastry"
+        else engine.composite(charts[0], charts[1])
+    )
+    if args.json:
+        print(result.to_json(indent=2))
+    else:
+        print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    return 0
+
+
+def _pair_local_datetime(args: argparse.Namespace, side: str) -> str:
+    date_value = getattr(args, f"{side}_date")
+    time_value = getattr(args, f"{side}_time")
+    if getattr(args, f"{side}_unknown_time"):
+        return str(date_value)
+    if not time_value:
+        raise errors.UnknownBirthTimeError(
+            f"--{side}-time is required unless --{side}-unknown-time is supplied.",
+            {"date": date_value, "chart": side.upper()},
+        )
+    return f"{date_value}T{time_value}"
+
+
 def _benchmark(args: argparse.Namespace) -> int:
     if args.cases <= 0:
         raise ValueError("--cases must be positive.")
@@ -220,6 +284,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.command == "natal":
             return _natal(args)
+        if args.command in {"synastry", "composite"}:
+            return _relationship(args)
         if args.command == "benchmark":
             return _benchmark(args)
         if args.command == "validate":

@@ -210,6 +210,44 @@
         ],
         "title": "NatalChartRequest",
         "type": "object"
+      },
+      "RelationshipRequest": {
+        "additionalProperties": false,
+        "description": "Two natal subjects for a synastry or composite chart.\n\nEach side carries the same fields as a natal request, so historical\ntimezone and DST interpretation stay with the engine on both sides.",
+        "examples": [
+          {
+            "chart_a": {
+              "latitude": 21.0285,
+              "local_date": "1992-11-03",
+              "local_time": "14:35",
+              "longitude": 105.8542,
+              "timezone": "Asia/Ho_Chi_Minh"
+            },
+            "chart_b": {
+              "latitude": 52.52,
+              "local_date": "1990-06-21",
+              "local_time": "08:20",
+              "longitude": 13.405,
+              "timezone": "Europe/Berlin"
+            }
+          }
+        ],
+        "properties": {
+          "chart_a": {
+            "$ref": "#/components/schemas/NatalChartRequest",
+            "description": "First subject."
+          },
+          "chart_b": {
+            "$ref": "#/components/schemas/NatalChartRequest",
+            "description": "Second subject."
+          }
+        },
+        "required": [
+          "chart_a",
+          "chart_b"
+        ],
+        "title": "RelationshipRequest",
+        "type": "object"
       }
     }
   },
@@ -240,6 +278,85 @@
         "summary": "Service health",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/v1/charts/composite": {
+      "post": {
+        "operationId": "calculate_composite_v1_charts_composite_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Canonical composite JSON: shortest-arc midpoint positions, with the methodology named under meta and any ambiguity reported in warnings."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Calculate a composite chart",
+        "tags": [
+          "charts"
         ]
       }
     },
@@ -339,6 +456,85 @@
           }
         },
         "summary": "Calculate a natal chart",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
+    "/v1/charts/synastry": {
+      "post": {
+        "operationId": "calculate_synastry_v1_charts_synastry_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Canonical synastry JSON: cross aspects, two-way house overlays and angle interactions, returned directly rather than wrapped."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Calculate a synastry chart",
         "tags": [
           "charts"
         ]

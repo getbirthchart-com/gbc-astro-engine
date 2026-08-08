@@ -11,22 +11,37 @@ from gbc_astro.models.position import BodyPosition
 from gbc_astro.profiles.model import AspectProfile, AspectRule
 
 
+def match_aspect_rule(
+    separation: float,
+    profile: AspectProfile,
+) -> tuple[AspectRule, float] | None:
+    """Return the tightest profile rule that `separation` satisfies, with its orb.
+
+    Shared by natal aspects and the relationship module so both classify against
+    the same profile with identical tie-breaking.
+    """
+    best_rule: AspectRule | None = None
+    best_orb: float | None = None
+    for rule in profile.rules:
+        orb = abs(separation - rule.exact_angle)
+        if orb <= rule.orb and (best_orb is None or orb < best_orb):
+            best_rule = rule
+            best_orb = orb
+    if best_rule is None or best_orb is None:
+        return None
+    return best_rule, best_orb
+
+
 def classify_aspect(
     body_a: BodyPosition,
     body_b: BodyPosition,
     profile: AspectProfile,
 ) -> Aspect | None:
     actual_angle = shortest_angular_distance(body_a.longitude, body_b.longitude)
-    best_rule: AspectRule | None = None
-    best_orb: float | None = None
-    for rule in profile.rules:
-        orb = abs(actual_angle - rule.exact_angle)
-        if orb <= rule.orb and (best_orb is None or orb < best_orb):
-            best_rule = rule
-            best_orb = orb
-
-    if best_rule is None or best_orb is None:
+    matched = match_aspect_rule(actual_angle, profile)
+    if matched is None:
         return None
+    best_rule, best_orb = matched
 
     phase = _aspect_phase(
         body_a,

@@ -63,13 +63,15 @@ A release cannot be called production-ready until every required box is checked 
 
 ## v0.2 Relationship DoD
 
-- [ ] synastry cross aspects
-- [ ] house overlays both directions
-- [ ] angle interactions
-- [ ] composite shortest-arc midpoint correctness
-- [ ] 0/360 composite regression cases
-- [ ] schemas versioned
-- [ ] tests/golden references
+- [x] synastry cross aspects
+- [x] house overlays both directions
+- [x] angle interactions
+- [x] composite shortest-arc midpoint correctness
+- [x] 0/360 composite regression cases
+- [x] schemas versioned
+- [x] tests/golden references
+
+Evidence: `evidence/v0.2-relationship/TASK_RESULT.md`.
 
 ---
 

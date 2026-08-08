@@ -188,3 +188,38 @@ class ApiErrorBody(BaseModel):
 
 class ApiErrorEnvelope(BaseModel):
     error: ApiErrorBody
+
+
+class RelationshipRequest(BaseModel):
+    """Two natal subjects for a synastry or composite chart.
+
+    Each side carries the same fields as a natal request, so historical
+    timezone and DST interpretation stay with the engine on both sides.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "examples": [
+                {
+                    "chart_a": {
+                        "local_date": "1992-11-03",
+                        "local_time": "14:35",
+                        "timezone": "Asia/Ho_Chi_Minh",
+                        "latitude": 21.0285,
+                        "longitude": 105.8542,
+                    },
+                    "chart_b": {
+                        "local_date": "1990-06-21",
+                        "local_time": "08:20",
+                        "timezone": "Europe/Berlin",
+                        "latitude": 52.52,
+                        "longitude": 13.405,
+                    },
+                }
+            ]
+        },
+    )
+
+    chart_a: NatalChartRequest = Field(..., description="First subject.")
+    chart_b: NatalChartRequest = Field(..., description="Second subject.")

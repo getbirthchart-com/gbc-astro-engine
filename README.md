@@ -50,6 +50,31 @@ chart = engine.natal(
 print(chart.to_json(indent=2))
 ```
 
+## Relationship charts (v0.2)
+
+```python
+a = engine.natal("1992-11-03T14:35:00", "Asia/Ho_Chi_Minh", 21.0285, 105.8542)
+b = engine.natal("1990-06-21T08:20:00", "Europe/Berlin", 52.52, 13.405)
+
+synastry = engine.synastry(a, b)   # cross aspects, house overlays, angle contacts
+composite = engine.composite(a, b) # shortest-arc midpoint positions
+```
+
+Both take already-calculated charts, so the two sides are known to share zodiac
+and schema semantics; mixing them is refused rather than silently averaged.
+
+Three things are deliberately not produced, each with a warning saying so:
+
+- **applying/separating on cross aspects** — two natal charts share no timeline,
+  so `phase` is always `indeterminate`
+- **composite houses** — deriving cusps needs a reference time and place a
+  composite chart does not have
+- **compatibility scores** — the spec forbids a percentage in the deterministic
+  engine without a separately versioned scoring profile
+
+Composite angles are produced but flagged: they are independent midpoints, so
+they need not hold the geometric relationship a real chart's angles do.
+
 ## CLI
 
 ```bash
@@ -119,12 +144,14 @@ Implemented:
 - aspect profile/classification/applying-separating logic
 - deterministic derived natal primitives
 - canonical JSON serialization
-- thin FastAPI HTTP adapter (`GET /health`, `POST /v1/charts/natal`, OpenAPI)
-- independent validation for both astronomy and geometry
+- synastry: cross aspects, two-way house overlays, angle interactions
+- composite: shortest-arc midpoint positions and angles
+- thin FastAPI HTTP adapter (`GET /health`, `POST /v1/charts/{natal,synastry,composite}`)
+- independent validation for astronomy, geometry and Chiron
 
 Not implemented (later releases):
 
-- v0.2 synastry, composite and relationship charts
+- Davison relationship charts and composite house systems
 - v0.3 transits, event search and returns
 - v1.0 progressions, solar arc, relocation, sidereal, draconic, harmonics,
   additional house systems, patterns, astrocartography, asteroids
