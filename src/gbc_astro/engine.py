@@ -23,6 +23,7 @@ from gbc_astro.derived.balances import (
     quadrant_counts,
 )
 from gbc_astro.derived.moon_phase import calculate_moon_phase
+from gbc_astro.derived.patterns import ChartPattern, find_patterns
 from gbc_astro.errors import InvalidCalculationProfileError, UnsupportedBodyError
 from gbc_astro.forecast.returns import calculate_returns
 from gbc_astro.forecast.transits import calculate_transits
@@ -53,6 +54,7 @@ from gbc_astro.models.relationship import (
 from gbc_astro.models.transform import TransformedChart
 from gbc_astro.profiles.defaults import RELATIONSHIP_WESTERN_V1, WESTERN_MODERN_V1
 from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
+from gbc_astro.profiles.pattern import PATTERN_PROFILE_V1, PatternProfile
 from gbc_astro.profiles.progression import (
     SECONDARY_PROGRESSION_V1,
     SOLAR_ARC_V1,
@@ -99,6 +101,7 @@ class AstrologyEngine:
         transit_profile: TransitProfile = TRANSIT_PROFILE_V1,
         progression_profile: ProgressionProfile = SECONDARY_PROGRESSION_V1,
         solar_arc_profile: ProgressionProfile = SOLAR_ARC_V1,
+        pattern_profile: PatternProfile = PATTERN_PROFILE_V1,
     ) -> None:
         self._provider = provider
         self.profile = profile
@@ -107,6 +110,7 @@ class AstrologyEngine:
         self.transit_profile = transit_profile
         self.progression_profile = progression_profile
         self.solar_arc_profile = solar_arc_profile
+        self.pattern_profile = pattern_profile
         self._house_calculator = house_calculator
         self._ayanamsa_calculator: AyanamsaCalculator | None = None
         self._validate_profile(profile)
@@ -439,6 +443,14 @@ class AstrologyEngine:
         return calculate_solar_arc(
             chart, target, self.profile, self.solar_arc_profile, self.natal
         )
+
+    def patterns(self, chart: NatalChart) -> tuple[ChartPattern, ...]:
+        """Named configurations in a chart, under the versioned pattern profile.
+
+        Detection is geometric, not heuristic: a grand trine is three bodies
+        mutually trine within the profile's orb, or it is not reported.
+        """
+        return find_patterns(chart.bodies, self.pattern_profile)
 
     def _get_ayanamsa_calculator(self) -> AyanamsaCalculator:
         if self._ayanamsa_calculator is None:
