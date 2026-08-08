@@ -350,3 +350,56 @@ def _assert_monotonic(cusps: tuple[float, ...]) -> None:
         total += step
     if abs(total - 360.0) > 1e-6:
         raise GeometryUndefinedError(f"Cusp sequence does not close the circle: {total:.6f} deg.")
+
+
+def porphyry_cusps(ascendant: float, midheaven: float) -> tuple[float, ...]:
+    """Porphyry cusps from the angles alone.
+
+    Definition: trisect the ecliptic arc from the Midheaven to the Ascendant,
+    and the arc from the Ascendant to the Imum Coeli. Nothing else is involved,
+    which is why Porphyry is defined at every latitude and why it can be derived
+    here without any spherical trigonometry at all.
+    """
+    upper = (ascendant - midheaven) % 360.0
+    lower = ((midheaven + 180.0) - ascendant) % 360.0
+    first_six = {
+        10: midheaven,
+        11: _norm360(midheaven + upper / 3.0),
+        12: _norm360(midheaven + 2.0 * upper / 3.0),
+        1: ascendant,
+        2: _norm360(ascendant + lower / 3.0),
+        3: _norm360(ascendant + 2.0 * lower / 3.0),
+    }
+    cusps = dict(first_six)
+    for number, longitude in first_six.items():
+        opposite = number + 6 if number <= 6 else number - 6
+        cusps[opposite] = _norm360(longitude + 180.0)
+    return tuple(cusps[number] for number in range(1, 13))
+
+
+def meridian_cusps(ramc: float, obliquity: float) -> tuple[float, ...]:
+    """Meridian (axial rotation) cusps.
+
+    Definition: cusp k is the ecliptic point whose right ascension is
+    `RAMC + 30 * (k - 10)`. Cusp 10 is therefore the Midheaven by construction,
+    and the horizon plays no part -- which is why cusp 1 is the East Point
+    rather than the Ascendant.
+    """
+    cusps: list[float] = []
+    for number in range(1, 13):
+        right_ascension = _norm360(ramc + 30.0 * (number - 10))
+        radians = math.radians(right_ascension)
+        longitude = _norm360(
+            math.degrees(
+                math.atan2(
+                    math.sin(radians),
+                    math.cos(radians) * math.cos(math.radians(obliquity)),
+                )
+            )
+        )
+        # atan2 resolves the quadrant, but assert the defining property rather
+        # than trusting it: the opposing point has RA + 180.
+        if abs(_norm180(_right_ascension(longitude, obliquity) - right_ascension)) > 1e-6:
+            longitude = _norm360(longitude + 180.0)
+        cusps.append(longitude)
+    return tuple(cusps)

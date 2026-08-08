@@ -33,6 +33,7 @@ from gbc_astro.houses.base import (
     assign_house,
 )
 from gbc_astro.houses.swiss import SwissHouseCalculator
+from gbc_astro.houses.systems import HOUSE_SYSTEMS, SUPPORTED_HOUSE_SYSTEMS
 from gbc_astro.models.chart import (
     ChartMeta,
     ChartSubject,
@@ -124,10 +125,13 @@ class AstrologyEngine:
             fold=chart_input.fold,
         )
         current_house_system = (house_system or self.profile.house_system).lower()
-        if current_house_system not in {"whole_sign", "equal", "placidus"}:
+        if current_house_system not in HOUSE_SYSTEMS:
             raise InvalidCalculationProfileError(
                 "Unsupported house system.",
-                {"houseSystem": current_house_system},
+                {
+                    "houseSystem": current_house_system,
+                    "supported": list(SUPPORTED_HOUSE_SYSTEMS),
+                },
             )
 
         warnings: list[WarningMessage] = []
@@ -178,6 +182,22 @@ class AstrologyEngine:
                 house_calculation = _to_sidereal_geometry(
                     house_calculation, ayanamsa_degrees
                 )
+
+        if house_calculation is not None and house_calculation.sequence_degenerate:
+            warnings.append(
+                WarningMessage(
+                    code="HOUSE_SEQUENCE_DEGENERATE",
+                    severity="warning",
+                    message=(
+                        f"The {current_house_system} cusps do not advance in zodiacal "
+                        "order at this latitude. Beyond the polar circles quadrant "
+                        "systems invert, and the result is mathematically defined but "
+                        "astrologically meaningless. House assignments should not be "
+                        "relied on. Whole Sign and Equal remain well-formed here."
+                    ),
+                    fields_affected=("houses", "bodies.*.house"),
+                )
+            )
 
         derived = self._calculate_derived(bodies, house_calculation)
         aspects = calculate_aspects(bodies, self.profile.aspect_profile)

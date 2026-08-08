@@ -16,6 +16,12 @@ class HouseCalculation:
     angles: dict[str, AnglePosition]
     houses: tuple[HouseCusp, ...]
     algorithm_version: str
+    # True when the cusps do not advance in zodiacal order. Beyond the polar
+    # circles quadrant systems such as Campanus and Regiomontanus invert: cusp 2
+    # falls behind cusp 1 and the houses run backwards. The result is
+    # mathematically defined and astrologically meaningless, so it is flagged
+    # rather than returned as though it were an ordinary chart.
+    sequence_degenerate: bool = False
 
 
 class HouseCalculator(Protocol):
@@ -73,6 +79,26 @@ def build_house_cusps(cusp_longitudes: tuple[float, ...]) -> tuple[HouseCusp, ..
             )
         )
     return tuple(cusps)
+
+
+def is_sequence_degenerate(cusps: tuple[HouseCusp, ...]) -> bool:
+    """True when the twelve cusps do not advance in zodiacal order.
+
+    A well-formed set steps forward by less than half the circle at each cusp
+    and closes at exactly 360 degrees. Beyond the polar circles that breaks
+    down for some quadrant systems.
+    """
+    if len(cusps) != 12:
+        return True
+    total = 0.0
+    for index in range(12):
+        step = (
+            cusps[(index + 1) % 12].cusp_longitude - cusps[index].cusp_longitude
+        ) % 360.0
+        if step <= 0.0 or step >= 180.0:
+            return True
+        total += step
+    return abs(total - 360.0) > 1.0e-6
 
 
 def assign_house(

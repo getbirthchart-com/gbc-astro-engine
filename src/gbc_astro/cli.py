@@ -52,6 +52,10 @@ from gbc_astro.validation.geometry_parity import (
     generate_geometry_cases,
     run_geometry_parity,
 )
+from gbc_astro.validation.houses_parity import (
+    generate_house_cases,
+    run_house_system_parity,
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -150,6 +154,11 @@ def _build_parser() -> argparse.ArgumentParser:
     geometry.add_argument("--seed", type=int, default=42)
     geometry.add_argument("--swiss-ephe-path")
     geometry.add_argument("--output-dir", default="evidence/v0.1-validation")
+
+    house_systems = validate_subcommands.add_parser("house-systems")
+    house_systems.add_argument("--cases", type=int, default=96)
+    house_systems.add_argument("--swiss-ephe-path")
+    house_systems.add_argument("--output-dir", default="evidence/v1.0-house-systems")
 
     ayanamsa = validate_subcommands.add_parser("ayanamsa-parity")
     ayanamsa.add_argument("--jpl-ephemeris-path")
@@ -450,6 +459,8 @@ def _validate(args: argparse.Namespace) -> int:
         return _validate_chiron_parity(args)
     if args.validate_command == "ayanamsa-parity":
         return _validate_ayanamsa_parity(args)
+    if args.validate_command == "house-systems":
+        return _validate_house_systems(args)
     raise ValueError(f"Unsupported validation command: {args.validate_command}")
 
 
@@ -625,6 +636,93 @@ def _validate_geometry_parity(args: argparse.Namespace) -> int:
     _write_text(output_dir / "PLACIDUS_PARITY.md", _placidus_parity_markdown(report))
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["status"] == "PASS" else 1
+
+
+def _validate_house_systems(args: argparse.Namespace) -> int:
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    report = run_house_system_parity(
+        cases=generate_house_cases(args.cases),
+        swiss_ephemeris_path=args.swiss_ephe_path,
+    )
+    _write_json(output_dir / "house-systems.json", report)
+    _write_text(output_dir / "HOUSE_SYSTEMS.md", _house_systems_markdown(report))
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0 if report["status"] == "PASS" else 1
+
+
+def _house_systems_markdown(report: dict[str, Any]) -> str:
+    absolute = [
+        f"| {system} | {data['compared']} | {data['maxDeltaDeg'] * 3600.0:.5f} | "
+        f"{data['outside']} |"
+        for system, data in report["independentlyValidated"].items()
+    ]
+    catalogue = [
+        f"| {profile['id']} | {profile['name']} | {profile['swissephCode']} | "
+        f"{'yes' if profile['quadrantBased'] else 'no'} | "
+        f"{'yes' if profile['definedAtAllLatitudes'] else 'no'} |"
+        for profile in report["systems"].values()
+    ]
+    return "\n".join(
+        (
+            "# House Systems",
+            "",
+            f"Status: {report['status']}",
+            "",
+            f"Cases: {report['caseCount']}",
+            f"Tolerance: {report['toleranceDeg']:.1e} deg",
+            "",
+            "## Supported systems",
+            "",
+            "| id | Name | Swiss code | Quadrant | Defined at all latitudes |",
+            "|---|---|---|---|---|",
+            *catalogue,
+            "",
+            "## Independently validated",
+            "",
+            "Re-derived from their definitions without Swiss Ephemeris, then compared.",
+            "",
+            "| System | Compared | Max delta (arcsec) | Outside tolerance |",
+            "|---|---:|---:|---:|",
+            *absolute,
+            "",
+            "## Structurally validated only",
+            "",
+            f"{', '.join(report['structurallyValidatedOnly'])}",
+            "",
+            "No independent reference exists for these in this engine. Calling them",
+            "validated because Swiss Ephemeris produced them would be validating a",
+            "thing against itself, so they are held to invariants instead: twelve",
+            "cusps in zodiacal order closing the circle, cusp 1 on the Ascendant and",
+            "cusp 10 on the Midheaven for quadrant systems, axial symmetry, and every",
+            "longitude landing in exactly one house.",
+            "",
+            f"Invariant violations: "
+            f"{sum(len(d['failures']) for d in report['structural'].values())}",
+            "",
+            "## Polar behaviour",
+            "",
+            f"Refusals (undefined beyond the polar circles): {report['polarRefusals']}",
+            "",
+            f"Degenerate sequences, flagged: {report['degenerateSequences']}",
+            "",
+            f"Unexpected degeneracy inside the polar circles: "
+            f"{len(report['unexpectedDegeneracy'])}",
+            "",
+            "Placidus and Koch have no solution beyond the polar circles and are",
+            "refused there. Campanus, Regiomontanus and Topocentric do not refuse --",
+            "they invert, returning cusps that run backwards. That is what the",
+            "geometry does, so the chart is returned with a HOUSE_SEQUENCE_DEGENERATE",
+            "warning rather than presented as ordinary. Degeneracy inside the polar",
+            "circles would be a defect and fails this gate.",
+            "",
+            "## Notes",
+            "",
+            *[f"- {note}" for note in report["notes"]],
+            "",
+        )
+    )
 
 
 def _validate_ayanamsa_parity(args: argparse.Namespace) -> int:

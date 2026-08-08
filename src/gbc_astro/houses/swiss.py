@@ -5,14 +5,23 @@ from __future__ import annotations
 import os
 from importlib import import_module
 from types import ModuleType
+from typing import TYPE_CHECKING, cast
 
 from gbc_astro.astronomy.circular import normalize_longitude
 from gbc_astro.errors import HouseCalculationUnavailableError, ProviderDependencyError
-from gbc_astro.houses.base import HouseCalculation, build_house_cusps
+from gbc_astro.houses.base import (
+    HouseCalculation,
+    build_house_cusps,
+    is_sequence_degenerate,
+)
 from gbc_astro.houses.equal import equal_cusp_longitudes
+from gbc_astro.houses.systems import HOUSE_SYSTEMS, LOCALLY_DERIVED
 from gbc_astro.houses.whole_sign import whole_sign_cusp_longitudes
 from gbc_astro.models.position import AnglePosition
 from gbc_astro.zodiac.tropical import longitude_to_tropical
+
+if TYPE_CHECKING:
+    from gbc_astro.houses.systems import HouseSystemProfile
 
 
 def _load_swisseph() -> ModuleType:
@@ -41,20 +50,13 @@ class SwissHouseCalculator:
         longitude: float,
         house_system: str,
     ) -> HouseCalculation:
-        system = house_system.lower()
-        if system not in {"whole_sign", "equal", "placidus"}:
-            raise HouseCalculationUnavailableError(
-                "Unsupported house system.",
-                {"houseSystem": house_system},
-            )
-
-        reference_system = "P" if system == "placidus" else "E"
+        system, profile = _resolve_system(house_system)
         try:
             cusps_raw, ascmc = self._swe.houses_ex(
                 julian_day,
                 latitude,
                 longitude,
-                reference_system.encode("ascii"),
+                _provider_code(system, profile).encode("ascii"),
             )
         except Exception as exc:
             raise HouseCalculationUnavailableError(
@@ -69,12 +71,7 @@ class SwissHouseCalculator:
 
         asc = normalize_longitude(float(ascmc[0]))
         mc = normalize_longitude(float(ascmc[1]))
-        if system == "whole_sign":
-            cusp_longitudes = whole_sign_cusp_longitudes(asc)
-        elif system == "equal":
-            cusp_longitudes = equal_cusp_longitudes(asc)
-        else:
-            cusp_longitudes = tuple(normalize_longitude(float(value)) for value in cusps_raw[:12])
+        cusp_longitudes = _cusps_for(system, asc, cusps_raw)
 
         angles = {
             "ascendant": _angle(asc),
@@ -82,10 +79,12 @@ class SwissHouseCalculator:
             "descendant": _angle(asc + 180.0),
             "ic": _angle(mc + 180.0),
         }
+        cusps = build_house_cusps(cusp_longitudes)
         return HouseCalculation(
             angles=angles,
-            houses=build_house_cusps(cusp_longitudes),
+            houses=cusps,
             algorithm_version=f"swisseph:{_version(self._swe)}:{system}",
+            sequence_degenerate=is_sequence_degenerate(cusps),
         )
 
 
@@ -115,20 +114,13 @@ class SwissHouseCalculator:
         beyond the polar circles Placidus has no solution and this raises rather
         than substituting another house system.
         """
-        system = house_system.lower()
-        if system not in {"whole_sign", "equal", "placidus"}:
-            raise HouseCalculationUnavailableError(
-                "Unsupported house system.",
-                {"houseSystem": house_system},
-            )
-
-        reference_system = "P" if system == "placidus" else "E"
+        system, profile = _resolve_system(house_system)
         try:
             cusps_raw, ascmc = self._swe.houses_armc(
                 normalize_longitude(armc),
                 latitude,
                 obliquity,
-                reference_system.encode("ascii"),
+                _provider_code(system, profile).encode("ascii"),
             )
         except Exception as exc:
             raise HouseCalculationUnavailableError(
@@ -143,12 +135,7 @@ class SwissHouseCalculator:
 
         asc = normalize_longitude(float(ascmc[0]))
         mc = normalize_longitude(float(ascmc[1]))
-        if system == "whole_sign":
-            cusp_longitudes = whole_sign_cusp_longitudes(asc)
-        elif system == "equal":
-            cusp_longitudes = equal_cusp_longitudes(asc)
-        else:
-            cusp_longitudes = tuple(normalize_longitude(float(value)) for value in cusps_raw[:12])
+        cusp_longitudes = _cusps_for(system, asc, cusps_raw)
 
         return HouseCalculation(
             angles={
@@ -159,7 +146,42 @@ class SwissHouseCalculator:
             },
             houses=build_house_cusps(cusp_longitudes),
             algorithm_version=f"swisseph:{_version(self._swe)}:{system}:armc",
+            sequence_degenerate=is_sequence_degenerate(build_house_cusps(cusp_longitudes)),
         )
+
+
+def _resolve_system(house_system: str) -> tuple[str, HouseSystemProfile]:
+    system = house_system.lower()
+    profile = HOUSE_SYSTEMS.get(system)
+    if profile is None:
+        raise HouseCalculationUnavailableError(
+            "Unsupported house system.",
+            {"houseSystem": house_system, "supported": sorted(HOUSE_SYSTEMS)},
+        )
+    return system, profile
+
+
+def _provider_code(system: str, profile: HouseSystemProfile) -> str:
+    """Which code to hand Swiss Ephemeris.
+
+    Whole Sign and Equal cusps are derived locally from the Ascendant, so the
+    provider is only asked for the angles. Requesting Equal for both keeps that
+    call identical and makes the derived-versus-provider boundary explicit.
+    """
+    if system in LOCALLY_DERIVED:
+        return "E"
+    return profile.swisseph_code
+
+
+def _cusps_for(
+    system: str, ascendant: float, provider_cusps: object
+) -> tuple[float, ...]:
+    if system == "whole_sign":
+        return whole_sign_cusp_longitudes(ascendant)
+    if system == "equal":
+        return equal_cusp_longitudes(ascendant)
+    values = cast("list[float]", provider_cusps)
+    return tuple(normalize_longitude(float(value)) for value in values[:12])
 
 
 def _angle(longitude: float) -> AnglePosition:

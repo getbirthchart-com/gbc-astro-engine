@@ -1,0 +1,214 @@
+{
+  "caseCount": 96,
+  "degenerateSequences": {
+    "campanus": 4,
+    "regiomontanus": 4,
+    "topocentric": 5
+  },
+  "engineVersion": "0.1.0",
+  "houseAssignmentFailures": [],
+  "independentlyValidated": {
+    "equal": {
+      "compared": 96,
+      "maxDeltaDeg": 0.0,
+      "outside": 0
+    },
+    "meridian": {
+      "compared": 82,
+      "maxDeltaDeg": 5.136608400846399e-07,
+      "outside": 0
+    },
+    "placidus": {
+      "compared": 81,
+      "maxDeltaDeg": 1.6115731846788606e-06,
+      "outside": 0
+    },
+    "porphyry": {
+      "compared": 82,
+      "maxDeltaDeg": 1.6115731846788606e-06,
+      "outside": 0
+    },
+    "whole_sign": {
+      "compared": 96,
+      "maxDeltaDeg": 0.0,
+      "outside": 0
+    }
+  },
+  "notes": [
+    "Placidus, Porphyry and Meridian are re-derived from their definitions without Swiss Ephemeris and compared numerically. Whole Sign and Equal are derived by the engine from the Ascendant and checked against that derivation.",
+    "Koch, Campanus, Regiomontanus, Alcabitius, Topocentric and Morinus have no independent reference here and are held to structural invariants only. Calling them validated because Swiss Ephemeris produced them would be validating a thing against itself.",
+    "Placidus and Koch are undefined beyond the polar circles. The engine refuses them there; it never substitutes a system that happens to be defined.",
+    "Campanus, Regiomontanus and Topocentric do not refuse beyond the polar circles; they invert, returning cusps that run backwards. That is what the geometry does, so the engine returns them with a HOUSE_SEQUENCE_DEGENERATE warning rather than pretending the chart is ordinary. Degeneracy inside the polar circles would be a defect and fails the gate."
+  ],
+  "polarRefusals": {
+    "alcabitius": 0,
+    "campanus": 0,
+    "equal": 0,
+    "koch": 15,
+    "meridian": 0,
+    "morinus": 0,
+    "placidus": 15,
+    "porphyry": 0,
+    "regiomontanus": 0,
+    "topocentric": 0,
+    "whole_sign": 0
+  },
+  "status": "PASS",
+  "structural": {
+    "alcabitius": {
+      "checked": 96,
+      "failures": []
+    },
+    "campanus": {
+      "checked": 96,
+      "failures": []
+    },
+    "equal": {
+      "checked": 96,
+      "failures": []
+    },
+    "koch": {
+      "checked": 81,
+      "failures": []
+    },
+    "meridian": {
+      "checked": 96,
+      "failures": []
+    },
+    "morinus": {
+      "checked": 96,
+      "failures": []
+    },
+    "placidus": {
+      "checked": 81,
+      "failures": []
+    },
+    "porphyry": {
+      "checked": 96,
+      "failures": []
+    },
+    "regiomontanus": {
+      "checked": 96,
+      "failures": []
+    },
+    "topocentric": {
+      "checked": 96,
+      "failures": []
+    },
+    "whole_sign": {
+      "checked": 96,
+      "failures": []
+    }
+  },
+  "structurallyValidatedOnly": [
+    "koch",
+    "campanus",
+    "regiomontanus",
+    "alcabitius",
+    "topocentric",
+    "morinus"
+  ],
+  "systems": {
+    "alcabitius": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": true,
+      "id": "alcabitius",
+      "name": "Alcabitius",
+      "quadrantBased": true,
+      "swissephCode": "B",
+      "version": "1.0.0"
+    },
+    "campanus": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": true,
+      "id": "campanus",
+      "name": "Campanus",
+      "quadrantBased": true,
+      "swissephCode": "C",
+      "version": "1.0.0"
+    },
+    "equal": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": true,
+      "id": "equal",
+      "name": "Equal",
+      "quadrantBased": true,
+      "swissephCode": "E",
+      "version": "1.0.0"
+    },
+    "koch": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": false,
+      "id": "koch",
+      "name": "Koch",
+      "quadrantBased": true,
+      "swissephCode": "K",
+      "version": "1.0.0"
+    },
+    "meridian": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": true,
+      "id": "meridian",
+      "name": "Meridian (axial rotation)",
+      "quadrantBased": false,
+      "swissephCode": "X",
+      "version": "1.0.0"
+    },
+    "morinus": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": true,
+      "id": "morinus",
+      "name": "Morinus",
+      "quadrantBased": false,
+      "swissephCode": "M",
+      "version": "1.0.0"
+    },
+    "placidus": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": false,
+      "id": "placidus",
+      "name": "Placidus",
+      "quadrantBased": true,
+      "swissephCode": "P",
+      "version": "1.0.0"
+    },
+    "porphyry": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": true,
+      "id": "porphyry",
+      "name": "Porphyry",
+      "quadrantBased": true,
+      "swissephCode": "O",
+      "version": "1.0.0"
+    },
+    "regiomontanus": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": true,
+      "id": "regiomontanus",
+      "name": "Regiomontanus",
+      "quadrantBased": true,
+      "swissephCode": "R",
+      "version": "1.0.0"
+    },
+    "topocentric": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": true,
+      "id": "topocentric",
+      "name": "Topocentric (Polich-Page)",
+      "quadrantBased": true,
+      "swissephCode": "T",
+      "version": "1.0.0"
+    },
+    "whole_sign": {
+      "axiallySymmetric": true,
+      "definedAtAllLatitudes": true,
+      "id": "whole_sign",
+      "name": "Whole Sign",
+      "quadrantBased": false,
+      "swissephCode": "W",
+      "version": "1.0.0"
+    }
+  },
+  "toleranceDeg": 1e-05,
+  "unexpectedDegeneracy": []
+}
