@@ -80,18 +80,20 @@ midpoint Midheaven, and Davison relationship charts.
 
 ## v0.3 Forecast/Return DoD
 
-- [ ] transit snapshot
-- [ ] exact event solver
-- [ ] ingress search
-- [ ] station search
-- [ ] exact transit search
-- [ ] Solar Return
-- [ ] Lunar Return
-- [ ] planetary return
-- [ ] retrograde multi-hit support
-- [ ] solver precision documented
-- [ ] no daily-sampling masquerading as exact search
-- [ ] reference validation
+- [x] transit snapshot
+- [x] exact event solver
+- [x] ingress search
+- [x] station search
+- [x] exact transit search
+- [x] Solar Return
+- [x] Lunar Return
+- [x] planetary return
+- [x] retrograde multi-hit support
+- [x] solver precision documented
+- [x] no daily-sampling masquerading as exact search
+- [x] reference validation
+
+Evidence: `evidence/v0.3-forecast/TASK_RESULT.md`.
 
 ---
 

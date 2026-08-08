@@ -131,6 +131,41 @@ publishing a new profile version, so previously stored scores stay reproducible.
 - **house overlays are not scored** — each extra factor adds another set of
   editorial weights, and overlays would need their own defensible table.
 
+## Forecast (v0.3)
+
+```python
+transits = engine.transits(natal, datetime(2026, 8, 8, 12, tzinfo=timezone.utc))
+saturn_return = engine.returns(natal, "saturn", window_start, window_end)
+stations = engine.search_events("station", "mercury", start, end)
+```
+
+Applying and separating are **real** in a transit chart. The transiting body
+moves while the natal point does not, so there is a genuine shared timeline --
+exactly what synastry lacks.
+
+### Events are solved, never sampled
+
+`03_CALCULATION_SPEC.md` forbids implementing event search as a "closest daily
+sample", and for good reason: a daily scan is wrong by up to twelve hours and
+misses outright any event that begins and ends between two samples.
+
+Every search here is a root find -- coarse bracketing, then bisection, then
+deduplication -- and reports the precision it actually achieved, typically
+**better than 0.01 seconds**. The coarse step comes from a per-body table,
+because two roots inside one step cancel and both would be lost.
+
+### Retrograde multi-hit
+
+A return is usually not one moment. A body stationing near its natal degree
+crosses it three times, and all three are reported:
+
+```
+saturn return, natal longitude 312.1016
+  #1  2021-04-11T04:20:13Z   direct
+  #2  2021-07-05T18:00:35Z   retrograde
+  #3  2022-01-02T19:50:06Z   direct
+```
+
 ## CLI
 
 ```bash
@@ -204,13 +239,15 @@ Implemented:
 - composite: midpoint positions with angles and houses derived from the Midheaven
 - Davison: a real chart at the midpoint moment and place
 - compatibility scoring behind a versioned, fully published scoring profile
+- transits, numerical event search (ingress, station, exact longitude, exact
+  aspect) and planetary returns with retrograde multi-hit support
 - thin FastAPI HTTP adapter (`GET /health`,
-  `POST /v1/charts/{natal,synastry,composite,davison,compatibility}`)
+  `POST /v1/charts/{natal,synastry,composite,davison,compatibility}`,
+  `POST /v1/forecast/{transits,returns,events}`)
 - independent validation for astronomy, geometry and Chiron
 
 Not implemented (later releases):
 
-- v0.3 transits, event search and returns
 - v1.0 progressions, solar arc, relocation, sidereal, draconic, harmonics,
   additional house systems, patterns, astrocartography, asteroids
 

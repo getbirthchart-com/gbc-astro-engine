@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from gbc_astro.errors import (
@@ -120,3 +121,36 @@ def isoformat_z(utc_datetime: datetime) -> str:
 
     dt = utc_datetime.astimezone(timezone.utc).replace(tzinfo=None)
     return dt.isoformat(timespec="seconds") + "Z"
+
+
+def julian_day_to_datetime(julian_day: float) -> datetime:
+    """Convert a Julian Day back to a UTC datetime.
+
+    Inverse of `datetime_to_julian_day`. The numerical search engine works in
+    Julian Days because they are a continuous real line, while providers take
+    datetimes, so the boundary needs both directions.
+    """
+
+    shifted = julian_day + 0.5
+    integer_part = math.floor(shifted)
+    day_fraction = shifted - integer_part
+
+    if integer_part >= 2299161:
+        alpha = math.floor((integer_part - 1867216.25) / 36524.25)
+        integer_part += 1 + alpha - math.floor(alpha / 4)
+
+    b = integer_part + 1524
+    c = math.floor((b - 122.1) / 365.25)
+    d = math.floor(365.25 * c)
+    e = math.floor((b - d) / 30.6001)
+
+    day = b - d - math.floor(30.6001 * e)
+    month = e - 1 if e < 14 else e - 13
+    year = c - 4716 if month > 2 else c - 4715
+
+    # Round to whole microseconds so the value round-trips cleanly; Julian Days
+    # carry more precision in the fraction than datetime can represent.
+    microseconds = int(round(day_fraction * 86400.0 * 1_000_000.0))
+    return datetime(int(year), int(month), int(day), tzinfo=timezone.utc) + timedelta(
+        microseconds=microseconds
+    )

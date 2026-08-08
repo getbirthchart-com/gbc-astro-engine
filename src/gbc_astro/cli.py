@@ -9,7 +9,7 @@ import random
 import sys
 import time
 from collections.abc import Sequence
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -88,6 +88,34 @@ def _build_parser() -> argparse.ArgumentParser:
         pair.add_argument("--house-system", default=WESTERN_MODERN_V1.house_system)
         pair.add_argument("--swiss-ephe-path")
         pair.add_argument("--json", action="store_true", help="Emit canonical JSON.")
+
+    transits = subcommands.add_parser("transits", help="Transit snapshot against a natal chart.")
+    _add_natal_arguments(transits)
+    transits.add_argument("--at", required=True, help="UTC instant, ISO 8601.")
+    transits.add_argument("--json", action="store_true")
+
+    returns = subcommands.add_parser("returns", help="Every exact return in a window.")
+    _add_natal_arguments(returns)
+    returns.add_argument("--body", required=True)
+    returns.add_argument("--from", dest="window_start", required=True, help="UTC ISO 8601.")
+    returns.add_argument("--to", dest="window_end", required=True, help="UTC ISO 8601.")
+    returns.add_argument("--charts", action="store_true", help="Cast a chart per hit.")
+    returns.add_argument("--json", action="store_true")
+
+    events = subcommands.add_parser("events", help="Ingress, station or exact-contact search.")
+    events.add_argument(
+        "--type",
+        dest="event_type",
+        required=True,
+        choices=("sign_ingress", "station", "exact_longitude", "exact_aspect"),
+    )
+    events.add_argument("--body", required=True)
+    events.add_argument("--from", dest="window_start", required=True, help="UTC ISO 8601.")
+    events.add_argument("--to", dest="window_end", required=True, help="UTC ISO 8601.")
+    events.add_argument("--target-longitude", type=float)
+    events.add_argument("--aspect-angle", type=float)
+    events.add_argument("--swiss-ephe-path")
+    events.add_argument("--json", action="store_true")
 
     benchmark = subcommands.add_parser("benchmark")
     benchmark.add_argument("--cases", type=int, default=10000)
@@ -176,6 +204,74 @@ def _natal(args: argparse.Namespace) -> int:
         print(chart.to_json(indent=2))
     else:
         print(json.dumps(chart.to_dict(), indent=2, sort_keys=True))
+    return 0
+
+
+def _add_natal_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--date", required=True, help="Local birth date, YYYY-MM-DD.")
+    parser.add_argument("--time", help="Local birth time, HH:MM[:SS].")
+    parser.add_argument("--unknown-time", action="store_true")
+    parser.add_argument("--timezone", required=True)
+    parser.add_argument("--lat", type=float, required=True)
+    parser.add_argument("--lng", type=float, required=True)
+    parser.add_argument("--fold", type=int, choices=(0, 1))
+    parser.add_argument("--house-system", default=WESTERN_MODERN_V1.house_system)
+    parser.add_argument("--swiss-ephe-path")
+
+
+def _engine_for(args: argparse.Namespace) -> AstrologyEngine:
+    if args.swiss_ephe_path:
+        return AstrologyEngine(
+            provider=SwissEphemerisProvider(ephemeris_path=args.swiss_ephe_path),
+            house_calculator=SwissHouseCalculator(ephemeris_path=args.swiss_ephe_path),
+        )
+    return AstrologyEngine()
+
+
+def _utc(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def _forecast(args: argparse.Namespace) -> int:
+    engine = _engine_for(args)
+
+    if args.command == "events":
+        result: Any = engine.search_events(
+            event_type=args.event_type,
+            body=args.body,
+            start=_utc(args.window_start),
+            end=_utc(args.window_end),
+            target_longitude=args.target_longitude,
+            aspect_angle=args.aspect_angle,
+        )
+    else:
+        natal = engine.natal(
+            local_datetime=(
+                args.date if args.unknown_time else f"{args.date}T{args.time}"
+            ),
+            timezone=args.timezone,
+            latitude=args.lat,
+            longitude=args.lng,
+            house_system=args.house_system,
+            unknown_time=args.unknown_time,
+            fold=args.fold,
+        )
+        if args.command == "transits":
+            result = engine.transits(natal, _utc(args.at))
+        else:
+            result = engine.returns(
+                natal,
+                args.body,
+                _utc(args.window_start),
+                _utc(args.window_end),
+                include_charts=args.charts,
+            )
+
+    if args.json:
+        print(result.to_json(indent=2))
+    else:
+        print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
     return 0
 
 
@@ -298,6 +394,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _natal(args)
         if args.command in {"synastry", "composite", "davison", "compatibility"}:
             return _relationship(args)
+        if args.command in {"transits", "returns", "events"}:
+            return _forecast(args)
         if args.command == "benchmark":
             return _benchmark(args)
         if args.command == "validate":

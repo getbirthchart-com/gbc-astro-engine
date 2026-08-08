@@ -47,6 +47,73 @@
         "title": "ApiErrorEnvelope",
         "type": "object"
       },
+      "EventSearchRequest": {
+        "additionalProperties": false,
+        "description": "A numerical event search over a time window.",
+        "properties": {
+          "aspect_angle": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required for exact_aspect, in degrees.",
+            "title": "Aspect Angle"
+          },
+          "body": {
+            "examples": [
+              "mercury",
+              "sun"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "end": {
+            "description": "Window end, UTC ISO 8601.",
+            "title": "End",
+            "type": "string"
+          },
+          "event_type": {
+            "description": "Which kind of event to locate.",
+            "enum": [
+              "sign_ingress",
+              "station",
+              "exact_longitude",
+              "exact_aspect"
+            ],
+            "title": "Event Type",
+            "type": "string"
+          },
+          "start": {
+            "description": "Window start, UTC ISO 8601.",
+            "title": "Start",
+            "type": "string"
+          },
+          "target_longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required for exact_longitude and exact_aspect.",
+            "title": "Target Longitude"
+          }
+        },
+        "required": [
+          "event_type",
+          "body",
+          "start",
+          "end"
+        ],
+        "title": "EventSearchRequest",
+        "type": "object"
+      },
       "HealthResponse": {
         "properties": {
           "api_version": {
@@ -247,6 +314,80 @@
           "chart_b"
         ],
         "title": "RelationshipRequest",
+        "type": "object"
+      },
+      "ReturnRequest": {
+        "additionalProperties": false,
+        "description": "A natal subject, a body, and the window to search for its returns.",
+        "properties": {
+          "body": {
+            "description": "Body whose return to find, for example 'sun' or 'saturn'.",
+            "examples": [
+              "sun",
+              "moon",
+              "saturn"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "include_charts": {
+            "default": false,
+            "description": "Cast a chart for each exact return.",
+            "title": "Include Charts",
+            "type": "boolean"
+          },
+          "natal": {
+            "$ref": "#/components/schemas/NatalChartRequest",
+            "description": "The natal subject."
+          },
+          "window_end": {
+            "description": "Window end, UTC ISO 8601.",
+            "title": "Window End",
+            "type": "string"
+          },
+          "window_start": {
+            "description": "Window start, UTC ISO 8601.",
+            "title": "Window Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "natal",
+          "body",
+          "window_start",
+          "window_end"
+        ],
+        "title": "ReturnRequest",
+        "type": "object"
+      },
+      "TransitRequest": {
+        "additionalProperties": false,
+        "description": "A natal subject plus the instant to read the sky at.",
+        "properties": {
+          "include_natal_chart": {
+            "default": false,
+            "description": "Embed the full natal chart in the response.",
+            "title": "Include Natal Chart",
+            "type": "boolean"
+          },
+          "natal": {
+            "$ref": "#/components/schemas/NatalChartRequest",
+            "description": "The natal subject."
+          },
+          "target_instant": {
+            "description": "UTC instant to calculate transits for, ISO 8601.",
+            "examples": [
+              "2026-08-08T12:00:00Z"
+            ],
+            "title": "Target Instant",
+            "type": "string"
+          }
+        },
+        "required": [
+          "natal",
+          "target_instant"
+        ],
+        "title": "TransitRequest",
         "type": "object"
       }
     }
@@ -695,6 +836,243 @@
         "summary": "Calculate a synastry chart",
         "tags": [
           "charts"
+        ]
+      }
+    },
+    "/v1/forecast/events": {
+      "post": {
+        "operationId": "search_events_v1_forecast_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Events located by bracketed root finding refined by bisection, with the achieved precision reported per event."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Locate ingresses, stations, exact longitudes or exact aspects",
+        "tags": [
+          "forecast"
+        ]
+      }
+    },
+    "/v1/forecast/returns": {
+      "post": {
+        "operationId": "calculate_returns_v1_forecast_returns_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReturnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "All exact returns, not the first. A body stationing near its natal degree returns three times and every one is reported."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Find every exact planetary return in a window",
+        "tags": [
+          "forecast"
+        ]
+      }
+    },
+    "/v1/forecast/transits": {
+      "post": {
+        "operationId": "calculate_transits_v1_forecast_transits_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Transit positions, transit-to-natal aspects with real applying and separating phases, and transit placements in the natal houses."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Calculate a transit snapshot against a natal chart",
+        "tags": [
+          "forecast"
         ]
       }
     }

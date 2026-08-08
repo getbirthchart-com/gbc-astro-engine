@@ -223,3 +223,57 @@ class RelationshipRequest(BaseModel):
 
     chart_a: NatalChartRequest = Field(..., description="First subject.")
     chart_b: NatalChartRequest = Field(..., description="Second subject.")
+
+
+class TransitRequest(BaseModel):
+    """A natal subject plus the instant to read the sky at."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    natal: NatalChartRequest = Field(..., description="The natal subject.")
+    target_instant: str = Field(
+        ...,
+        description="UTC instant to calculate transits for, ISO 8601.",
+        json_schema_extra={"examples": ["2026-08-08T12:00:00Z"]},
+    )
+    include_natal_chart: bool = Field(
+        default=False, description="Embed the full natal chart in the response."
+    )
+
+
+class ReturnRequest(BaseModel):
+    """A natal subject, a body, and the window to search for its returns."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    natal: NatalChartRequest = Field(..., description="The natal subject.")
+    body: str = Field(
+        ...,
+        description="Body whose return to find, for example 'sun' or 'saturn'.",
+        json_schema_extra={"examples": ["sun", "moon", "saturn"]},
+    )
+    window_start: str = Field(..., description="Window start, UTC ISO 8601.")
+    window_end: str = Field(..., description="Window end, UTC ISO 8601.")
+    include_charts: bool = Field(
+        default=False, description="Cast a chart for each exact return."
+    )
+
+
+class EventSearchRequest(BaseModel):
+    """A numerical event search over a time window."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    event_type: Literal["sign_ingress", "station", "exact_longitude", "exact_aspect"] = Field(
+        ..., description="Which kind of event to locate."
+    )
+    body: str = Field(..., json_schema_extra={"examples": ["mercury", "sun"]})
+    start: str = Field(..., description="Window start, UTC ISO 8601.")
+    end: str = Field(..., description="Window end, UTC ISO 8601.")
+    target_longitude: float | None = Field(
+        default=None,
+        description="Required for exact_longitude and exact_aspect.",
+    )
+    aspect_angle: float | None = Field(
+        default=None, description="Required for exact_aspect, in degrees."
+    )

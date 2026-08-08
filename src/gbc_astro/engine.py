@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from collections.abc import Callable
+from datetime import date, datetime, timezone
+from typing import Any
 
 from gbc_astro.aspects.engine import calculate_aspects
 from gbc_astro.astronomy.time import isoformat_z, normalize_local_datetime
-from gbc_astro.constants import BODY_IDS, ENGINE_NAME, ENGINE_VERSION, SCHEMA_VERSION
+from gbc_astro.constants import (
+    BODY_IDS,
+    ENGINE_NAME,
+    ENGINE_VERSION,
+    EVENT_SCHEMA_VERSION,
+    SCHEMA_VERSION,
+)
 from gbc_astro.derived.balances import (
     element_counts,
     hemisphere_counts,
@@ -16,6 +24,8 @@ from gbc_astro.derived.balances import (
 )
 from gbc_astro.derived.moon_phase import calculate_moon_phase
 from gbc_astro.errors import InvalidCalculationProfileError, UnsupportedBodyError
+from gbc_astro.forecast.returns import calculate_returns
+from gbc_astro.forecast.transits import calculate_transits
 from gbc_astro.houses.base import (
     ArmcHouseCalculator,
     HouseCalculation,
@@ -30,6 +40,7 @@ from gbc_astro.models.chart import (
     NatalChart,
     WarningMessage,
 )
+from gbc_astro.models.forecast import EventSearchResult, ReturnSearchResult, TransitChart
 from gbc_astro.models.input import ChartInput
 from gbc_astro.models.position import BodyPosition
 from gbc_astro.models.relationship import (
@@ -48,6 +59,12 @@ from gbc_astro.relationship.composite import calculate_composite
 from gbc_astro.relationship.davison import calculate_davison
 from gbc_astro.relationship.scoring import calculate_relationship_score
 from gbc_astro.relationship.synastry import calculate_synastry
+from gbc_astro.search.events import (
+    find_aspect_events,
+    find_longitude_crossings,
+    find_sign_ingresses,
+    find_stations,
+)
 
 
 class AstrologyEngine:
@@ -214,6 +231,118 @@ class AstrologyEngine:
             self.synastry(chart_a, chart_b),
             self.relationship_profile,
             self.scoring_profile,
+        )
+
+    def transits(
+        self,
+        natal_chart: NatalChart,
+        target_instant: datetime,
+        include_natal_chart: bool = False,
+    ) -> TransitChart:
+        """Sky positions at an instant, aspected and housed against a natal chart.
+
+        Applying and separating are real here: the transiting bodies move while
+        the natal points do not, so there is a shared timeline, which is exactly
+        what synastry lacks.
+        """
+        return calculate_transits(
+            natal_chart=natal_chart,
+            target_instant=target_instant,
+            provider=self._get_provider(),
+            profile=self.profile,
+            include_natal_chart=include_natal_chart,
+        )
+
+    def returns(
+        self,
+        natal_chart: NatalChart,
+        body: str,
+        window_start: datetime,
+        window_end: datetime,
+        include_charts: bool = False,
+    ) -> ReturnSearchResult:
+        """Every exact return of a body to its natal longitude inside a window.
+
+        All hits, not the first: a body stationing near its natal degree returns
+        three times, and a Saturn return usually does.
+        """
+        return calculate_returns(
+            natal_chart=natal_chart,
+            body=body,
+            window_start=window_start,
+            window_end=window_end,
+            provider=self._get_provider(),
+            chart_builder=(self._return_chart_builder(natal_chart) if include_charts else None),
+        )
+
+    def _return_chart_builder(self, natal_chart: NatalChart) -> Callable[[datetime], NatalChart]:
+        """Cast each return chart at the natal location, as convention requires."""
+
+        def build(instant: datetime) -> NatalChart:
+            return self.natal(
+                local_datetime=instant.astimezone(timezone.utc).replace(tzinfo=None),
+                timezone="UTC",
+                latitude=natal_chart.subject.latitude,
+                longitude=natal_chart.subject.longitude,
+            )
+
+        return build
+
+    def search_events(
+        self,
+        event_type: str,
+        body: str,
+        start: datetime,
+        end: datetime,
+        target_longitude: float | None = None,
+        aspect_angle: float | None = None,
+    ) -> EventSearchResult:
+        """Locate ingresses, stations, exact longitudes or exact aspects."""
+        provider = self._get_provider()
+        if event_type == "sign_ingress":
+            events: tuple[Any, ...] = find_sign_ingresses(provider, body, start, end)
+        elif event_type == "station":
+            events = find_stations(provider, body, start, end)
+        elif event_type == "exact_longitude":
+            if target_longitude is None:
+                raise InvalidCalculationProfileError(
+                    "exact_longitude search requires target_longitude.",
+                    {"eventType": event_type},
+                )
+            events = find_longitude_crossings(provider, body, target_longitude, start, end)
+        elif event_type == "exact_aspect":
+            if target_longitude is None or aspect_angle is None:
+                raise InvalidCalculationProfileError(
+                    "exact_aspect search requires target_longitude and aspect_angle.",
+                    {"eventType": event_type},
+                )
+            events = find_aspect_events(
+                provider, body, target_longitude, aspect_angle, start, end
+            )
+        else:
+            raise InvalidCalculationProfileError(
+                "Unsupported event type.",
+                {"eventType": event_type},
+            )
+
+        return EventSearchResult(
+            schema_version=EVENT_SCHEMA_VERSION,
+            meta={
+                "engine": ENGINE_NAME,
+                "engineVersion": ENGINE_VERSION,
+                "ephemerisProvider": provider.id,
+                "ephemerisDataVersion": provider.data_version,
+                "method": "coarse_bracket_then_bisection",
+            },
+            query={
+                "type": event_type,
+                "body": body,
+                "from": start.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "to": end.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "targetLongitude": target_longitude,
+                "aspectAngle": aspect_angle,
+            },
+            events=events,
         )
 
     def _get_armc_house_calculator(self) -> ArmcHouseCalculator:
