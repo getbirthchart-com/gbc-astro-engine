@@ -35,6 +35,15 @@ from gbc_astro.derived.balances import (
 )
 from gbc_astro.derived.moon_phase import calculate_moon_phase
 from gbc_astro.derived.patterns import ChartPattern, find_patterns
+from gbc_astro.derived.rulership import (
+    chart_ruler,
+    dignities,
+    dispositor_chains,
+    dominant_planets,
+    final_dispositors,
+    house_rulers,
+    mutual_receptions,
+)
 from gbc_astro.errors import (
     InvalidCalculationProfileError,
     UnknownBirthTimeError,
@@ -57,6 +66,7 @@ from gbc_astro.houses.systems import (
     SUPPORTED_HOUSE_SYSTEMS,
 )
 from gbc_astro.houses.whole_sign import whole_sign_cusp_longitudes
+from gbc_astro.models.aspect import Aspect
 from gbc_astro.models.chart import (
     ChartMeta,
     ChartSubject,
@@ -81,6 +91,11 @@ from gbc_astro.profiles.progression import (
     SECONDARY_PROGRESSION_V1,
     SOLAR_ARC_V1,
     ProgressionProfile,
+)
+from gbc_astro.profiles.rulership import (
+    DOMINANT_WESTERN_V1,
+    DominantProfile,
+    resolve_rulership_profile,
 )
 from gbc_astro.profiles.scoring import SYNASTRY_SCORING_V1, ScoringProfile
 from gbc_astro.profiles.transit import TRANSIT_PROFILE_V1, TransitProfile
@@ -129,6 +144,7 @@ class AstrologyEngine:
         progression_profile: ProgressionProfile = SECONDARY_PROGRESSION_V1,
         solar_arc_profile: ProgressionProfile = SOLAR_ARC_V1,
         pattern_profile: PatternProfile = PATTERN_PROFILE_V1,
+        dominant_profile: DominantProfile = DOMINANT_WESTERN_V1,
     ) -> None:
         self._provider = provider
         self.profile = profile
@@ -138,6 +154,7 @@ class AstrologyEngine:
         self.progression_profile = progression_profile
         self.solar_arc_profile = solar_arc_profile
         self.pattern_profile = pattern_profile
+        self.dominant_profile = dominant_profile
         self._house_calculator = house_calculator
         self._ayanamsa_calculator: AyanamsaCalculator | None = None
         self._validate_profile(profile)
@@ -252,8 +269,10 @@ class AstrologyEngine:
                 )
             )
 
-        derived = self._calculate_derived(bodies, house_calculation)
+        # Aspects first: the dominance score inside `derived` weighs how much of
+        # the chart each planet aspects, so it needs them already calculated.
         aspects = calculate_aspects(bodies, self.profile.aspect_profile)
+        derived = self._calculate_derived(bodies, house_calculation, aspects)
         meta = ChartMeta(
             schema_version=SCHEMA_VERSION,
             engine=ENGINE_NAME,
@@ -262,6 +281,12 @@ class AstrologyEngine:
             ephemeris_data_version=provider.data_version,
             timezone_data_version=time_norm.timezone_data_version,
             calculation_profile=self.profile.id,
+            rulership_profile=resolve_rulership_profile(self.profile.rulership).id,
+            rulership_profile_version=resolve_rulership_profile(
+                self.profile.rulership
+            ).version,
+            dominant_profile=self.dominant_profile.id,
+            dominant_profile_version=self.dominant_profile.version,
             house_system=current_house_system if chart_input.birth_time_known else None,
             aspect_profile=self.profile.aspect_profile.id,
             zodiac=self.profile.zodiac,
@@ -684,6 +709,7 @@ class AstrologyEngine:
         self,
         bodies: dict[str, BodyPosition],
         house_calculation: HouseCalculation | None,
+        aspects: tuple[Aspect, ...] = (),
     ) -> DerivedNatal:
         rising = house_calculation.angles["ascendant"].sign if house_calculation else None
         moon_phase = None
@@ -691,7 +717,31 @@ class AstrologyEngine:
             moon_phase = calculate_moon_phase(bodies["sun"], bodies["moon"])
         sun = bodies.get("sun")
         moon = bodies.get("moon")
+
+        # Rulership needs no ephemeris, only the signs above and the table the
+        # profile names. It is resolved per chart rather than cached on the
+        # engine so that a profile swap cannot leave a stale table behind.
+        rulership = resolve_rulership_profile(self.profile.rulership)
+        angles = house_calculation.angles if house_calculation else {}
+        houses = house_calculation.houses if house_calculation else ()
+        ruler = chart_ruler(angles, bodies, rulership)
+        body_dignities = dignities(bodies, rulership)
+        chains = dispositor_chains(bodies, rulership)
+
         return DerivedNatal(
+            chart_ruler=ruler,
+            house_rulers=house_rulers(houses, bodies, rulership),
+            dignities=body_dignities,
+            dispositors=chains,
+            final_dispositors=final_dispositors(chains),
+            mutual_receptions=mutual_receptions(bodies, rulership),
+            dominant_planets=dominant_planets(
+                bodies,
+                aspects,
+                {dignity.body_id: dignity.state for dignity in body_dignities},
+                ruler.body_id if ruler else None,
+                self.dominant_profile,
+            ),
             big_three={
                 "sun": sun.sign if sun else None,
                 "moon": moon.sign if moon else None,

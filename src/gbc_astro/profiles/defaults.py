@@ -31,6 +31,7 @@ WESTERN_MODERN_V1 = CalculationProfile(
     aspect_profile=MODERN_MAJOR_V1,
     unknown_time_policy="local_date_start_with_uncertainty_warning",
     balance_bodies=CLASSICAL_BALANCE_BODIES,
+    rulership="modern",
 )
 
 
@@ -46,6 +47,11 @@ VEDIC_SIDEREAL_V1 = CalculationProfile(
     unknown_time_policy="local_date_start_with_uncertainty_warning",
     balance_bodies=CLASSICAL_BALANCE_BODIES,
     ayanamsa="lahiri",
+    # The classical seven. Vedic practice does not assign Scorpio to Pluto or
+    # Aquarius to Uranus, so answering a sidereal chart from the modern table
+    # would name the wrong ruler for three of the twelve signs and corrupt
+    # every dispositor chain that passes through them.
+    rulership="traditional",
 )
 
 

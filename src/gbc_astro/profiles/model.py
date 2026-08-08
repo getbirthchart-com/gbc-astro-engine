@@ -55,6 +55,12 @@ class CalculationProfile:
     unknown_time_policy: str
     balance_bodies: tuple[str, ...]
     cusp_policy: str = "exact_cusp_belongs_to_following_house"
+    # Which rulership table names the chart ruler, the house rulers and every
+    # dispositor chain. It belongs to the profile rather than to the request
+    # because it is not independent of the rest of it: a sidereal chart cast in
+    # the Vedic tradition uses the classical seven, and offering it Pluto as the
+    # ruler of Scorpio would be answering in the wrong system entirely.
+    rulership: str = "modern"
     # Required when `zodiac` is "sidereal", ignored otherwise. No default is
     # applied for a sidereal profile: the schools disagree by whole degrees, so
     # picking one silently would be picking an answer.

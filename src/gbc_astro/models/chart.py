@@ -8,6 +8,13 @@ from typing import Any
 
 from gbc_astro.models.aspect import Aspect
 from gbc_astro.models.position import AnglePosition, BodyPosition, HouseCusp
+from gbc_astro.models.rulership import (
+    Dignity,
+    DispositorChain,
+    DominantPlanet,
+    HouseRuler,
+    RulerPlacement,
+)
 
 
 @dataclass(frozen=True)
@@ -42,6 +49,10 @@ class ChartMeta:
     ayanamsa: str | None = None
     ayanamsa_version: str | None = None
     ayanamsa_degrees: float | None = None
+    rulership_profile: str | None = None
+    rulership_profile_version: str | None = None
+    dominant_profile: str | None = None
+    dominant_profile_version: str | None = None
 
     def to_dict(self) -> dict[str, str | float | None]:
         return {
@@ -55,6 +66,10 @@ class ChartMeta:
             "aspectProfile": self.aspect_profile,
             "zodiac": self.zodiac,
             "houseAlgorithmVersion": self.house_algorithm_version,
+            "rulershipProfile": self.rulership_profile,
+            "rulershipProfileVersion": self.rulership_profile_version,
+            "dominantProfile": self.dominant_profile,
+            "dominantProfileVersion": self.dominant_profile_version,
             **(
                 {
                     "ayanamsa": self.ayanamsa,
@@ -116,6 +131,15 @@ class DerivedNatal:
     polarities: dict[str, int] = field(default_factory=dict)
     hemispheres: dict[str, int] = field(default_factory=dict)
     quadrants: dict[str, int] = field(default_factory=dict)
+    # Rulership-derived. All of it is a function of the signs above plus the
+    # rulership table the profile names, and none of it touches an ephemeris.
+    chart_ruler: RulerPlacement | None = None
+    house_rulers: tuple[HouseRuler, ...] = ()
+    dignities: tuple[Dignity, ...] = ()
+    dispositors: tuple[DispositorChain, ...] = ()
+    final_dispositors: tuple[str, ...] = ()
+    mutual_receptions: tuple[tuple[str, str], ...] = ()
+    dominant_planets: tuple[DominantPlanet, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -126,6 +150,13 @@ class DerivedNatal:
             "polarities": self.polarities,
             "hemispheres": self.hemispheres,
             "quadrants": self.quadrants,
+            "chartRuler": self.chart_ruler.to_dict() if self.chart_ruler else None,
+            "houseRulers": [ruler.to_dict() for ruler in self.house_rulers],
+            "dignities": [dignity.to_dict() for dignity in self.dignities],
+            "dispositors": [chain.to_dict() for chain in self.dispositors],
+            "finalDispositors": list(self.final_dispositors),
+            "mutualReceptions": [list(pair) for pair in self.mutual_receptions],
+            "dominantPlanets": [planet.to_dict() for planet in self.dominant_planets],
         }
 
 
