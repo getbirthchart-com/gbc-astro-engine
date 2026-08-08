@@ -76,6 +76,28 @@ gbc natal \
   --json
 ```
 
+## Validation
+
+v0.1 natal core has passed both independent parity tracks. Neither reference
+reuses the implementation it validates.
+
+```bash
+# Planetary astronomy against JPL DE440S via Skyfield
+gbc validate astronomy-parity --reference jpl-de440 --cases 10000 --seed 42
+
+# ASC/MC/Placidus against an independently derived geometry reference
+gbc validate geometry-parity --cases 500 --seed 42
+```
+
+| Track | Reference | Cases | Outside tolerance |
+|---|---|---:|---:|
+| Astronomy | `jpl-de440` DE440S | 10000 | 0 |
+| Angles/houses | `gbc-independent-geometry` | 464 compared | 0 |
+
+Reports live in [`evidence/v0.1-validation/`](evidence/v0.1-validation/).
+Methodology: [`docs/HOUSE_REFERENCE_METHODOLOGY.md`](docs/HOUSE_REFERENCE_METHODOLOGY.md),
+[`docs/JPL_REFERENCE_METHODOLOGY.md`](docs/JPL_REFERENCE_METHODOLOGY.md).
+
 ## Current Implementation Boundary
 
 Implemented:
@@ -86,16 +108,25 @@ Implemented:
 - IANA timezone normalization with ambiguous/nonexistent local time detection
 - provider protocol and Swiss Ephemeris wrapper
 - tropical zodiac mapping
+- ASC/MC/DSC/IC, Whole Sign / Equal / Placidus houses
 - aspect profile/classification/applying-separating logic
 - deterministic derived natal primitives
 - canonical JSON serialization
 - thin FastAPI HTTP adapter (`GET /health`, `POST /v1/charts/natal`, OpenAPI)
+- independent validation for both astronomy and geometry
 
-Blocked until `pyswisseph` and a Python 3.12+ environment are available:
+Not implemented (later releases):
 
-- real Sun-through-Chiron ephemeris values
-- ASC/MC and Placidus reference calculations
-- v0.1 differential parity gate
+- v0.2 synastry, composite and relationship charts
+- v0.3 transits, event search and returns
+- v1.0 progressions, solar arc, relocation, sidereal, draconic, harmonics,
+  additional house systems, patterns, astrocartography, asteroids
+
+Known validation gaps within v0.1:
+
+- Chiron and the lunar nodes are validated only through Swiss Ephemeris; the
+  independent astronomy track covers Sun through Pluto
+- Placidus is refused beyond the polar circles rather than approximated
 
 No LLM, prose interpretation, hidden noon substitution, UTC-offset guessing, or
 silent Placidus fallback is used in the calculation path.

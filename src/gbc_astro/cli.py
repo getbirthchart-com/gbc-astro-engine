@@ -34,6 +34,10 @@ from gbc_astro.validation.fixtures import (
     DeterministicValidationHouseCalculator,
     DeterministicValidationProvider,
 )
+from gbc_astro.validation.geometry_parity import (
+    generate_geometry_cases,
+    run_geometry_parity,
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -79,6 +83,12 @@ def _build_parser() -> argparse.ArgumentParser:
     astronomy.add_argument("--jpl-ephemeris-path")
     astronomy.add_argument("--swiss-ephe-path")
     astronomy.add_argument("--output-dir", default="evidence/v0.1-validation")
+
+    geometry = validate_subcommands.add_parser("geometry-parity")
+    geometry.add_argument("--cases", type=int, default=500)
+    geometry.add_argument("--seed", type=int, default=42)
+    geometry.add_argument("--swiss-ephe-path")
+    geometry.add_argument("--output-dir", default="evidence/v0.1-validation")
 
     hostile = validate_subcommands.add_parser("hostile")
     hostile.add_argument("--cases-path", default="tests/fixtures/hostile_natal_cases.json")
@@ -240,6 +250,8 @@ def _validate(args: argparse.Namespace) -> int:
         return _validate_health(args)
     if args.validate_command == "astronomy-parity":
         return _validate_astronomy_parity(args)
+    if args.validate_command == "geometry-parity":
+        return _validate_geometry_parity(args)
     raise ValueError(f"Unsupported validation command: {args.validate_command}")
 
 
@@ -254,9 +266,10 @@ def _validate_differential(args: argparse.Namespace) -> int:
             source = JplReferenceSource()
             reference_version = source.version
             raise ReferenceUnavailableError(
-                "JPL reference source validates astronomy only; combined natal parity still "
-                "requires independent angle and house fixtures. Use `validate astronomy-parity` "
-                "for the JPL astronomy track."
+                "JPL reference source validates astronomy only. Run `validate "
+                "astronomy-parity` for the JPL astronomy track and `validate "
+                "geometry-parity` for the independent angle/Placidus track; this "
+                "combined-fixture path still needs an external fixture set."
             )
         if args.reference == "external-fixture" and not args.reference_path:
             raise ReferenceUnavailableError(
@@ -286,7 +299,9 @@ def _validate_differential(args: argparse.Namespace) -> int:
         "unresolvedMismatchCount": None,
     }
     _write_json(output_dir / "parity-report.json", report)
-    _write_text(output_dir / "PARITY_REPORT.md", _parity_markdown(report))
+    # Deliberately not PARITY_REPORT.md: that file is the curated v0.1 gate
+    # summary covering every track, and this command only knows about its own.
+    _write_text(output_dir / "DIFFERENTIAL_REPORT.md", _parity_markdown(report))
     print(json.dumps(report, indent=2, sort_keys=True))
     return 2 if blocked_reason else 0
 
@@ -393,6 +408,137 @@ def _validate_astronomy_parity(args: argparse.Namespace) -> int:
     write_astronomy_parity_report(args.output_dir, report)
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["status"] == "PASS" else 1
+
+
+def _validate_geometry_parity(args: argparse.Namespace) -> int:
+    if args.swiss_ephe_path:
+        os.environ["GBC_SWISS_EPHE_PATH"] = args.swiss_ephe_path
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    started = time.perf_counter()
+    cases = generate_geometry_cases(args.cases, args.seed)
+    report = run_geometry_parity(cases)
+    report["seed"] = args.seed
+    report["runtimeMs"] = (time.perf_counter() - started) * 1000.0
+
+    _write_json(output_dir / "geometry-parity.json", report)
+    _write_text(output_dir / "ANGLE_PARITY.md", _angle_parity_markdown(report))
+    _write_text(output_dir / "PLACIDUS_PARITY.md", _placidus_parity_markdown(report))
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0 if report["status"] == "PASS" else 1
+
+
+def _angle_parity_markdown(report: dict[str, Any]) -> str:
+    reference = report["reference"]
+    ascendant = report["ascendant"]
+    midheaven = report["midheaven"]
+    return "\n".join(
+        (
+            "# Angle Parity",
+            "",
+            f"Status: {report['status']}",
+            "",
+            f"Reference: `{reference['id']}` {reference['version']} ({reference['method']})",
+            "",
+            f"Cases compared: {report['comparedCount']} of {report['caseCount']}",
+            "",
+            "| Angle | p95 (deg) | max (deg) | max (arcsec) | tolerance (deg) | outside |",
+            "|---|---:|---:|---:|---:|---:|",
+            _angle_row("Ascendant", ascendant),
+            _angle_row("MC", midheaven),
+            "",
+            "DSC and IC are the opposing points of ASC and MC in both implementations,",
+            "so they carry the same deltas and are not reported separately.",
+            "",
+            "## Method",
+            "",
+            "The reference derives sidereal time and true obliquity from Skyfield and",
+            "solves the defining spherical condition for each angle numerically. It shares",
+            "no code with Swiss Ephemeris, which satisfies the independence requirement in",
+            "`docs/HOUSE_REFERENCE_METHODOLOGY.md`.",
+            "",
+            f"Tolerance rationale: {report['tolerance']['rationale']}",
+            "",
+        )
+    )
+
+
+def _placidus_parity_markdown(report: dict[str, Any]) -> str:
+    reference = report["reference"]
+    cusps = report["houseCusps"]
+    return "\n".join(
+        (
+            "# Placidus Parity",
+            "",
+            f"Status: {report['status']}",
+            "",
+            f"Reference: `{reference['id']}` {reference['version']} ({reference['method']})",
+            "",
+            f"Cases compared: {report['comparedCount']} of {report['caseCount']}",
+            f"Cusp comparisons: {cusps['cases']}",
+            "",
+            "| Metric | Value |",
+            "|---|---:|",
+            f"| Cusp p95 delta (deg) | {cusps['p95Deg']:.3e} |",
+            f"| Cusp max delta (deg) | {cusps['maxDeg']:.3e} |",
+            f"| Cusp max delta (arcsec) | {cusps['maxDeg'] * 3600.0:.6f} |",
+            f"| Tolerance (deg) | {cusps['toleranceDeg']:.1e} |",
+            f"| Outside tolerance | {cusps['outsideToleranceCount']} |",
+            f"| House assignment mismatches | {report['houseAssignmentMismatchCount']} |",
+            f"| Undefined, both sides agree (excluded) | {report['agreedUndefinedCount']} |",
+            f"| Convention differences (engine stricter) | {report['conventionDifferenceCount']} |",
+            f"| Undefined-branch disagreements | {report['disagreementCount']} |",
+            f"| Time-resolution errors | {report['timeErrorCount']} |",
+            "",
+            "## Undefined Placidus cases",
+            "",
+            "Beyond the polar circles the semi-diurnal arc does not exist for part of the",
+            "ecliptic and Placidus has no solution. Such cases are excluded from the",
+            "statistics above and are never compared against a substitute house system,",
+            "as `docs/HOUSE_REFERENCE_METHODOLOGY.md` requires.",
+            "",
+            "Exclusion is not taken on trust. Each case is cross-checked both ways: the",
+            "engine must refuse with a structured error exactly where the independent",
+            "reference finds no solution. A case where either side produced cusps while",
+            "the other could not is counted as a disagreement and fails the gate -- that",
+            "is how a silent fallback to a different house system would surface.",
+            "",
+            f"Agreed undefined: {report['agreedUndefinedCount']} case(s).",
+            f"Disagreements: {report['disagreementCount']} case(s).",
+            "",
+            "### Convention difference at the polar circles",
+            "",
+            f"Recorded: {report['conventionDifferenceCount']} case(s).",
+            "",
+            "Swiss Ephemeris declines Placidus categorically for any latitude beyond the",
+            "polar circles, whereas the reference declines per case and can still solve",
+            "some of them. Probed directly at 69.65 N: `houses_ex(..., b\"P\")` raises while",
+            "`b\"O\"` (Porphyry) returns values, so the engine is refusing rather than",
+            "substituting a different house system. Declining more often than strictly",
+            "necessary cannot yield a wrong chart, so these are recorded as a convention",
+            "difference in the safe direction and do not fail the gate. The opposite",
+            "direction -- cusps emitted where Placidus has no solution -- is counted as a",
+            "disagreement and does fail it.",
+            "",
+            "## House assignment",
+            "",
+            "Every body in every compared chart was re-assigned to a house using the",
+            "independently derived cusps and checked against the engine's assignment.",
+            f"Mismatches: {report['houseAssignmentMismatchCount']}.",
+            "",
+            f"Tolerance rationale: {report['tolerance']['rationale']}",
+            "",
+        )
+    )
+
+
+def _angle_row(label: str, metrics: dict[str, Any]) -> str:
+    return (
+        f"| {label} | {metrics['p95Deg']:.3e} | {metrics['maxDeg']:.3e} | "
+        f"{metrics['maxDeg'] * 3600.0:.6f} | {metrics['toleranceDeg']:.1e} | "
+        f"{metrics['outsideToleranceCount']} |"
+    )
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:

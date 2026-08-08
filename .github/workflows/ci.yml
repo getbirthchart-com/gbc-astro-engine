@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+env:
+  GBC_SWISS_EPHE_PATH: ${{ github.workspace }}/.ephemeris/swiss
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -13,16 +16,62 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      # Swiss Ephemeris data is not committed: it carries redistribution terms.
+      # Without it the suite still passes, but the Swiss golden tests and the
+      # geometry gate skip, which would make this workflow green while proving
+      # nothing about the real calculation path.
+      - name: Cache Swiss Ephemeris data
+        id: swiss-cache
+        uses: actions/cache@v4
+        with:
+          path: .ephemeris/swiss
+          key: swiss-ephe-18-v1
+
+      - name: Fetch Swiss Ephemeris data
+        if: steps.swiss-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .ephemeris/swiss
+          base=https://raw.githubusercontent.com/aloistr/swisseph/master/ephe
+          for file in sepl_18.se1 semo_18.se1 seas_18.se1; do
+            curl -fsSL -o ".ephemeris/swiss/$file" "$base/$file"
+          done
+
       - name: Install
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev,swiss,validation]"
+
+      - name: Assert ephemeris data is actually present
+        run: |
+          for file in sepl_18.se1 semo_18.se1 seas_18.se1; do
+            test -s "$GBC_SWISS_EPHE_PATH/$file" || {
+              echo "Missing $file: the suite would skip the tests that matter."
+              exit 1
+            }
+          done
+
       - name: Ruff
         run: ruff check .
+
       - name: Mypy
         run: mypy src
-      - name: Pytest
-        run: pytest
+
+      # A skip here means an environment problem, not an excused test: with the
+      # ephemeris data and validation extras present the whole suite must run.
+      - name: Pytest (no skips allowed)
+        run: |
+          set -o pipefail
+          pytest -q -rs 2>&1 | tee /tmp/pytest.txt
+          if grep -qi "skipped" /tmp/pytest.txt; then
+            echo "::error::Tests were skipped; CI must run the full suite."
+            grep "SKIPPED" /tmp/pytest.txt || true
+            exit 1
+          fi
+
       - name: Hostile Corpus Smoke
         run: gbc validate hostile --output-dir evidence/v0.1-validation
+
       - name: Reproducibility Smoke
         run: gbc validate reproducibility --cases 25 --runs 2 --output-dir evidence/v0.1-validation
 
+      - name: Geometry Parity Gate
+        run: gbc validate geometry-parity --cases 120 --seed 42 --output-dir evidence/v0.1-validation

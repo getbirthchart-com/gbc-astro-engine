@@ -1,0 +1,200 @@
+{
+  "agreedUndefinedCases": [
+    {
+      "caseId": "geom-00433",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 69.6492,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00434",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 72.7869,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00435",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": -77.8419,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00436",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 69.6492,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00437",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 72.7869,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00438",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": -77.8419,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00440",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 72.7869,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00441",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": -77.8419,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00442",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 69.6492,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00443",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 72.7869,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00444",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": -77.8419,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00445",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 69.6492,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00446",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 72.7869,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00447",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": -77.8419,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00448",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 69.6492,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00449",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 72.7869,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00450",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": -77.8419,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00452",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 72.7869,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00453",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": -77.8419,
+      "referenceReason": "Geometry condition has no solution for this input."
+    },
+    {
+      "caseId": "geom-00454",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "latitude": 69.6492,
+      "referenceReason": "Geometry condition has no solution for this input."
+    }
+  ],
+  "agreedUndefinedCount": 33,
+  "ascendant": {
+    "cases": 464,
+    "maxDeg": 1.9247805767008686e-06,
+    "outsideToleranceCount": 0,
+    "p95Deg": 5.667285734034522e-07,
+    "toleranceDeg": 1e-05,
+    "worstCases": []
+  },
+  "caseCount": 500,
+  "comparedCount": 464,
+  "conventionDifferenceCount": 3,
+  "conventionDifferences": [
+    {
+      "assessment": "engine is stricter; safe direction",
+      "caseId": "geom-00439",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "kind": "engine-refused-where-reference-solved",
+      "latitude": 69.6492
+    },
+    {
+      "assessment": "engine is stricter; safe direction",
+      "caseId": "geom-00451",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "kind": "engine-refused-where-reference-solved",
+      "latitude": 69.6492
+    },
+    {
+      "assessment": "engine is stricter; safe direction",
+      "caseId": "geom-00463",
+      "engineErrorCode": "HOUSE_CALCULATION_UNAVAILABLE",
+      "kind": "engine-refused-where-reference-solved",
+      "latitude": 69.6492
+    }
+  ],
+  "disagreementCount": 0,
+  "disagreements": [],
+  "engineVersion": "0.1.0",
+  "houseAssignmentMismatchCount": 0,
+  "houseAssignmentMismatches": [],
+  "houseCusps": {
+    "cases": 5568,
+    "maxDeg": 1.9247805767008686e-06,
+    "outsideToleranceCount": 0,
+    "p95Deg": 4.435407277014747e-07,
+    "toleranceDeg": 1e-05,
+    "worstCases": []
+  },
+  "midheaven": {
+    "cases": 464,
+    "maxDeg": 5.108626908167935e-07,
+    "outsideToleranceCount": 0,
+    "p95Deg": 4.1665663275125553e-07,
+    "toleranceDeg": 1e-05,
+    "worstCases": []
+  },
+  "reference": {
+    "id": "gbc-independent-geometry",
+    "independentOfSwissEphemeris": true,
+    "method": "skyfield-gast+true-obliquity/numeric-placidus",
+    "version": "1.0.0"
+  },
+  "runtimeMs": 2125.8068750612438,
+  "seed": 42,
+  "status": "PASS",
+  "timeErrorCount": 0,
+  "timeErrors": [],
+  "tolerance": {
+    "ascendantDeg": 1e-05,
+    "houseCuspDeg": 1e-05,
+    "id": "geometry-parity-v1",
+    "mcDeg": 1e-05,
+    "rationale": "Two independent implementations of the same spherical geometry cannot agree to machine precision: they take sidereal time and true obliquity from different nutation series (Skyfield IAU 2000B versus Swiss Ephemeris), and the reference locates cusps by bisection rather than closed form. Measured agreement across the committed corpus is below 0.001 arcsecond (~3e-7 deg). The threshold is set at 1e-5 deg (0.036 arcsecond), roughly 30x the observed maximum so nutation-model drift cannot cause a spurious failure, while remaining about 100x tighter than one arcsecond and far below any astrologically meaningful difference. Loosening this further requires new measured evidence recorded in evidence/v0.1-validation/PLACIDUS_PARITY.md.",
+    "referenceSource": "gbc-independent-geometry",
+    "version": "1.0.0"
+  }
+}

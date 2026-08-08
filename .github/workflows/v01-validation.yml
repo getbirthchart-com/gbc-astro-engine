@@ -4,11 +4,19 @@ on:
   workflow_dispatch:
     inputs:
       cases:
-        description: "Differential case count"
+        description: "Astronomy differential case count"
         required: true
         default: "10000"
+      geometry_cases:
+        description: "Geometry parity case count"
+        required: true
+        default: "500"
   schedule:
     - cron: "0 3 * * 0"
+
+env:
+  GBC_SWISS_EPHE_PATH: ${{ github.workspace }}/.ephemeris/swiss
+  GBC_JPL_EPHEMERIS_PATH: ${{ github.workspace }}/.ephemeris/jpl/de440s.bsp
 
 jobs:
   validation:
@@ -18,23 +26,75 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Cache ephemeris data
+        id: ephe-cache
+        uses: actions/cache@v4
+        with:
+          path: .ephemeris
+          key: ephe-swiss18-de440s-v1
+
+      # Neither data set is committed: both carry redistribution terms.
+      - name: Fetch ephemeris data
+        if: steps.ephe-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .ephemeris/swiss .ephemeris/jpl
+          base=https://raw.githubusercontent.com/aloistr/swisseph/master/ephe
+          for file in sepl_18.se1 semo_18.se1 seas_18.se1; do
+            curl -fsSL -o ".ephemeris/swiss/$file" "$base/$file"
+          done
+          curl -fsSL -o .ephemeris/jpl/de440s.bsp \
+            https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp
+
+      # The JPL track needs skyfield/jplephem/numpy from the validation extra.
+      # Installing only [dev,swiss] leaves the reference unavailable, which used
+      # to make this workflow report success without comparing anything.
       - name: Install
-        run: python -m pip install -e ".[dev,swiss]"
+        run: python -m pip install -e ".[dev,swiss,validation]"
+
+      - name: Assert ephemeris data is actually present
+        run: |
+          for file in sepl_18.se1 semo_18.se1 seas_18.se1; do
+            test -s "$GBC_SWISS_EPHE_PATH/$file" || { echo "Missing $file"; exit 1; }
+          done
+          test -s "$GBC_JPL_EPHEMERIS_PATH" || { echo "Missing de440s.bsp"; exit 1; }
+
       - name: Lint
         run: ruff check .
+
       - name: Typecheck
         run: mypy src
+
       - name: Tests
-        run: pytest
+        run: pytest -q
+
       - name: Hostile Corpus
         run: gbc validate hostile --output-dir evidence/v0.1-validation
+
       - name: Reproducibility
         run: gbc validate reproducibility --cases 100 --runs 3 --output-dir evidence/v0.1-validation
-      - name: Independent Differential
+
+      # No `|| test "$?" = "2"` here. Exit 2 means BLOCKED -- the reference was
+      # unavailable and nothing was compared. Swallowing it turned a gate that
+      # never ran into a green check.
+      - name: Independent Astronomy Parity
         run: |
-          gbc validate differential \
+          gbc validate astronomy-parity \
+            --reference jpl-de440 \
             --cases "${{ inputs.cases || '10000' }}" \
             --seed 42 \
-            --reference jpl \
-            --output-dir evidence/v0.1-validation || test "$?" = "2"
+            --output-dir evidence/v0.1-validation
 
+      - name: Independent Geometry Parity
+        run: |
+          gbc validate geometry-parity \
+            --cases "${{ inputs.geometry_cases || '500' }}" \
+            --seed 42 \
+            --output-dir evidence/v0.1-validation
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v01-validation-evidence
+          path: evidence/v0.1-validation/
