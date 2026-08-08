@@ -185,3 +185,10 @@ SUPPORTED_HOUSE_SYSTEMS: tuple[str, ...] = tuple(sorted(HOUSE_SYSTEMS))
 # Systems whose cusps this engine derives itself rather than taking from the
 # provider, so their behaviour is identical at every latitude.
 LOCALLY_DERIVED = frozenset({"whole_sign", "equal"})
+
+# Systems whose cusps are defined against *sign boundaries* rather than against
+# the angles. These are not equivariant under a zodiac rotation: rotating a
+# whole-sign cusp set by an ayanamsa lands every cusp at an arbitrary degree
+# instead of at 0 of a sign. They must be rebuilt from the rotated Ascendant,
+# not rotated. Equal is safe because ASC + 30k rotates with the Ascendant.
+SIGN_ANCHORED = frozenset({"whole_sign"})

@@ -79,3 +79,66 @@ here means the zodiac and nothing else.
 Remaining v1.0 modules: progressions, solar arc, relocation, draconic,
 harmonics, extended house systems, patterns, astrocartography, ephemeris
 generator, asteroid support.
+
+---
+
+# Addendum — two correctness bugs found by self-review
+
+Found while auditing the eleven v1.0 modules, after they had all shipped. The
+full suite passed throughout: **no existing test caught either**.
+
+## Bug 1: Whole Sign cusps under a zodiac rotation
+
+Whole Sign cusps were computed from the **tropical** Ascendant and then rotated
+with the rest of the chart. Sign boundaries are not equivariant under a
+rotation: every cusp landed at 6.2429 degrees instead of 0.
+
+```
+before:  house 1: aquarius 6.2429   house 2: pisces 6.2429  ...
+after:   house 1: aquarius 0.0000   house 2: pisces 0.0000  ...
+```
+
+Whole Sign is the default of `VEDIC_SIDEREAL_V1`, so this was wrong on **every
+sidereal chart the engine produced**, house assignments included.
+
+Fixed by rebuilding sign-anchored systems from the *rotated* Ascendant instead
+of rotating their cusps. `SIGN_ANCHORED` names them, and Equal is deliberately
+not in it: `ASC + 30k` rotates correctly, which a test now confirms rather than
+assumes.
+
+## Bug 2: relocation dropped the ayanamsa
+
+The house calculator always works tropically. `calculate_relocation` recomputed
+angles and cusps for the new place and never rotated them, so a relocated
+sidereal chart came back with **sidereal bodies against tropical angles** --
+incoherent by the whole ayanamsa, 23.76 degrees -- while `meta` still reported
+`zodiac: sidereal` and the ayanamsa it had supposedly applied.
+
+Fixed by rotating the recalculated geometry with the chart's own recorded
+ayanamsa, which is valid because relocation does not change the instant.
+
+## Why the suite missed both
+
+`test_house_assignments_are_invariant` asserted that house numbers survive the
+zodiac rotation. That is true for quadrant systems, whose cusps are geometric
+and rotate with everything, and it is **exactly false** for sign-anchored ones.
+The test was written against Placidus and generalised in my head to all systems.
+
+Relocation had no sidereal test at all: every relocation test used a tropical
+chart, so the path that drops the ayanamsa was never exercised.
+
+## A test that was wrong rather than a bug
+
+The first regression test asserted that Whole Sign house numbers must *differ*
+between the tropical and sidereal charts. It failed. Investigating showed the
+ayanamsa moves the Ascendant and all thirteen bodies back by exactly one sign on
+this chart, leaving every relative sign distance -- and therefore every house
+number -- unchanged. A coincidence of this chart, not a rule.
+
+Replaced with the precise statement: the cusps must equal the whole-sign set
+built from the *sidereal* Ascendant, and must not equal the tropical set rotated
+by the ayanamsa. Those differ by the ayanamsa's fractional part, which
+distinguishes fixed from buggy unambiguously.
+
+Regression tests: `tests/integration/test_sidereal.py::SignAnchoredHouseTests`
+and `::SiderealRelocationTests`.

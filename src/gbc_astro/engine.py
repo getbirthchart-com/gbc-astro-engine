@@ -38,9 +38,16 @@ from gbc_astro.houses.base import (
     HouseCalculation,
     HouseCalculator,
     assign_house,
+    build_house_cusps,
+    is_sequence_degenerate,
 )
 from gbc_astro.houses.swiss import SwissHouseCalculator
-from gbc_astro.houses.systems import HOUSE_SYSTEMS, SUPPORTED_HOUSE_SYSTEMS
+from gbc_astro.houses.systems import (
+    HOUSE_SYSTEMS,
+    SIGN_ANCHORED,
+    SUPPORTED_HOUSE_SYSTEMS,
+)
+from gbc_astro.houses.whole_sign import whole_sign_cusp_longitudes
 from gbc_astro.models.chart import (
     ChartMeta,
     ChartSubject,
@@ -50,7 +57,7 @@ from gbc_astro.models.chart import (
 )
 from gbc_astro.models.forecast import EventSearchResult, ReturnSearchResult, TransitChart
 from gbc_astro.models.input import ChartInput
-from gbc_astro.models.position import AnglePosition, BodyPosition, HouseCusp
+from gbc_astro.models.position import AnglePosition, BodyPosition
 from gbc_astro.models.relationship import (
     CompositeChart,
     DavisonChart,
@@ -211,8 +218,14 @@ class AstrologyEngine:
             }
             if house_calculation is not None:
                 house_calculation = _to_sidereal_geometry(
-                    house_calculation, ayanamsa_degrees
+                    house_calculation, ayanamsa_degrees, current_house_system
                 )
+                bodies = {
+                    body_id: _replace_house(
+                        body, assign_house(body.longitude, house_calculation.houses)
+                    )
+                    for body_id, body in bodies.items()
+                }
 
         if house_calculation is not None and house_calculation.sequence_degenerate:
             warnings.append(
@@ -644,32 +657,49 @@ def _to_sidereal_body(body: BodyPosition, ayanamsa: float) -> BodyPosition:
 
 
 def _to_sidereal_geometry(
-    calculation: HouseCalculation, ayanamsa: float
+    calculation: HouseCalculation,
+    ayanamsa: float,
+    house_system: str,
 ) -> HouseCalculation:
-    """Rotate angles and cusps by the same ayanamsa the bodies used."""
-    angles = {}
-    for name, angle in calculation.angles.items():
-        zodiac = longitude_to_sidereal(angle.longitude, ayanamsa)
-        angles[name] = AnglePosition(
-            longitude=zodiac.longitude,
-            sign=zodiac.sign,
-            degree_in_sign=zodiac.degree_in_sign,
+    """Move angles and cusps into the sidereal zodiac.
+
+    Angles rotate, because an angle is a longitude. Cusps mostly rotate too --
+    but not the sign-anchored ones. Whole Sign cusps are defined as the starts
+    of signs, and sign boundaries do not rotate with the zodiac: rotating them
+    by an ayanamsa puts every cusp at an arbitrary degree instead of at 0 of a
+    sign. Those are rebuilt from the rotated Ascendant instead.
+    """
+    angles = {
+        name: _to_sidereal_angle(angle, ayanamsa)
+        for name, angle in calculation.angles.items()
+    }
+
+    if house_system in SIGN_ANCHORED:
+        cusps = build_house_cusps(
+            whole_sign_cusp_longitudes(angles["ascendant"].longitude)
         )
-    cusps = []
-    for cusp in calculation.houses:
-        zodiac = longitude_to_sidereal(cusp.cusp_longitude, ayanamsa)
-        cusps.append(
-            HouseCusp(
-                number=cusp.number,
-                cusp_longitude=zodiac.longitude,
-                sign=zodiac.sign,
-                degree_in_sign=zodiac.degree_in_sign,
+    else:
+        cusps = build_house_cusps(
+            tuple(
+                longitude_to_sidereal(cusp.cusp_longitude, ayanamsa).longitude
+                for cusp in calculation.houses
             )
         )
+
     return HouseCalculation(
         angles=angles,
-        houses=tuple(cusps),
-        algorithm_version=calculation.algorithm_version,
+        houses=cusps,
+        algorithm_version=f"{calculation.algorithm_version}:sidereal",
+        sequence_degenerate=is_sequence_degenerate(cusps),
+    )
+
+
+def _to_sidereal_angle(angle: AnglePosition, ayanamsa: float) -> AnglePosition:
+    zodiac = longitude_to_sidereal(angle.longitude, ayanamsa)
+    return AnglePosition(
+        longitude=zodiac.longitude,
+        sign=zodiac.sign,
+        degree_in_sign=zodiac.degree_in_sign,
     )
 
 

@@ -227,3 +227,177 @@ class SiderealChartTests(unittest.TestCase):
         self.assertEqual(chart.houses, ())
         self.assertTrue(chart.bodies)
         self.assertEqual(chart.meta.ayanamsa, "lahiri")
+
+
+@unittest.skipUnless(_swiss_available(), "Sidereal houses need Swiss Ephemeris data")
+class SignAnchoredHouseTests(unittest.TestCase):
+    """Regression: Whole Sign cusps are not equivariant under a zodiac rotation.
+
+    The first implementation computed Whole Sign cusps from the tropical
+    Ascendant and then rotated the whole chart by the ayanamsa. Rotating a cusp
+    that is defined as "the start of a sign" moves it off the sign boundary:
+    every cusp landed at 6.2429 degrees instead of 0. House assignments were
+    wrong with them.
+
+    Whole Sign is the default of the Vedic profile, so this was wrong on every
+    sidereal chart the engine produced. The existing suite did not catch it
+    because it asserted rotation-invariance -- true for quadrant systems,
+    exactly false for sign-anchored ones.
+    """
+
+    def setUp(self) -> None:
+        path = os.environ["GBC_SWISS_EPHE_PATH"]
+        self.provider = SwissEphemerisProvider(ephemeris_path=path)
+        self.houses = SwissHouseCalculator(ephemeris_path=path)
+
+    def _chart(self, system: str, sidereal: bool = True):
+        profile = (
+            replace(VEDIC_SIDEREAL_V1, id=f"t-{system}", house_system=system)
+            if sidereal
+            else replace(WESTERN_MODERN_V1, id=f"t-{system}", house_system=system)
+        )
+        return AstrologyEngine(
+            provider=self.provider, house_calculator=self.houses, profile=profile
+        ).natal(*BIRTH)
+
+    def test_sidereal_whole_sign_cusps_sit_on_sign_boundaries(self) -> None:
+        chart = self._chart("whole_sign")
+        for cusp in chart.houses:
+            with self.subTest(house=cusp.number):
+                self.assertAlmostEqual(cusp.degree_in_sign, 0.0, places=9)
+
+    def test_the_first_house_is_the_sign_holding_the_sidereal_ascendant(self) -> None:
+        chart = self._chart("whole_sign")
+        self.assertEqual(chart.houses[0].sign, chart.angles["ascendant"].sign)
+
+    def test_whole_sign_house_assignments_follow_the_sidereal_signs(self) -> None:
+        """Each body's house is its sign's distance from the first house."""
+        from gbc_astro.constants import SIGN_IDS
+
+        chart = self._chart("whole_sign")
+        first = SIGN_IDS.index(chart.houses[0].sign)
+        for body_id, body in chart.bodies.items():
+            with self.subTest(body=body_id):
+                expected = (SIGN_IDS.index(body.sign) - first) % 12 + 1
+                self.assertEqual(body.house, expected)
+
+    def test_cusps_come_from_the_sidereal_ascendant_not_the_rotated_tropical_ones(
+        self,
+    ) -> None:
+        """The precise statement of the fix.
+
+        Under the bug the cusps were the tropical whole-sign set rotated by the
+        ayanamsa; correct is the whole-sign set built from the sidereal
+        Ascendant. Those differ by the ayanamsa's fractional part, so comparing
+        against both distinguishes them unambiguously.
+
+        House *numbers* are not a reliable canary: on this chart the ayanamsa
+        moves the Ascendant and every body back by exactly one sign, so the
+        relative sign distances -- and therefore the house numbers -- happen to
+        be unchanged. That is a coincidence of this chart, not a rule.
+        """
+        from gbc_astro.houses.whole_sign import whole_sign_cusp_longitudes
+
+        sidereal = self._chart("whole_sign")
+        tropical = self._chart("whole_sign", sidereal=False)
+        ayanamsa = sidereal.meta.ayanamsa_degrees
+        assert ayanamsa is not None
+
+        correct = whole_sign_cusp_longitudes(sidereal.angles["ascendant"].longitude)
+        buggy = tuple(
+            normalize_longitude(cusp.cusp_longitude - ayanamsa)
+            for cusp in tropical.houses
+        )
+        actual = tuple(cusp.cusp_longitude for cusp in sidereal.houses)
+
+        for index in range(12):
+            with self.subTest(house=index + 1):
+                self.assertAlmostEqual(actual[index], correct[index], places=9)
+        self.assertNotAlmostEqual(actual[0], buggy[0], places=6)
+
+    def test_equal_houses_stay_anchored_to_the_ascendant(self) -> None:
+        """Equal is ASC + 30k, which does rotate correctly. Confirm, don't assume."""
+        chart = self._chart("equal")
+        self.assertAlmostEqual(
+            shortest_angular_distance(
+                chart.houses[0].cusp_longitude, chart.angles["ascendant"].longitude
+            ),
+            0.0,
+            places=9,
+        )
+
+    def test_quadrant_cusps_still_track_the_angles(self) -> None:
+        chart = self._chart("placidus")
+        self.assertAlmostEqual(
+            shortest_angular_distance(
+                chart.houses[0].cusp_longitude, chart.angles["ascendant"].longitude
+            ),
+            0.0,
+            places=9,
+        )
+        self.assertAlmostEqual(
+            shortest_angular_distance(
+                chart.houses[9].cusp_longitude, chart.angles["mc"].longitude
+            ),
+            0.0,
+            places=9,
+        )
+
+
+@unittest.skipUnless(_swiss_available(), "Sidereal relocation needs Swiss Ephemeris data")
+class SiderealRelocationTests(unittest.TestCase):
+    """Regression: relocation recalculated geometry without applying the ayanamsa.
+
+    The house calculator always works tropically. A relocated sidereal chart came
+    back with sidereal bodies against tropical angles -- incoherent by the whole
+    ayanamsa, 23.76 degrees, while `meta` still reported zodiac "sidereal" and
+    the ayanamsa it had supposedly used.
+    """
+
+    def setUp(self) -> None:
+        path = os.environ["GBC_SWISS_EPHE_PATH"]
+        self.sidereal = AstrologyEngine(
+            provider=SwissEphemerisProvider(ephemeris_path=path),
+            house_calculator=SwissHouseCalculator(ephemeris_path=path),
+            profile=VEDIC_SIDEREAL_V1,
+        )
+        self.tropical = AstrologyEngine(
+            provider=SwissEphemerisProvider(ephemeris_path=path),
+            house_calculator=SwissHouseCalculator(ephemeris_path=path),
+        )
+
+    def test_relocated_angles_are_offset_by_the_ayanamsa(self) -> None:
+        sidereal = self.sidereal.relocate(self.sidereal.natal(*BIRTH), 51.5074, -0.1278)
+        tropical = self.tropical.relocate(self.tropical.natal(*BIRTH), 51.5074, -0.1278)
+
+        ayanamsa = sidereal.meta.ayanamsa_degrees
+        assert ayanamsa is not None
+        for name, angle in tropical.angles.items():
+            with self.subTest(angle=name):
+                self.assertAlmostEqual(
+                    shortest_angular_distance(
+                        normalize_longitude(angle.longitude - ayanamsa),
+                        sidereal.angles[name].longitude,
+                    ),
+                    0.0,
+                    places=9,
+                )
+
+    def test_relocated_whole_sign_cusps_stay_on_sign_boundaries(self) -> None:
+        relocated = self.sidereal.relocate(self.sidereal.natal(*BIRTH), 51.5074, -0.1278)
+        for cusp in relocated.houses:
+            with self.subTest(house=cusp.number):
+                self.assertAlmostEqual(cusp.degree_in_sign, 0.0, places=9)
+        self.assertEqual(relocated.houses[0].sign, relocated.angles["ascendant"].sign)
+
+    def test_bodies_are_untouched_by_relocation(self) -> None:
+        natal = self.sidereal.natal(*BIRTH)
+        relocated = self.sidereal.relocate(natal, 51.5074, -0.1278)
+        for body_id, body in natal.bodies.items():
+            self.assertEqual(relocated.bodies[body_id].longitude, body.longitude, body_id)
+
+    def test_the_relocated_chart_still_declares_its_ayanamsa(self) -> None:
+        relocated = self.sidereal.relocate(self.sidereal.natal(*BIRTH), 51.5074, -0.1278)
+        self.assertEqual(relocated.meta.zodiac, "sidereal")
+        self.assertEqual(relocated.meta.ayanamsa, "lahiri")
+        self.assertIsNotNone(relocated.meta.ayanamsa_degrees)

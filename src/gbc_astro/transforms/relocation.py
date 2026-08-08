@@ -21,11 +21,20 @@ from __future__ import annotations
 from gbc_astro.aspects.engine import calculate_aspects
 from gbc_astro.constants import ENGINE_NAME, ENGINE_VERSION, SCHEMA_VERSION
 from gbc_astro.errors import InvalidCalculationProfileError
-from gbc_astro.houses.base import HouseCalculator, assign_house, is_sequence_degenerate
+from gbc_astro.houses.base import (
+    HouseCalculation,
+    HouseCalculator,
+    assign_house,
+    build_house_cusps,
+    is_sequence_degenerate,
+)
+from gbc_astro.houses.systems import SIGN_ANCHORED
+from gbc_astro.houses.whole_sign import whole_sign_cusp_longitudes
 from gbc_astro.models.chart import ChartMeta, ChartSubject, NatalChart, WarningMessage
 from gbc_astro.models.input import ChartInput
-from gbc_astro.models.position import BodyPosition
+from gbc_astro.models.position import AnglePosition, BodyPosition
 from gbc_astro.profiles.model import CalculationProfile
+from gbc_astro.zodiac.sidereal import longitude_to_sidereal
 
 RELOCATION_VERSION = "1.0.0"
 
@@ -69,6 +78,23 @@ def calculate_relocation(
         longitude=longitude,
         house_system=system,
     )
+
+    # The house calculator always works in the tropical frame. A sidereal source
+    # chart has already had its bodies rotated, so the freshly calculated angles
+    # and cusps must be rotated to match -- otherwise the result is sidereal
+    # bodies against tropical angles, incoherent by the whole ayanamsa while the
+    # metadata still claims to be sidereal. The instant is unchanged, so the
+    # chart's own recorded ayanamsa is the right one to reuse.
+    if chart.meta.zodiac == "sidereal":
+        if chart.meta.ayanamsa_degrees is None:
+            raise InvalidCalculationProfileError(
+                "A sidereal chart must record the ayanamsa it used before it can be "
+                "relocated; without it the new angles cannot be placed.",
+                {"zodiac": chart.meta.zodiac},
+            )
+        geometry = _to_sidereal_geometry(
+            geometry, chart.meta.ayanamsa_degrees, system
+        )
 
     bodies = {
         body_id: _with_house(body, assign_house(body.longitude, geometry.houses))
@@ -137,6 +163,44 @@ def calculate_relocation(
         aspects=calculate_aspects(bodies, calculation_profile.aspect_profile),
         derived=chart.derived,
         warnings=tuple(warnings),
+    )
+
+
+def _to_sidereal_geometry(
+    calculation: HouseCalculation, ayanamsa: float, house_system: str
+) -> HouseCalculation:
+    """Rotate a freshly calculated geometry into the sidereal zodiac.
+
+    Sign-anchored systems are rebuilt from the rotated Ascendant rather than
+    rotated, for the same reason as in the natal path: sign boundaries do not
+    move with the zodiac.
+    """
+    angles = {}
+    for name, angle in calculation.angles.items():
+        zodiac = longitude_to_sidereal(angle.longitude, ayanamsa)
+        angles[name] = AnglePosition(
+            longitude=zodiac.longitude,
+            sign=zodiac.sign,
+            degree_in_sign=zodiac.degree_in_sign,
+        )
+
+    if house_system in SIGN_ANCHORED:
+        cusps = build_house_cusps(
+            whole_sign_cusp_longitudes(angles["ascendant"].longitude)
+        )
+    else:
+        cusps = build_house_cusps(
+            tuple(
+                longitude_to_sidereal(cusp.cusp_longitude, ayanamsa).longitude
+                for cusp in calculation.houses
+            )
+        )
+
+    return HouseCalculation(
+        angles=angles,
+        houses=cusps,
+        algorithm_version=f"{calculation.algorithm_version}:sidereal",
+        sequence_degenerate=is_sequence_degenerate(cusps),
     )
 
 
