@@ -138,6 +138,33 @@ class ProgressedChartTests(unittest.TestCase):
                     progressed.bodies[body_id].longitude, body.longitude, places=6
                 )
 
+    def test_the_progressed_chart_keeps_the_source_chart_house_system(self) -> None:
+        """It used to recast on the profile default whatever the source chart used."""
+        koch = self.engine.natal(*BIRTH, house_system="koch")
+        self.assertEqual(
+            self.engine.progressions(koch, self._at_age(30.0)).meta["houseSystem"],
+            "koch",
+        )
+
+    def test_a_polar_birth_can_be_progressed_in_a_system_that_works_there(self) -> None:
+        """Tromso, 69.65N. Placidus has no cusps here and the default is Placidus.
+
+        The natal chart cast fine in whole sign and progressing it then failed on
+        a house system the caller never asked for.
+        """
+        polar = self.engine.natal(
+            "1985-06-12T03:40:00",
+            "Europe/Oslo",
+            69.6492,
+            18.9553,
+            house_system="whole_sign",
+        )
+        target = datetime(2026, 8, 8, 12, tzinfo=timezone.utc)
+        self.assertEqual(
+            self.engine.progressions(polar, target).meta["houseSystem"], "whole_sign"
+        )
+        self.assertIn("solarArcDegrees", self.engine.solar_arc(polar, target).meta)
+
     def test_the_progressed_chart_is_a_real_chart(self) -> None:
         """Real positions, real speeds, real houses; only the mapping is symbolic."""
         progressed = self.engine.progressions(self.natal, self._at_age(30.0))

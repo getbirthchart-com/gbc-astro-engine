@@ -59,6 +59,7 @@ def calculate_returns(
     window_end: datetime,
     provider: EphemerisProvider,
     chart_builder: Callable[[datetime], NatalChart] | None = None,
+    zodiac_offset: Callable[[float], float] | None = None,
 ) -> ReturnSearchResult:
     """Every exact return of `body` to its natal longitude inside the window.
 
@@ -81,6 +82,7 @@ def calculate_returns(
         natal_body.longitude,
         window_start.astimezone(timezone.utc),
         window_end.astimezone(timezone.utc),
+        zodiac_offset=zodiac_offset,
     )
 
     hits = tuple(
@@ -123,6 +125,8 @@ def calculate_returns(
             "ephemerisProvider": provider.id,
             "ephemerisDataVersion": provider.data_version,
             "method": "bracketed_root_find_bisection_refined",
+            "zodiac": natal_chart.meta.zodiac,
+            "ayanamsa": natal_chart.meta.ayanamsa,
         },
         body=body,
         natal_longitude=natal_body.longitude,

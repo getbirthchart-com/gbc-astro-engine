@@ -172,6 +172,22 @@ class PolarBehaviourTests(unittest.TestCase):
                     house_system=system,
                 )
 
+    def test_the_polar_refusal_says_why_and_names_what_does_work(self) -> None:
+        """"Could not calculate" left the caller with nowhere to go."""
+        with self.assertRaises(HouseCalculationUnavailableError) as raised:
+            self.calculator.calculate(
+                julian_day=2448256.0,
+                latitude=78.2232,
+                longitude=15.6267,
+                house_system="placidus",
+            )
+        message = str(raised.exception)
+        self.assertIn("polar circles", message)
+        self.assertIn("78.2232", message)
+        self.assertIn("whole_sign", message)
+        # Naming alternatives must not shade into choosing one.
+        self.assertIn("No other system was substituted", message)
+
     def test_inverting_systems_are_flagged_not_returned_silently(self) -> None:
         for system in ("campanus", "regiomontanus", "topocentric"):
             with self.subTest(system=system):

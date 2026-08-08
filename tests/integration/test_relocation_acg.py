@@ -129,6 +129,22 @@ class RelocationTests(unittest.TestCase):
         with self.assertRaises(InvalidCalculationProfileError):
             self.engine.relocate(unknown, 51.5, -0.13)
 
+    def test_astrocartography_also_refuses_an_unknown_birth_time(self) -> None:
+        """It used to answer, with every line up to 141 degrees of longitude out.
+
+        Relocation refuses because an unknown-time chart has no angles. These
+        lines *are* those angles drawn across the map, so the same reason
+        applies, and the placeholder midnight moves them most of the way round
+        the world rather than slightly.
+        """
+        from gbc_astro.errors import UnknownBirthTimeError
+
+        unknown = self.engine.natal(
+            "1992-11-03", "Asia/Ho_Chi_Minh", 21.0285, 105.8542, unknown_time=True
+        )
+        with self.assertRaises(UnknownBirthTimeError):
+            self.engine.astrocartography(unknown)
+
     def test_an_impossible_coordinate_is_refused(self) -> None:
         from gbc_astro.errors import InvalidCoordinateError
 

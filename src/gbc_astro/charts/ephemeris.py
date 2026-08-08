@@ -15,16 +15,18 @@ property worth validating and is asserted in the tests.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from gbc_astro.astronomy.circular import normalize_longitude
 from gbc_astro.astronomy.time import isoformat_z
 from gbc_astro.constants import ENGINE_NAME, ENGINE_VERSION
 from gbc_astro.errors import UnsupportedBodyError
 from gbc_astro.providers.base import EphemerisProvider
 from gbc_astro.providers.normalization import normalize_body_position
+from gbc_astro.zodiac.tropical import longitude_to_tropical
 
 EPHEMERIS_VERSION = "1.0.0"
 
@@ -54,8 +56,14 @@ def iter_ephemeris(
     end: datetime,
     step: timedelta,
     max_rows: int = DEFAULT_MAX_ROWS,
+    zodiac_offset: Callable[[float], float] | None = None,
 ) -> Iterator[EphemerisRow]:
-    """Yield one row per step from `start` through `end` inclusive."""
+    """Yield one row per step from `start` through `end` inclusive.
+
+    `zodiac_offset` moves the longitudes into the caller's zodiac. Without it a
+    sidereal engine would hand back tropical positions with nothing in the
+    result saying so.
+    """
     if start.tzinfo is None or end.tzinfo is None:
         raise ValueError("start and end must be timezone-aware.")
     if end < start:
@@ -81,18 +89,38 @@ def iter_ephemeris(
                 f"Ephemeris would exceed {max_rows} rows. Narrow the range, widen "
                 "the step, or raise max_rows deliberately."
             )
+        julian_day = julian_day_ut(instant)
         yield EphemerisRow(
             instant_utc=isoformat_z(instant),
-            julian_day=julian_day_ut(instant),
+            julian_day=julian_day,
             bodies={
-                body: normalize_body_position(
-                    body, provider.position(body, instant)
-                ).to_dict()
+                body: _position(provider, body, instant, julian_day, zodiac_offset)
                 for body in bodies
             },
         )
         emitted += 1
         instant += step
+
+
+def _position(
+    provider: EphemerisProvider,
+    body: str,
+    instant: datetime,
+    julian_day: float,
+    zodiac_offset: Callable[[float], float] | None,
+) -> dict[str, Any]:
+    position = normalize_body_position(body, provider.position(body, instant))
+    if zodiac_offset is None:
+        return position.to_dict()
+    zodiac = longitude_to_tropical(
+        normalize_longitude(position.longitude - zodiac_offset(julian_day))
+    )
+    return {
+        **position.to_dict(),
+        "longitude": zodiac.longitude,
+        "sign": zodiac.sign,
+        "degreeInSign": zodiac.degree_in_sign,
+    }
 
 
 def generate_ephemeris(
@@ -102,15 +130,22 @@ def generate_ephemeris(
     end: datetime,
     step: timedelta,
     max_rows: int = DEFAULT_MAX_ROWS,
+    zodiac: str = "tropical",
+    ayanamsa: str | None = None,
+    zodiac_offset: Callable[[float], float] | None = None,
 ) -> dict[str, Any]:
     """Materialise the table, with provenance."""
-    rows = list(iter_ephemeris(provider, bodies, start, end, step, max_rows))
+    rows = list(
+        iter_ephemeris(provider, bodies, start, end, step, max_rows, zodiac_offset)
+    )
     return {
         "engine": ENGINE_NAME,
         "engineVersion": ENGINE_VERSION,
         "version": EPHEMERIS_VERSION,
         "ephemerisProvider": provider.id,
         "ephemerisDataVersion": provider.data_version,
+        "zodiac": zodiac,
+        "ayanamsa": ayanamsa,
         "bodies": list(bodies),
         "range": {
             "start": isoformat_z(start.astimezone(timezone.utc)),

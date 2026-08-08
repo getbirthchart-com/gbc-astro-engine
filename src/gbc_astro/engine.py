@@ -7,7 +7,12 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from gbc_astro.aspects.engine import calculate_aspects
-from gbc_astro.astronomy.time import isoformat_z, normalize_local_datetime
+from gbc_astro.astronomy.circular import normalize_longitude
+from gbc_astro.astronomy.time import (
+    datetime_to_julian_day,
+    isoformat_z,
+    normalize_local_datetime,
+)
 from gbc_astro.charts.astrocartography import (
     DEFAULT_LATITUDE_RANGE,
     DEFAULT_LATITUDE_STEP,
@@ -30,7 +35,11 @@ from gbc_astro.derived.balances import (
 )
 from gbc_astro.derived.moon_phase import calculate_moon_phase
 from gbc_astro.derived.patterns import ChartPattern, find_patterns
-from gbc_astro.errors import InvalidCalculationProfileError, UnsupportedBodyError
+from gbc_astro.errors import (
+    InvalidCalculationProfileError,
+    UnknownBirthTimeError,
+    UnsupportedBodyError,
+)
 from gbc_astro.forecast.returns import calculate_returns
 from gbc_astro.forecast.transits import calculate_transits
 from gbc_astro.houses.base import (
@@ -346,6 +355,9 @@ class AstrologyEngine:
             transit_profile=self.transit_profile,
             top_count=top_count,
             include_natal_chart=include_natal_chart,
+            zodiac_offset=self._zodiac_offset(
+                datetime_to_julian_day(target_instant.astimezone(timezone.utc))
+            ),
         )
 
     def returns(
@@ -368,6 +380,7 @@ class AstrologyEngine:
             window_end=window_end,
             provider=self._get_provider(),
             chart_builder=(self._return_chart_builder(natal_chart) if include_charts else None),
+            zodiac_offset=self._zodiac_offset_or_none(),
         )
 
     def _return_chart_builder(self, natal_chart: NatalChart) -> Callable[[datetime], NatalChart]:
@@ -394,17 +407,22 @@ class AstrologyEngine:
     ) -> EventSearchResult:
         """Locate ingresses, stations, exact longitudes or exact aspects."""
         provider = self._get_provider()
+        offset = self._zodiac_offset_or_none()
         if event_type == "sign_ingress":
-            events: tuple[Any, ...] = find_sign_ingresses(provider, body, start, end)
+            events: tuple[Any, ...] = find_sign_ingresses(
+                provider, body, start, end, zodiac_offset=offset
+            )
         elif event_type == "station":
-            events = find_stations(provider, body, start, end)
+            events = find_stations(provider, body, start, end, zodiac_offset=offset)
         elif event_type == "exact_longitude":
             if target_longitude is None:
                 raise InvalidCalculationProfileError(
                     "exact_longitude search requires target_longitude.",
                     {"eventType": event_type},
                 )
-            events = find_longitude_crossings(provider, body, target_longitude, start, end)
+            events = find_longitude_crossings(
+                provider, body, target_longitude, start, end, zodiac_offset=offset
+            )
         elif event_type == "exact_aspect":
             if target_longitude is None or aspect_angle is None:
                 raise InvalidCalculationProfileError(
@@ -412,7 +430,13 @@ class AstrologyEngine:
                     {"eventType": event_type},
                 )
             events = find_aspect_events(
-                provider, body, target_longitude, aspect_angle, start, end
+                provider,
+                body,
+                target_longitude,
+                aspect_angle,
+                start,
+                end,
+                zodiac_offset=offset,
             )
         else:
             raise InvalidCalculationProfileError(
@@ -428,6 +452,8 @@ class AstrologyEngine:
                 "ephemerisProvider": provider.id,
                 "ephemerisDataVersion": provider.data_version,
                 "method": "coarse_bracket_then_bisection",
+                "zodiac": self.profile.zodiac,
+                "ayanamsa": self.profile.ayanamsa,
             },
             query={
                 "type": event_type,
@@ -511,6 +537,23 @@ class AstrologyEngine:
         The instant is fixed and only the observer moves, so every line is
         closed form.
         """
+        if not chart.subject.birth_time_known:
+            # An unknown-time chart is stamped with local midnight so its bodies
+            # can still be calculated, and for a planet that placeholder costs a
+            # fraction of a degree. Here it costs everything: these lines are the
+            # angles drawn as a function of place, and the angles turn a full
+            # circle every day. A birth time unknown within the day puts the
+            # lines anywhere on Earth -- measured at up to 141 degrees of
+            # geographic longitude, most of an ocean -- so there is no degraded
+            # answer to give, only a wrong one.
+            raise UnknownBirthTimeError(
+                "Astrocartography lines are the chart's angles drawn across the "
+                "map, and a chart without a birth time has no angles. The lines "
+                "would move most of the way round the world with the unknown "
+                "hour. No substitute time was used.",
+                {"birthTimeKnown": False},
+            )
+
         calculator = self._get_armc_house_calculator()
         obliquity = calculator.obliquity(chart.subject.julian_day)
         sidereal_time = SwissHouseCalculator(
@@ -520,8 +563,20 @@ class AstrologyEngine:
         swiss = SwissHouseCalculator(
             ephemeris_path=getattr(calculator, "ephemeris_path", None)
         )
+        # Where a body is angular on Earth is a physical fact and cannot depend
+        # on which zodiac the chart labels its positions with. A sidereal chart
+        # has already had its longitudes rotated, so the rotation is undone
+        # before converting to equatorial -- otherwise every line lands about
+        # 2,500 km from where the body actually is.
+        offset = (
+            chart.meta.ayanamsa_degrees
+            if chart.meta.zodiac == "sidereal" and chart.meta.ayanamsa_degrees is not None
+            else 0.0
+        )
         equatorial = {
-            body_id: swiss.to_equatorial(body.longitude, body.latitude, obliquity)
+            body_id: swiss.to_equatorial(
+                normalize_longitude(body.longitude + offset), body.latitude, obliquity
+            )
             for body_id, body in chart.bodies.items()
         }
         result = calculate_astrocartography(
@@ -556,8 +611,36 @@ class AstrologyEngine:
     ) -> dict[str, Any]:
         """A table of positions over a range, at a fixed step."""
         return generate_ephemeris(
-            self._get_provider(), bodies, start, end, step, max_rows
+            self._get_provider(),
+            bodies,
+            start,
+            end,
+            step,
+            max_rows,
+            zodiac=self.profile.zodiac,
+            ayanamsa=self.profile.ayanamsa,
+            zodiac_offset=self._zodiac_offset_or_none(),
         )
+
+    def _zodiac_offset(self, julian_day: float) -> float:
+        """Degrees to subtract from a tropical longitude for this engine's zodiac.
+
+        Internal: this is a frame conversion, not a capability. The value it
+        returns is published in the `meta` of every result that depends on it,
+        so a caller never has to ask for it separately.
+
+        Zero for tropical. Providers always answer tropically, so every path
+        that reaches a provider directly -- transits, returns, event search,
+        the ephemeris table -- has to apply this or it will quietly mix frames
+        with a chart that has already been rotated.
+        """
+        if self.profile.zodiac != "sidereal":
+            return 0.0
+        profile = resolve_ayanamsa_profile(self.profile.ayanamsa or "")
+        return self._get_ayanamsa_calculator().value(julian_day, profile)
+
+    def _zodiac_offset_or_none(self) -> Callable[[float], float] | None:
+        return None if self.profile.zodiac != "sidereal" else self._zodiac_offset
 
     def _get_ayanamsa_calculator(self) -> AyanamsaCalculator:
         if self._ayanamsa_calculator is None:

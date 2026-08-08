@@ -24,6 +24,7 @@ thirteen degrees a day and needs a step measured in hours; Pluto does not.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -95,19 +96,36 @@ class EphemerisFunction:
     The solver needs a continuous real function; the provider speaks datetimes.
     Results are memoised because bisection asks for the same instant repeatedly
     and every call is an ephemeris lookup.
+
+    `zodiac_offset` moves the longitudes into the chart's zodiac. Providers
+    always answer tropically, so without it a sidereal chart would be searched
+    against tropical positions: a solar return would be looked for at a
+    longitude the Sun does not reach for another 24 days, and a sign ingress
+    would report the tropical boundary. Speed is unaffected -- the ayanamsa
+    drifts 50 arcseconds a year, which is below anything a station search can
+    see -- so only longitude is shifted.
     """
 
-    def __init__(self, provider: EphemerisProvider, body: str) -> None:
+    def __init__(
+        self,
+        provider: EphemerisProvider,
+        body: str,
+        zodiac_offset: Callable[[float], float] | None = None,
+    ) -> None:
         self.provider = provider
         self.body = body
+        self.zodiac_offset = zodiac_offset
         self._cache: dict[float, tuple[float, float | None]] = {}
 
     def _at(self, julian_day: float) -> tuple[float, float | None]:
         cached = self._cache.get(julian_day)
         if cached is None:
             raw = self.provider.position(self.body, julian_day_to_datetime(julian_day))
+            longitude = raw.longitude_deg
+            if self.zodiac_offset is not None:
+                longitude -= self.zodiac_offset(julian_day)
             cached = (
-                normalize_longitude(raw.longitude_deg),
+                normalize_longitude(longitude),
                 raw.longitude_speed_deg_per_day,
             )
             self._cache[julian_day] = cached
@@ -160,6 +178,7 @@ def find_longitude_crossings(
     start: datetime,
     end: datetime,
     coarse_step_days: float | None = None,
+    zodiac_offset: Callable[[float], float] | None = None,
 ) -> tuple[AstroEvent, ...]:
     """Every instant the body's longitude equals `target_longitude`.
 
@@ -168,7 +187,7 @@ def find_longitude_crossings(
     """
     from gbc_astro.astronomy.time import datetime_to_julian_day
 
-    function = EphemerisFunction(provider, body)
+    function = EphemerisFunction(provider, body, zodiac_offset)
     target = normalize_longitude(target_longitude)
     roots = find_roots(
         lambda jd: function.signed_distance_to(jd, target),
@@ -191,6 +210,7 @@ def find_sign_ingresses(
     start: datetime,
     end: datetime,
     coarse_step_days: float | None = None,
+    zodiac_offset: Callable[[float], float] | None = None,
 ) -> tuple[AstroEvent, ...]:
     """Every crossing of a 30 degree sign boundary, in either direction.
 
@@ -202,7 +222,7 @@ def find_sign_ingresses(
     for index in range(12):
         boundary = index * 30.0
         for event in find_longitude_crossings(
-            provider, body, boundary, start, end, coarse_step_days
+            provider, body, boundary, start, end, coarse_step_days, zodiac_offset
         ):
             entering = SIGN_IDS[index] if event.direction != "retrograde" else SIGN_IDS[index - 1]
             leaving = SIGN_IDS[index - 1] if event.direction != "retrograde" else SIGN_IDS[index]
@@ -232,6 +252,7 @@ def find_stations(
     start: datetime,
     end: datetime,
     coarse_step_days: float | None = None,
+    zodiac_offset: Callable[[float], float] | None = None,
 ) -> tuple[AstroEvent, ...]:
     """Instants where longitude speed changes sign.
 
@@ -241,7 +262,7 @@ def find_stations(
     """
     from gbc_astro.astronomy.time import datetime_to_julian_day
 
-    function = EphemerisFunction(provider, body)
+    function = EphemerisFunction(provider, body, zodiac_offset)
     roots = find_roots(
         function.speed,
         datetime_to_julian_day(start),
@@ -282,6 +303,7 @@ def find_aspect_events(
     start: datetime,
     end: datetime,
     coarse_step_days: float | None = None,
+    zodiac_offset: Callable[[float], float] | None = None,
 ) -> tuple[AstroEvent, ...]:
     """Every instant the body is exactly `aspect_angle` from a fixed longitude.
 
@@ -301,7 +323,7 @@ def find_aspect_events(
     events: list[AstroEvent] = []
     for target in sorted(targets):
         for event in find_longitude_crossings(
-            provider, body, target, start, end, coarse_step_days
+            provider, body, target, start, end, coarse_step_days, zodiac_offset
         ):
             events.append(
                 AstroEvent(

@@ -60,11 +60,12 @@ class SwissHouseCalculator:
             )
         except Exception as exc:
             raise HouseCalculationUnavailableError(
-                "Swiss Ephemeris could not calculate houses for this input.",
+                _diagnose(system, profile, latitude),
                 {
                     "houseSystem": system,
                     "latitude": latitude,
                     "longitude": longitude,
+                    "definedAtAllLatitudes": profile.defined_at_all_latitudes,
                     "provider": self.id,
                 },
             ) from exc
@@ -124,11 +125,12 @@ class SwissHouseCalculator:
             )
         except Exception as exc:
             raise HouseCalculationUnavailableError(
-                "Swiss Ephemeris could not calculate houses from the supplied ARMC.",
+                _diagnose(system, profile, latitude),
                 {
                     "houseSystem": system,
                     "armc": armc,
                     "latitude": latitude,
+                    "definedAtAllLatitudes": profile.defined_at_all_latitudes,
                     "provider": self.id,
                 },
             ) from exc
@@ -162,6 +164,40 @@ class SwissHouseCalculator:
             (longitude, latitude, 1.0), -obliquity
         )
         return normalize_longitude(float(right_ascension)), float(declination)
+
+
+# The polar circle sits at 90 minus the obliquity, so it drifts by a few
+# arcminutes over historical time. This is used only to decide whether to
+# explain a failure that has already happened, never to predict one, so the
+# current mean value is precise enough.
+POLAR_CIRCLE_LATITUDE = 66.56
+
+
+def _diagnose(system: str, profile: HouseSystemProfile, latitude: float) -> str:
+    """Say *why* the calculation failed, when the registry already knows why.
+
+    Placidus and Koch divide arcs that do not exist beyond the polar circles, so
+    a birth in Tromso or Murmansk has no cusps in either. That is a real
+    property of the system, not a defect, but "could not calculate" leaves the
+    caller with nothing to do about it. Naming the systems that *are* defined
+    there turns a dead end into a choice -- without making it for them, which
+    would be the silent fallback the spec forbids.
+    """
+    if not profile.defined_at_all_latitudes and abs(latitude) > POLAR_CIRCLE_LATITUDE:
+        alternatives = ", ".join(
+            sorted(
+                other
+                for other, candidate in HOUSE_SYSTEMS.items()
+                if candidate.defined_at_all_latitudes
+            )
+        )
+        return (
+            f"{profile.name} has no house cusps beyond the polar circles, where the "
+            "arcs it divides do not exist, and this birth is at latitude "
+            f"{latitude:.4f}. No other system was substituted. These are defined at "
+            f"every latitude: {alternatives}."
+        )
+    return "Swiss Ephemeris could not calculate houses for this input."
 
 
 def _resolve_system(house_system: str) -> tuple[str, HouseSystemProfile]:

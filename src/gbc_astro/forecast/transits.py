@@ -34,6 +34,7 @@ from gbc_astro.profiles.model import CalculationProfile
 from gbc_astro.profiles.transit import TRANSIT_PROFILE_V1, TransitProfile
 from gbc_astro.providers.base import EphemerisProvider
 from gbc_astro.providers.normalization import normalize_body_position
+from gbc_astro.zodiac.tropical import longitude_to_tropical
 
 # The step used to decide whether a transit is closing on an aspect or leaving
 # it. Small enough that the answer is the instantaneous one, large enough to
@@ -73,6 +74,22 @@ def transit_phase(
     if future_orb > current_orb + exact_epsilon_deg:
         return AspectPhase.SEPARATING
     return AspectPhase.INDETERMINATE
+
+
+def _shift(body: BodyPosition, offset: float) -> BodyPosition:
+    """Rotate one transit position into the chart's zodiac."""
+    zodiac = longitude_to_tropical(normalize_longitude(body.longitude - offset))
+    return BodyPosition(
+        body_id=body.body_id,
+        longitude=zodiac.longitude,
+        latitude=body.latitude,
+        distance=body.distance,
+        speed_longitude=body.speed_longitude,
+        retrograde=body.retrograde,
+        sign=zodiac.sign,
+        degree_in_sign=zodiac.degree_in_sign,
+        house=body.house,
+    )
 
 
 def rank_score(
@@ -173,8 +190,15 @@ def calculate_transits(
     transit_profile: TransitProfile = TRANSIT_PROFILE_V1,
     top_count: int | None = None,
     include_natal_chart: bool = False,
+    zodiac_offset: float = 0.0,
 ) -> TransitChart:
-    """Positions at `target_instant`, aspected and housed against the natal chart."""
+    """Positions at `target_instant`, aspected and housed against the natal chart.
+
+    `zodiac_offset` moves the transit positions into the natal chart's zodiac.
+    The provider always answers tropically, so without it a sidereal natal chart
+    would be aspected against tropical transits and every contact would be out
+    by the whole ayanamsa.
+    """
     if target_instant.tzinfo is None:
         raise ValueError("target_instant must be timezone-aware.")
     instant = target_instant.astimezone(timezone.utc)
@@ -184,8 +208,11 @@ def calculate_transits(
     for body_id in transit_profile.transiting_bodies:
         if not provider.supports_body(body_id):
             continue
-        transit_bodies[body_id] = normalize_body_position(
+        position = normalize_body_position(
             body_id, provider.position(body_id, instant)
+        )
+        transit_bodies[body_id] = (
+            position if zodiac_offset == 0.0 else _shift(position, zodiac_offset)
         )
 
     targets = _natal_targets(natal_chart, transit_profile)
@@ -262,6 +289,8 @@ def calculate_transits(
             "rankingProfileVersion": transit_profile.ranking.version,
             "rankingProfileDetail": transit_profile.ranking.to_dict(),
             "zodiac": profile.zodiac,
+            "ayanamsa": profile.ayanamsa,
+            "zodiacOffsetDegrees": zodiac_offset,
             "natalHouseSystem": natal_chart.meta.house_system,
             "phaseBasis": "transit_motion_against_fixed_natal_point",
             "natalAngleTargetsIncluded": any(

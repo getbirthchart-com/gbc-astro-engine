@@ -72,11 +72,18 @@ def calculate_secondary_progressions(
     birth = _parse_utc(chart.subject.utc_datetime)
     instant, years = progressed_instant(birth, target.astimezone(timezone.utc), profile)
 
+    # The source chart's own house system, not the profile default. Carrying it
+    # over keeps the progressed chart a chart of the same kind, and it is what
+    # makes a polar birth work at all: above the polar circle Placidus and Koch
+    # have no cusps, so a Tromso chart cast in whole sign would otherwise cast
+    # its natal fine and then fail here, on a default the caller never chose.
     progressed = natal(
         local_datetime=instant.replace(tzinfo=None),
         timezone="UTC",
         latitude=chart.subject.latitude,
         longitude=chart.subject.longitude,
+        altitude_m=chart.subject.altitude_m,
+        house_system=chart.meta.house_system,
     )
 
     return TransformedChart(
