@@ -239,6 +239,12 @@ class TransitRequest(BaseModel):
     include_natal_chart: bool = Field(
         default=False, description="Embed the full natal chart in the response."
     )
+    top: int | None = Field(
+        default=None,
+        ge=0,
+        le=50,
+        description="How many ranked transits to return in topAspects. Defaults to 3.",
+    )
 
 
 class ReturnRequest(BaseModel):

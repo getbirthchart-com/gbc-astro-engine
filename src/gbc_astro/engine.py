@@ -52,6 +52,7 @@ from gbc_astro.models.relationship import (
 from gbc_astro.profiles.defaults import RELATIONSHIP_WESTERN_V1, WESTERN_MODERN_V1
 from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
 from gbc_astro.profiles.scoring import SYNASTRY_SCORING_V1, ScoringProfile
+from gbc_astro.profiles.transit import TRANSIT_PROFILE_V1, TransitProfile
 from gbc_astro.providers.base import EphemerisProvider
 from gbc_astro.providers.normalization import normalize_body_position
 from gbc_astro.providers.swiss import SwissEphemerisProvider
@@ -77,11 +78,13 @@ class AstrologyEngine:
         house_calculator: HouseCalculator | None = None,
         relationship_profile: RelationshipProfile = RELATIONSHIP_WESTERN_V1,
         scoring_profile: ScoringProfile = SYNASTRY_SCORING_V1,
+        transit_profile: TransitProfile = TRANSIT_PROFILE_V1,
     ) -> None:
         self._provider = provider
         self.profile = profile
         self.relationship_profile = relationship_profile
         self.scoring_profile = scoring_profile
+        self.transit_profile = transit_profile
         self._house_calculator = house_calculator
         self._validate_profile(profile)
 
@@ -237,6 +240,7 @@ class AstrologyEngine:
         self,
         natal_chart: NatalChart,
         target_instant: datetime,
+        top_count: int | None = None,
         include_natal_chart: bool = False,
     ) -> TransitChart:
         """Sky positions at an instant, aspected and housed against a natal chart.
@@ -250,6 +254,8 @@ class AstrologyEngine:
             target_instant=target_instant,
             provider=self._get_provider(),
             profile=self.profile,
+            transit_profile=self.transit_profile,
+            top_count=top_count,
             include_natal_chart=include_natal_chart,
         )
 

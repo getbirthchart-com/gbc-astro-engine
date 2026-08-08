@@ -22,21 +22,40 @@ class TransitAspect:
 
     transit_body: str
     natal_body: str
+    natal_target_kind: str
     aspect_type: str
     exact_angle: float
     actual_angle: float
     orb: float
     phase: str
+    score: float = 0.0
+    rank: int = 0
 
-    def to_dict(self) -> dict[str, float | str]:
+    @property
+    def id(self) -> str:
+        """Deterministic identifier, derived only from what the contact is.
+
+        Stable across runs and across engine versions, so a caller can key
+        interpretation copy or user state off it.
+        """
+        return (
+            f"transit.{self.transit_body}.{self.aspect_type}.natal.{self.natal_body}"
+        )
+
+    def to_dict(self) -> dict[str, float | int | str]:
         return {
+            "id": self.id,
             "transitBody": self.transit_body,
+            "natalTarget": self.natal_body,
+            "natalTargetKind": self.natal_target_kind,
             "natalBody": self.natal_body,
             "type": self.aspect_type,
             "exactAngle": self.exact_angle,
             "actualAngle": self.actual_angle,
             "orb": self.orb,
             "phase": self.phase,
+            "score": self.score,
+            "rank": self.rank,
         }
 
 
@@ -61,6 +80,7 @@ class TransitChart:
     target_instant: str
     transit_bodies: dict[str, BodyPosition]
     transit_to_natal_aspects: tuple[TransitAspect, ...] = ()
+    top_aspects: tuple[TransitAspect, ...] = ()
     transit_house_placements: tuple[TransitHousePlacement, ...] = ()
     natal_chart: NatalChart | None = None
     warnings: tuple[WarningMessage, ...] = ()
@@ -76,6 +96,7 @@ class TransitChart:
             "transitToNatalAspects": [
                 aspect.to_dict() for aspect in self.transit_to_natal_aspects
             ],
+            "topAspects": [aspect.to_dict() for aspect in self.top_aspects],
             "transitHousePlacements": [
                 placement.to_dict() for placement in self.transit_house_placements
             ],

@@ -381,6 +381,20 @@
             ],
             "title": "Target Instant",
             "type": "string"
+          },
+          "top": {
+            "anyOf": [
+              {
+                "maximum": 50.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How many ranked transits to return in topAspects. Defaults to 3.",
+            "title": "Top"
           }
         },
         "required": [

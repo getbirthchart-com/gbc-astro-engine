@@ -78,7 +78,8 @@ class ForecastRouteTests(unittest.TestCase):
 
         self.assertEqual(payload["targetInstant"], "2026-08-08T12:00:00Z")
         self.assertTrue(payload["transitToNatalAspects"])
-        self.assertEqual(len(payload["transitHousePlacements"]), 13)
+        self.assertEqual(len(payload["transitHousePlacements"]), 10)
+        self.assertEqual(len(payload["topAspects"]), 3)
 
     def test_returns_report_every_hit_with_its_precision(self) -> None:
         response = self.client.post(

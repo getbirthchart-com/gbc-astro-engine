@@ -51,10 +51,13 @@ class TransitTests(ForecastTestCase):
         super().setUp()
         self.instant = datetime(2026, 8, 8, 12, tzinfo=timezone.utc)
 
-    def test_snapshot_covers_every_body_and_places_them_in_natal_houses(self) -> None:
+    def test_snapshot_covers_the_ten_transiting_planets(self) -> None:
+        """Nodes and Chiron are natal bodies but not transiting bodies here."""
+        from gbc_astro.profiles.transit import TRANSITING_BODIES
+
         transits = self.engine.transits(self.natal, self.instant)
-        self.assertEqual(len(transits.transit_bodies), len(self.natal.bodies))
-        self.assertEqual(len(transits.transit_house_placements), len(self.natal.bodies))
+        self.assertEqual(set(transits.transit_bodies), set(TRANSITING_BODIES))
+        self.assertEqual(len(transits.transit_house_placements), len(TRANSITING_BODIES))
         for placement in transits.transit_house_placements:
             self.assertIn(placement.natal_house, range(1, 13))
 
@@ -110,6 +113,7 @@ class TransitTests(ForecastTestCase):
                 "targetInstant",
                 "transitBodies",
                 "transitToNatalAspects",
+                "topAspects",
                 "transitHousePlacements",
                 "warnings",
             },

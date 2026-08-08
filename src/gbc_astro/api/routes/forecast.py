@@ -72,6 +72,7 @@ def calculate_transits(body: TransitRequest, engine: EngineDep) -> JSONResponse:
     result = engine.transits(
         _natal(engine, body.natal),
         _instant(body.target_instant, "target_instant"),
+        top_count=body.top,
         include_natal_chart=body.include_natal_chart,
     )
     logger.info("transits_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
