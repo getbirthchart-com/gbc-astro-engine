@@ -37,6 +37,10 @@ class RelationshipProfile:
     composite_position_method: str
     composite_angle_method: str | None
     composite_house_method: str | None
+    composite_house_system: str
+    composite_reference_latitude_method: str
+    composite_obliquity_epoch: str
+    davison_location_method: str
     cross_aspect_phase_policy: str
 
 

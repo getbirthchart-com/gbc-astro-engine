@@ -73,6 +73,9 @@ A release cannot be called production-ready until every required box is checked 
 
 Evidence: `evidence/v0.2-relationship/TASK_RESULT.md`.
 
+Beyond the required list: composite houses and angles derived from the
+midpoint Midheaven, and Davison relationship charts.
+
 ---
 
 ## v0.3 Forecast/Return DoD

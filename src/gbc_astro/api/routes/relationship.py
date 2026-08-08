@@ -62,6 +62,24 @@ def calculate_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResp
 
 
 @router.post(
+    "/davison",
+    summary="Calculate a Davison relationship chart",
+    response_description=(
+        "Canonical Davison JSON: an ordinary chart for the midpoint moment and "
+        "midpoint place of the two births, so its speeds, houses and "
+        "applying/separating phases are real rather than constructed."
+    ),
+    responses=_ERROR_RESPONSES,
+)
+def calculate_davison(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
+    started = time.perf_counter()
+    result = engine.davison(_natal(engine, body.chart_a), _natal(engine, body.chart_b))
+    logger.info("davison_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
+    payload: dict[str, Any] = result.to_dict()
+    return JSONResponse(content=payload)
+
+
+@router.post(
     "/composite",
     summary="Calculate a composite chart",
     response_description=(

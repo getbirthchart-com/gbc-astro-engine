@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from gbc_astro.models.chart import NatalChart, WarningMessage
-from gbc_astro.models.position import AnglePosition, BodyPosition
+from gbc_astro.models.position import AnglePosition, BodyPosition, HouseCusp
 
 CHART_A = "A"
 CHART_B = "B"
@@ -103,6 +103,12 @@ class RelationshipMeta:
     composite_position_method: str | None = None
     composite_angle_method: str | None = None
     composite_house_method: str | None = None
+    composite_house_system: str | None = None
+    composite_reference_latitude_method: str | None = None
+    composite_obliquity_epoch: str | None = None
+    davison_location_method: str | None = None
+    cross_aspect_phase_policy: str | None = None
+    house_algorithm_version: str | None = None
 
     def to_dict(self) -> dict[str, str | None]:
         payload: dict[str, str | None] = {
@@ -118,8 +124,17 @@ class RelationshipMeta:
             payload["compositePositionMethod"] = self.composite_position_method
         if self.composite_angle_method is not None:
             payload["compositeAngleMethod"] = self.composite_angle_method
-        if self.composite_house_method is not None:
-            payload["compositeHouseMethod"] = self.composite_house_method
+        for key, value in (
+            ("compositeHouseMethod", self.composite_house_method),
+            ("compositeHouseSystem", self.composite_house_system),
+            ("compositeReferenceLatitudeMethod", self.composite_reference_latitude_method),
+            ("compositeObliquityEpoch", self.composite_obliquity_epoch),
+            ("davisonLocationMethod", self.davison_location_method),
+            ("crossAspectPhasePolicy", self.cross_aspect_phase_policy),
+            ("houseAlgorithmVersion", self.house_algorithm_version),
+        ):
+            if value is not None:
+                payload[key] = value
         return payload
 
 
@@ -180,6 +195,7 @@ class CompositeChart:
     meta: RelationshipMeta
     bodies: dict[str, BodyPosition]
     angles: dict[str, AnglePosition] = field(default_factory=dict)
+    houses: tuple[HouseCusp, ...] = ()
     aspects: tuple[Any, ...] = ()
     midpoints: tuple[CompositeMidpoint, ...] = ()
     warnings: tuple[WarningMessage, ...] = ()
@@ -190,8 +206,44 @@ class CompositeChart:
             "meta": self.meta.to_dict(),
             "bodies": {name: body.to_dict() for name, body in self.bodies.items()},
             "angles": {name: angle.to_dict() for name, angle in self.angles.items()},
+            "houses": [house.to_dict() for house in self.houses],
             "aspects": [aspect.to_dict() for aspect in self.aspects],
             "midpoints": [midpoint.to_dict() for midpoint in self.midpoints],
+            "warnings": [warning.to_dict() for warning in self.warnings],
+        }
+
+    def to_json(self, indent: int | None = None) -> str:
+        return json.dumps(self.to_dict(), indent=indent, sort_keys=True)
+
+
+@dataclass(frozen=True)
+class DavisonChart:
+    """A real chart for the midpoint moment and midpoint place of two births.
+
+    Unlike a composite, this is an actual instant at an actual location, so it
+    carries genuine speeds, retrograde states, houses and angles, and its
+    aspects have meaningful applying and separating phases. It is the physically
+    grounded answer to the questions a midpoint composite can only approximate.
+    """
+
+    schema_version: str
+    meta: RelationshipMeta
+    chart: NatalChart
+    derived_utc_datetime: str
+    derived_latitude: float
+    derived_longitude: float
+    warnings: tuple[WarningMessage, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schemaVersion": self.schema_version,
+            "meta": self.meta.to_dict(),
+            "derivedFrom": {
+                "utcDateTime": self.derived_utc_datetime,
+                "latitude": self.derived_latitude,
+                "longitude": self.derived_longitude,
+            },
+            "chart": self.chart.to_dict(),
             "warnings": [warning.to_dict() for warning in self.warnings],
         }
 

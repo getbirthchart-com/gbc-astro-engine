@@ -43,7 +43,7 @@ def classify_aspect(
         return None
     best_rule, best_orb = matched
 
-    phase = _aspect_phase(
+    phase = aspect_phase(
         body_a,
         body_b,
         best_rule.exact_angle,
@@ -73,7 +73,7 @@ def calculate_aspects(
     return tuple(aspects)
 
 
-def _aspect_phase(
+def aspect_phase(
     body_a: BodyPosition,
     body_b: BodyPosition,
     exact_angle: float,

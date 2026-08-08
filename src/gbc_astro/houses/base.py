@@ -33,6 +33,31 @@ class HouseCalculator(Protocol):
         ...
 
 
+class ArmcHouseCalculator(Protocol):
+    """Houses from ARMC rather than from an instant.
+
+    Kept separate from `HouseCalculator` because only constructions that have no
+    time of their own -- the composite chart -- need it, and the validation
+    fixtures implement the time-based protocol only.
+    """
+
+    @property
+    def id(self) -> str:
+        ...
+
+    def obliquity(self, julian_day: float) -> float:
+        ...
+
+    def calculate_from_armc(
+        self,
+        armc: float,
+        latitude: float,
+        obliquity: float,
+        house_system: str,
+    ) -> HouseCalculation:
+        ...
+
+
 def build_house_cusps(cusp_longitudes: tuple[float, ...]) -> tuple[HouseCusp, ...]:
     if len(cusp_longitudes) != 12:
         raise ValueError("A house calculation must contain exactly 12 cusps.")

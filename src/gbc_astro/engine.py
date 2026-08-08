@@ -16,7 +16,12 @@ from gbc_astro.derived.balances import (
 )
 from gbc_astro.derived.moon_phase import calculate_moon_phase
 from gbc_astro.errors import InvalidCalculationProfileError, UnsupportedBodyError
-from gbc_astro.houses.base import HouseCalculation, HouseCalculator, assign_house
+from gbc_astro.houses.base import (
+    ArmcHouseCalculator,
+    HouseCalculation,
+    HouseCalculator,
+    assign_house,
+)
 from gbc_astro.houses.swiss import SwissHouseCalculator
 from gbc_astro.models.chart import (
     ChartMeta,
@@ -27,13 +32,14 @@ from gbc_astro.models.chart import (
 )
 from gbc_astro.models.input import ChartInput
 from gbc_astro.models.position import BodyPosition
-from gbc_astro.models.relationship import CompositeChart, SynastryChart
+from gbc_astro.models.relationship import CompositeChart, DavisonChart, SynastryChart
 from gbc_astro.profiles.defaults import RELATIONSHIP_WESTERN_V1, WESTERN_MODERN_V1
 from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
 from gbc_astro.providers.base import EphemerisProvider
 from gbc_astro.providers.normalization import normalize_body_position
 from gbc_astro.providers.swiss import SwissEphemerisProvider
 from gbc_astro.relationship.composite import calculate_composite
+from gbc_astro.relationship.davison import calculate_davison
 from gbc_astro.relationship.synastry import calculate_synastry
 
 
@@ -171,8 +177,28 @@ class AstrologyEngine:
         return calculate_synastry(chart_a, chart_b, self.relationship_profile)
 
     def composite(self, chart_a: NatalChart, chart_b: NatalChart) -> CompositeChart:
-        """Shortest-arc midpoint composite of two natal charts."""
-        return calculate_composite(chart_a, chart_b, self.relationship_profile)
+        """Shortest-arc midpoint composite, with angles and houses derived from the MC."""
+        return calculate_composite(
+            chart_a,
+            chart_b,
+            self.relationship_profile,
+            self._get_armc_house_calculator(),
+        )
+
+    def davison(self, chart_a: NatalChart, chart_b: NatalChart) -> DavisonChart:
+        """A real chart for the midpoint moment and midpoint place of two births.
+
+        Unlike a composite this is an actual instant, so its speeds, houses and
+        applying/separating phases are genuine rather than constructed.
+        """
+        return calculate_davison(chart_a, chart_b, self.relationship_profile, self.natal)
+
+    def _get_armc_house_calculator(self) -> ArmcHouseCalculator:
+        """Reuse the configured Swiss calculator so composite shares its ephemeris path."""
+        calculator = self._get_house_calculator()
+        if isinstance(calculator, SwissHouseCalculator):
+            return calculator
+        return SwissHouseCalculator()
 
     def _get_provider(self) -> EphemerisProvider:
         if self._provider is None:

@@ -10,12 +10,14 @@ that depend on them are omitted and a warning names them, never approximated.
 
 from __future__ import annotations
 
-from gbc_astro.aspects.engine import match_aspect_rule
+from gbc_astro.aspects.engine import aspect_phase, match_aspect_rule
 from gbc_astro.astronomy.circular import shortest_angular_distance
 from gbc_astro.constants import ENGINE_NAME, ENGINE_VERSION, SYNASTRY_SCHEMA_VERSION
 from gbc_astro.errors import InvalidCalculationProfileError
 from gbc_astro.houses.base import assign_house
 from gbc_astro.models.chart import NatalChart, WarningMessage
+from gbc_astro.models.enums import AspectPhase
+from gbc_astro.models.position import BodyPosition
 from gbc_astro.models.relationship import (
     CHART_A,
     CHART_B,
@@ -61,9 +63,34 @@ def calculate_cross_aspects(
                     exact_angle=rule.exact_angle,
                     actual_angle=separation,
                     orb=orb,
+                    phase=_cross_aspect_phase(body_a, body_b, rule.exact_angle, orb, profile),
                 )
             )
     return tuple(aspects)
+
+
+def _cross_aspect_phase(
+    body_a: BodyPosition,
+    body_b: BodyPosition,
+    exact_angle: float,
+    orb: float,
+    profile: RelationshipProfile,
+) -> str:
+    """Phase for a cross aspect, according to the profile's declared policy.
+
+    The default is `indeterminate`: applying and separating describe motion
+    along a shared timeline, and two natal charts are frozen instants belonging
+    to different people. `natal_speed_convention` opts into the traditional
+    reading that runs the two natal speeds through the natal phase logic. That
+    is a convention rather than physics, and the chart's warnings say so
+    whenever it is switched on. For a physically real answer, use a Davison
+    chart, which is an actual instant with actual motion.
+    """
+    if profile.cross_aspect_phase_policy != "natal_speed_convention":
+        return AspectPhase.INDETERMINATE.value
+    return aspect_phase(
+        body_a, body_b, exact_angle, orb, profile.aspect_profile.exact_epsilon_deg
+    ).value
 
 
 def calculate_house_overlays(
@@ -185,18 +212,36 @@ def calculate_synastry(
             )
         )
 
-    warnings.append(
-        WarningMessage(
-            code="SYNASTRY_PHASE_INDETERMINATE",
-            severity="info",
-            message=(
-                "Cross aspects report phase 'indeterminate'. Applying and separating "
-                "describe motion along a shared timeline, which two natal charts do "
-                "not share."
-            ),
-            fields_affected=("crossAspects",),
+    if profile.cross_aspect_phase_policy == "natal_speed_convention":
+        warnings.append(
+            WarningMessage(
+                code="SYNASTRY_PHASE_BY_CONVENTION",
+                severity="warning",
+                message=(
+                    "Cross-aspect phases were produced from the two natal speeds under "
+                    "the traditional synastry convention. This is a convention, not "
+                    "physics: the two charts are frozen instants belonging to different "
+                    "people and share no timeline along which anything applies or "
+                    "separates. For a physically real phase, use a Davison chart."
+                ),
+                fields_affected=("crossAspects",),
+            )
         )
-    )
+    else:
+        warnings.append(
+            WarningMessage(
+                code="SYNASTRY_PHASE_INDETERMINATE",
+                severity="info",
+                message=(
+                    "Cross aspects report phase 'indeterminate'. Applying and separating "
+                    "describe motion along a shared timeline, which two natal charts do "
+                    "not share. Set the profile's cross_aspect_phase_policy to "
+                    "'natal_speed_convention' to opt into the traditional convention, or "
+                    "use a Davison chart for a physically real phase."
+                ),
+                fields_affected=("crossAspects",),
+            )
+        )
 
     return SynastryChart(
         schema_version=SYNASTRY_SCHEMA_VERSION,
@@ -209,6 +254,7 @@ def calculate_synastry(
             zodiac=chart_a.meta.zodiac,
             chart_a_schema_version=chart_a.schema_version,
             chart_b_schema_version=chart_b.schema_version,
+            cross_aspect_phase_policy=profile.cross_aspect_phase_policy,
         ),
         chart_a=chart_a,
         chart_b=chart_b,

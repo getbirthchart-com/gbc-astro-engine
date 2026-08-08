@@ -149,19 +149,85 @@ class RelationshipTests(unittest.TestCase):
             )
 
     def test_composite_carries_no_speed_distance_or_retrograde(self) -> None:
-        """A composite chart is not an instant, so those fields have no meaning."""
+        """A composite chart is not an instant, so those fields have no meaning.
+
+        Houses are different: they follow from the composite Midheaven, which is
+        a real construction, so they are produced.
+        """
         composite = self.engine.composite(self.chart_a, self.chart_b)
         for body in composite.bodies.values():
             self.assertIsNone(body.speed_longitude)
             self.assertIsNone(body.distance)
             self.assertIsNone(body.retrograde)
-            self.assertIsNone(body.house)
+            self.assertIn(body.house, range(1, 13))
 
-    def test_composite_declares_its_methodology_and_omits_houses(self) -> None:
+    def test_composite_declares_every_part_of_its_methodology(self) -> None:
         composite = self.engine.composite(self.chart_a, self.chart_b)
         self.assertEqual(composite.meta.composite_position_method, "shortest_arc_midpoint")
-        self.assertIsNone(composite.meta.composite_house_method)
-        self.assertIn("COMPOSITE_HOUSES_UNAVAILABLE", {w.code for w in composite.warnings})
+        self.assertEqual(composite.meta.composite_angle_method, "midpoint_mc_derived_angles")
+        self.assertEqual(composite.meta.composite_house_method, "armc_from_midpoint_mc")
+        self.assertEqual(composite.meta.composite_house_system, "placidus")
+        self.assertEqual(
+            composite.meta.composite_reference_latitude_method, "mean_of_birth_latitudes"
+        )
+        self.assertEqual(composite.meta.composite_obliquity_epoch, "midpoint_julian_day")
+        self.assertIsNotNone(composite.meta.house_algorithm_version)
+
+    def test_composite_midheaven_is_the_midpoint_of_both_midheavens(self) -> None:
+        from gbc_astro.astronomy.circular import shortest_arc_midpoint
+
+        composite = self.engine.composite(self.chart_a, self.chart_b)
+        expected = shortest_arc_midpoint(
+            self.chart_a.angles["mc"].longitude, self.chart_b.angles["mc"].longitude
+        )
+        self.assertAlmostEqual(
+            shortest_angular_distance(composite.angles["mc"].longitude, expected), 0.0, places=9
+        )
+
+    def test_composite_angles_are_now_mutually_consistent(self) -> None:
+        """The defect that independent averaging caused is gone, not documented."""
+        composite = self.engine.composite(self.chart_a, self.chart_b)
+        ascendant = composite.angles["ascendant"].longitude
+        midheaven = composite.angles["mc"].longitude
+
+        self.assertAlmostEqual(
+            shortest_angular_distance(composite.angles["descendant"].longitude, ascendant + 180.0),
+            0.0,
+            places=9,
+        )
+        self.assertAlmostEqual(
+            shortest_angular_distance(composite.angles["ic"].longitude, midheaven + 180.0),
+            0.0,
+            places=9,
+        )
+        self.assertAlmostEqual(
+            shortest_angular_distance(composite.houses[0].cusp_longitude, ascendant),
+            0.0,
+            places=9,
+        )
+        self.assertAlmostEqual(
+            shortest_angular_distance(composite.houses[9].cusp_longitude, midheaven),
+            0.0,
+            places=9,
+        )
+        self.assertNotIn(
+            "COMPOSITE_ANGLES_NOT_MUTUALLY_CONSISTENT",
+            {warning.code for warning in composite.warnings},
+        )
+
+    def test_composite_cusps_advance_in_zodiacal_order(self) -> None:
+        composite = self.engine.composite(self.chart_a, self.chart_b)
+        self.assertEqual(len(composite.houses), 12)
+        total = 0.0
+        for index in range(12):
+            step = (
+                composite.houses[(index + 1) % 12].cusp_longitude
+                - composite.houses[index].cusp_longitude
+            ) % 360.0
+            self.assertGreater(step, 0.0)
+            self.assertLess(step, 180.0)
+            total += step
+        self.assertAlmostEqual(total, 360.0, places=6)
 
     def test_composite_with_self_reproduces_the_original_longitudes(self) -> None:
         composite = self.engine.composite(self.chart_a, self.chart_a)
@@ -237,3 +303,52 @@ class RelationshipTests(unittest.TestCase):
                     build(self.chart_a, self.chart_b).to_json(),
                     build(self.chart_a, self.chart_b).to_json(),
                 )
+
+
+@unittest.skipUnless(_swiss_available(), "Relationship charts need Swiss Ephemeris data")
+class CrossAspectPhasePolicyTests(unittest.TestCase):
+    """The natal-speed convention is opt-in and labels itself as a convention."""
+
+    def setUp(self) -> None:
+        from dataclasses import replace as replace_dataclass
+
+        path = os.environ["GBC_SWISS_EPHE_PATH"]
+        self.convention_profile = replace_dataclass(
+            RELATIONSHIP_WESTERN_V1, cross_aspect_phase_policy="natal_speed_convention"
+        )
+        self.engine = AstrologyEngine(
+            provider=SwissEphemerisProvider(ephemeris_path=path),
+            house_calculator=SwissHouseCalculator(ephemeris_path=path),
+            relationship_profile=self.convention_profile,
+        )
+        self.chart_a = self.engine.natal(
+            "1992-11-03T14:35:00", "Asia/Ho_Chi_Minh", 21.0285, 105.8542
+        )
+        self.chart_b = self.engine.natal("1990-06-21T08:20:00", "Europe/Berlin", 52.52, 13.405)
+
+    def test_convention_produces_real_phases(self) -> None:
+        synastry = self.engine.synastry(self.chart_a, self.chart_b)
+        phases = {aspect.phase for aspect in synastry.cross_aspects}
+        self.assertTrue(phases & {"applying", "separating"})
+
+    def test_convention_is_declared_and_warned_about(self) -> None:
+        synastry = self.engine.synastry(self.chart_a, self.chart_b)
+        self.assertEqual(synastry.meta.cross_aspect_phase_policy, "natal_speed_convention")
+
+        codes = {warning.code for warning in synastry.warnings}
+        self.assertIn("SYNASTRY_PHASE_BY_CONVENTION", codes)
+        self.assertNotIn("SYNASTRY_PHASE_INDETERMINATE", codes)
+
+        warning = next(w for w in synastry.warnings if w.code == "SYNASTRY_PHASE_BY_CONVENTION")
+        self.assertEqual(warning.severity, "warning")
+        self.assertIn("convention, not", warning.message)
+
+    def test_default_profile_still_refuses(self) -> None:
+        default_engine = AstrologyEngine(
+            provider=SwissEphemerisProvider(ephemeris_path=os.environ["GBC_SWISS_EPHE_PATH"]),
+            house_calculator=SwissHouseCalculator(
+                ephemeris_path=os.environ["GBC_SWISS_EPHE_PATH"]
+            ),
+        )
+        synastry = default_engine.synastry(self.chart_a, self.chart_b)
+        self.assertEqual({a.phase for a in synastry.cross_aspects}, {"indeterminate"})

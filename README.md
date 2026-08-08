@@ -57,23 +57,48 @@ a = engine.natal("1992-11-03T14:35:00", "Asia/Ho_Chi_Minh", 21.0285, 105.8542)
 b = engine.natal("1990-06-21T08:20:00", "Europe/Berlin", 52.52, 13.405)
 
 synastry = engine.synastry(a, b)   # cross aspects, house overlays, angle contacts
-composite = engine.composite(a, b) # shortest-arc midpoint positions
+composite = engine.composite(a, b) # midpoint positions, angles and houses
+davison = engine.davison(a, b)     # a real chart at the midpoint moment and place
 ```
 
-Both take already-calculated charts, so the two sides are known to share zodiac
-and schema semantics; mixing them is refused rather than silently averaged.
+All three take already-calculated charts, so the two sides are known to share
+zodiac and schema semantics; mixing them is refused rather than silently
+averaged.
 
-Three things are deliberately not produced, each with a warning saying so:
+### Composite geometry is derived, not averaged
 
-- **applying/separating on cross aspects** — two natal charts share no timeline,
-  so `phase` is always `indeterminate`
-- **composite houses** — deriving cusps needs a reference time and place a
-  composite chart does not have
+The composite Midheaven is the shortest-arc midpoint of the two Midheavens. The
+Ascendant and all twelve cusps are then **derived** from it, via the ARMC at the
+mean of the two birth latitudes. The common shortcut of averaging each angle
+separately produces an Ascendant and Midheaven that do not hold the relationship
+a real chart's angles do; on the worked example in the tests that shortcut moves
+the Ascendant by nearly 13 degrees.
+
+Everything the construction rests on is named in `meta`: position method, angle
+method, house method, house system, reference latitude, and which instant the
+obliquity is taken at.
+
+Composite bodies still carry no speed, distance or retrograde state, because a
+composite is not an instant.
+
+### Davison is the physically real alternative
+
+A Davison chart is an ordinary natal calculation run at the midpoint moment
+between the two births and the midpoint of the two places. Everything in it is
+genuine: real speeds, real retrograde states, real houses, and aspects with
+meaningful applying and separating phases.
+
+Geographic longitude wraps, so 179 East and 179 West average to 180, not 0.
+
+### Still not produced
+
+- **applying/separating on synastry cross aspects** — two natal charts share no
+  timeline, so `phase` is `indeterminate` by default. Set the profile's
+  `cross_aspect_phase_policy` to `natal_speed_convention` to opt into the
+  traditional reading; the chart then warns that it is a convention, not physics.
+  For a physically real phase, use a Davison chart.
 - **compatibility scores** — the spec forbids a percentage in the deterministic
-  engine without a separately versioned scoring profile
-
-Composite angles are produced but flagged: they are independent midpoints, so
-they need not hold the geometric relationship a real chart's angles do.
+  engine without a separately versioned scoring profile.
 
 ## CLI
 
@@ -145,13 +170,15 @@ Implemented:
 - deterministic derived natal primitives
 - canonical JSON serialization
 - synastry: cross aspects, two-way house overlays, angle interactions
-- composite: shortest-arc midpoint positions and angles
-- thin FastAPI HTTP adapter (`GET /health`, `POST /v1/charts/{natal,synastry,composite}`)
+- composite: midpoint positions with angles and houses derived from the Midheaven
+- Davison: a real chart at the midpoint moment and place
+- thin FastAPI HTTP adapter (`GET /health`,
+  `POST /v1/charts/{natal,synastry,composite,davison}`)
 - independent validation for astronomy, geometry and Chiron
 
 Not implemented (later releases):
 
-- Davison relationship charts and composite house systems
+- compatibility scoring profiles
 - v0.3 transits, event search and returns
 - v1.0 progressions, solar arc, relocation, sidereal, draconic, harmonics,
   additional house systems, patterns, astrocartography, asteroids

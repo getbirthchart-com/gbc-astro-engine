@@ -23,9 +23,20 @@ EXPECTED_COMPOSITE_BODIES = {
     "moon": (14.75116120868654, "aries", 14.75116120868654),
     "mercury": (160.40601423508105, "virgo", 10.406014235081045),
 }
+# Angles are DERIVED from the composite Midheaven, not averaged independently.
+# The Ascendant differs by roughly 12.8 degrees from what independent averaging
+# produced, which is the size of the error that method carried.
 EXPECTED_COMPOSITE_ANGLES = {
-    "ascendant": (59.99027484618614, "taurus"),
+    "ascendant": (72.76795156915098, "gemini"),
     "mc": (321.0547419221317, "aquarius"),
+}
+EXPECTED_COMPOSITE_HOUSE_OF = {"sun": 4, "moon": 11}
+EXPECTED_DAVISON = {
+    "utc": "1991-08-28T06:57:30Z",
+    "latitude": 36.77425,
+    "longitude": 59.629599999999996,
+    "sun_longitude": 154.49022036916918,
+    "ascendant": 220.82077071624454,
 }
 EXPECTED_OVERLAYS_A_IN_B = {"sun": 4, "moon": 7}
 EXPECTED_OVERLAYS_B_IN_A = {"sun": 4, "moon": 3}
@@ -79,6 +90,23 @@ class RelationshipGoldenTests(unittest.TestCase):
             self.assertEqual(a_in_b[body], house, f"A.{body} in B houses")
         for body, house in EXPECTED_OVERLAYS_B_IN_A.items():
             self.assertEqual(b_in_a[body], house, f"B.{body} in A houses")
+
+    def test_composite_house_placements(self) -> None:
+        composite = self.engine.composite(self.chart_a, self.chart_b)
+        for body_id, house in EXPECTED_COMPOSITE_HOUSE_OF.items():
+            self.assertEqual(composite.bodies[body_id].house, house, body_id)
+
+    def test_davison_derived_instant_and_place(self) -> None:
+        davison = self.engine.davison(self.chart_a, self.chart_b)
+        self.assertEqual(davison.derived_utc_datetime, EXPECTED_DAVISON["utc"])
+        self.assertAlmostEqual(davison.derived_latitude, EXPECTED_DAVISON["latitude"], places=9)
+        self.assertAlmostEqual(davison.derived_longitude, EXPECTED_DAVISON["longitude"], places=9)
+        self.assertAlmostEqual(
+            davison.chart.bodies["sun"].longitude, EXPECTED_DAVISON["sun_longitude"], places=9
+        )
+        self.assertAlmostEqual(
+            davison.chart.angles["ascendant"].longitude, EXPECTED_DAVISON["ascendant"], places=9
+        )
 
     def test_result_counts(self) -> None:
         synastry = self.engine.synastry(self.chart_a, self.chart_b)

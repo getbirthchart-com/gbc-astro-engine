@@ -83,3 +83,89 @@ and a sidereal chart would be arithmetic on incompatible frames.
 `/v1/charts/composite`. The frontend pins the contract by hash in
 `.engine-version.json`, so it keeps building against v0.1.0 until it re-syncs
 deliberately.
+
+---
+
+# Addendum — deriving what was previously refused
+
+The three refusals above were about missing methodology, not missing capability.
+Two of them are now implemented properly rather than declined.
+
+## Composite houses and angles
+
+Previously: angles were the independent midpoint of each of the two charts'
+angles, houses were not produced at all.
+
+Now:
+
+```
+composite MC = shortest-arc midpoint of the two Midheavens
+ARMC         = right ascension of that Midheaven
+angles+cusps = swe_houses_armc(ARMC, reference latitude, obliquity, system)
+```
+
+`swe_houses_armc` needs no instant, which is exactly why it fits a chart that
+has none. The reference latitude is the plain mean of the two birth latitudes,
+since latitude does not wrap. Obliquity does need an instant, so the profile
+declares one: the midpoint of the two Julian Days, the same instant the Davison
+chart uses.
+
+The defect that made the old angles worth warning about is gone rather than
+documented. Verified in tests: Descendant is exactly Ascendant + 180, IC is
+exactly MC + 180, cusp 1 is exactly the Ascendant, cusp 10 is exactly the
+Midheaven, and the twelve cusps advance in order and close the circle.
+
+The correction is not cosmetic. On the committed golden pair the Ascendant moves
+from 59.990 to 72.768 degrees, nearly 13 degrees, which is the size of the error
+the averaging shortcut carried.
+
+Composite bodies now carry a house number. They still carry no speed, distance
+or retrograde state: a composite remains a construct, not an instant.
+
+Schema: composite `1.1.0` (was `1.0.0`).
+
+## Davison charts
+
+A Davison chart is an ordinary natal calculation at the midpoint moment between
+the two births and the midpoint of the two places. Nothing is constructed, so
+everything is real: genuine speeds, retrograde states, houses, and aspects with
+meaningful applying and separating phases.
+
+Two traps, both covered by tests:
+
+- **Geographic longitude wraps.** 179 East and 179 West average to 180, not 0.
+  Latitude does not wrap and takes the plain mean.
+- **Floating-point order dependence.** `shortest_arc_midpoint` is commutative in
+  exact arithmetic but differs in the last bits between argument orders. Here the
+  midpoint is not the answer but the *input* to a fresh chart calculation, so
+  1e-14 degrees was enough to make `davison(a, b)` and `davison(b, a)` return
+  different charts. Found by the order-independence test, fixed by sorting the
+  inputs rather than rounding the output.
+
+Both birth times must be known; a Davison chart with an unknown time is refused,
+not approximated.
+
+Schema: davison `1.0.0`.
+
+## Cross-aspect phase, opt-in
+
+Default remains `indeterminate`. Setting the profile's
+`cross_aspect_phase_policy` to `natal_speed_convention` produces applying and
+separating from the two natal speeds under the traditional synastry reading. The
+chart then carries `SYNASTRY_PHASE_BY_CONVENTION` at `warning` severity stating
+that this is a convention rather than physics, and the policy is echoed in
+`meta.crossAspectPhasePolicy` so any stored chart records which reading produced
+it.
+
+## Still refused
+
+Compatibility scoring. `03_CALCULATION_SPEC.md` allows it only behind a
+separately versioned scoring profile, and the weights in such a profile are an
+editorial decision, not a technical one.
+
+## Surfaces
+
+CLI `gbc davison`, HTTP `POST /v1/charts/davison`, and
+`AstrologyEngine.davison(...)`.
+
+Suite: 172 passed, 0 skipped.

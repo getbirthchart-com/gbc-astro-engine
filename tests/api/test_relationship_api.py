@@ -83,8 +83,10 @@ class RelationshipRouteTests(unittest.TestCase):
         payload = response.json()
 
         self.assertEqual(payload["meta"]["compositePositionMethod"], "shortest_arc_midpoint")
-        self.assertNotIn("compositeHouseMethod", payload["meta"])
-        self.assertIn(
+        self.assertEqual(payload["meta"]["compositeHouseMethod"], "armc_from_midpoint_mc")
+        self.assertEqual(payload["meta"]["compositeHouseSystem"], "placidus")
+        self.assertEqual(len(payload["houses"]), 12)
+        self.assertNotIn(
             "COMPOSITE_HOUSES_UNAVAILABLE",
             {warning["code"] for warning in payload["warnings"]},
         )
@@ -119,3 +121,41 @@ class RelationshipRouteTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.json()["error"]["code"], "AMBIGUOUS_LOCAL_TIME")
+
+
+@unittest.skipUnless(_swiss_available(), "Davison route needs Swiss Ephemeris data")
+class DavisonRouteTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = TestClient(create_app())
+
+    def test_davison_returns_a_real_chart_with_speeds_and_houses(self) -> None:
+        response = self.client.post(
+            "/v1/charts/davison", json={"chart_a": CHART_A, "chart_b": CHART_B}
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+
+        self.assertIn("derivedFrom", payload)
+        self.assertEqual(len(payload["chart"]["houses"]), 12)
+        self.assertIsNotNone(payload["chart"]["bodies"]["sun"]["speedLongitude"])
+        self.assertEqual(
+            payload["meta"]["davisonLocationMethod"], "mean_latitude_circular_mean_longitude"
+        )
+
+    def test_unknown_birth_time_is_refused(self) -> None:
+        response = self.client.post(
+            "/v1/charts/davison",
+            json={
+                "chart_a": CHART_A,
+                "chart_b": {
+                    "local_date": "1990-06-21",
+                    "local_time": None,
+                    "unknown_time": True,
+                    "timezone": "Europe/Berlin",
+                    "latitude": 52.52,
+                    "longitude": 13.405,
+                },
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"]["code"], "UNKNOWN_BIRTH_TIME")
