@@ -150,6 +150,20 @@ class SwissHouseCalculator:
         )
 
 
+    def sidereal_time_degrees(self, julian_day: float) -> float:
+        """Greenwich apparent sidereal time in degrees, for a Julian Day (UT)."""
+        return normalize_longitude(float(self._swe.sidtime(julian_day)) * 15.0)
+
+    def to_equatorial(
+        self, longitude: float, latitude: float, obliquity: float
+    ) -> tuple[float, float]:
+        """Ecliptic longitude and latitude to right ascension and declination."""
+        right_ascension, declination, _distance = self._swe.cotrans(
+            (longitude, latitude, 1.0), -obliquity
+        )
+        return normalize_longitude(float(right_ascension)), float(declination)
+
+
 def _resolve_system(house_system: str) -> tuple[str, HouseSystemProfile]:
     system = house_system.lower()
     profile = HOUSE_SYSTEMS.get(system)

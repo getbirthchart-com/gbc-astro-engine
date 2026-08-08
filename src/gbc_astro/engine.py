@@ -8,6 +8,11 @@ from typing import Any
 
 from gbc_astro.aspects.engine import calculate_aspects
 from gbc_astro.astronomy.time import isoformat_z, normalize_local_datetime
+from gbc_astro.charts.astrocartography import (
+    DEFAULT_LATITUDE_RANGE,
+    DEFAULT_LATITUDE_STEP,
+    calculate_astrocartography,
+)
 from gbc_astro.constants import (
     BODY_IDS,
     ENGINE_NAME,
@@ -81,6 +86,7 @@ from gbc_astro.transforms.progressions import (
     calculate_secondary_progressions,
     calculate_solar_arc,
 )
+from gbc_astro.transforms.relocation import calculate_relocation
 from gbc_astro.zodiac.sidereal import (
     AyanamsaCalculator,
     longitude_to_sidereal,
@@ -451,6 +457,65 @@ class AstrologyEngine:
         mutually trine within the profile's orb, or it is not reported.
         """
         return find_patterns(chart.bodies, self.pattern_profile)
+
+    def relocate(
+        self,
+        chart: NatalChart,
+        latitude: float,
+        longitude: float,
+        house_system: str | None = None,
+        altitude_m: float | None = None,
+    ) -> NatalChart:
+        """Recast the same birth moment for a different place.
+
+        The sky is unchanged, so body longitudes and every aspect are carried
+        over untouched. Only the angles, cusps and house placements differ.
+        """
+        return calculate_relocation(
+            chart,
+            latitude,
+            longitude,
+            self.profile,
+            self._get_house_calculator(),
+            house_system=house_system,
+            altitude_m=altitude_m,
+        )
+
+    def astrocartography(
+        self,
+        chart: NatalChart,
+        bodies: tuple[str, ...] | None = None,
+        latitude_range: tuple[float, float] = DEFAULT_LATITUDE_RANGE,
+        latitude_step: float = DEFAULT_LATITUDE_STEP,
+    ) -> dict[str, Any]:
+        """Where on Earth each body sits on an angle, for this chart's instant.
+
+        The instant is fixed and only the observer moves, so every line is
+        closed form.
+        """
+        calculator = self._get_armc_house_calculator()
+        obliquity = calculator.obliquity(chart.subject.julian_day)
+        sidereal_time = SwissHouseCalculator(
+            ephemeris_path=getattr(calculator, "ephemeris_path", None)
+        ).sidereal_time_degrees(chart.subject.julian_day)
+
+        swiss = SwissHouseCalculator(
+            ephemeris_path=getattr(calculator, "ephemeris_path", None)
+        )
+        equatorial = {
+            body_id: swiss.to_equatorial(body.longitude, body.latitude, obliquity)
+            for body_id, body in chart.bodies.items()
+        }
+        result = calculate_astrocartography(
+            equatorial,
+            sidereal_time,
+            bodies=bodies,
+            latitude_range=latitude_range,
+            latitude_step=latitude_step,
+        )
+        result["chartInstant"] = chart.subject.utc_datetime
+        result["obliquity"] = obliquity
+        return result
 
     def _get_ayanamsa_calculator(self) -> AyanamsaCalculator:
         if self._ayanamsa_calculator is None:
