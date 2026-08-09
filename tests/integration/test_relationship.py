@@ -296,10 +296,12 @@ class RelationshipTests(unittest.TestCase):
                 "aBodiesInBHouses",
                 "bBodiesInAHouses",
                 "angleInteractions",
+                "rulerInteractions",
+                "directionalThemes",
                 "warnings",
             },
         )
-        self.assertEqual(payload["schemaVersion"], "1.1.0")
+        self.assertEqual(payload["schemaVersion"], "1.2.0")
         self.assertEqual(payload["meta"]["relationshipProfile"], "relationship-western-v1")
 
     def test_relationship_json_is_deterministic(self) -> None:

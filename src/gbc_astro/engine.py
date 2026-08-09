@@ -335,7 +335,9 @@ class AstrologyEngine:
         built under the same semantics; mixing zodiacs or schema versions is
         refused rather than silently averaged.
         """
-        return calculate_synastry(chart_a, chart_b, self.relationship_profile)
+        return calculate_synastry(
+            chart_a, chart_b, self.relationship_profile, self.dimension_profile
+        )
 
     def composite(self, chart_a: NatalChart, chart_b: NatalChart) -> CompositeChart:
         """Shortest-arc midpoint composite, with angles and houses derived from the MC."""

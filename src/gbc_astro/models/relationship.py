@@ -130,6 +130,73 @@ class AngleInteraction:
 
 
 @dataclass(frozen=True)
+class RulerInteraction:
+    """A house ruler of one chart meeting something in the other.
+
+    Not a new contact. If Mercury rules A's seventh house, "A's seventh ruler
+    conjunct B's Venus" *is* the cross aspect `a.mercury.conjunction.b.venus`,
+    which is already in the result and already scored. `evidence_id` points at
+    that fact rather than minting a second one, so the same geometry cannot
+    enter the scoring twice.
+    """
+
+    direction: str
+    house: int
+    ruler: str
+    kind: str
+    target: str
+    evidence_id: str
+    aspect_type: str | None = None
+    orb: float | None = None
+
+    @property
+    def id(self) -> str:
+        source = self.direction.split("_")[0].lower()
+        target = self.direction.split("_")[-1].lower()
+        detail = self.aspect_type or "in"
+        return (
+            f"synastry.ruler.{source}.house_{self.house}.{self.ruler}"
+            f".{detail}.{target}.{self.target}"
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "direction": self.direction,
+            "house": self.house,
+            "ruler": self.ruler,
+            "kind": self.kind,
+            "target": self.target,
+            "type": self.aspect_type,
+            "orb": self.orb,
+            "evidenceId": self.evidence_id,
+        }
+
+
+@dataclass(frozen=True)
+class DirectionalTheme:
+    """Which way a group of directional facts runs, and what they touch.
+
+    Built from house overlays and angle contacts only. A cross aspect is a
+    mutual relation with no direction of influence, and grouping one here would
+    assert a direction the geometry does not have.
+    """
+
+    direction: str
+    theme: str
+    contact_count: int
+    evidence_ids: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "direction": self.direction,
+            "theme": self.theme,
+            "contactCount": self.contact_count,
+            "evidenceIds": list(self.evidence_ids),
+        }
+
+
+@dataclass(frozen=True)
 class RelationshipMeta:
     schema_version: str
     engine: str
@@ -187,6 +254,8 @@ class SynastryChart:
     a_bodies_in_b_houses: tuple[HouseOverlay, ...] = ()
     b_bodies_in_a_houses: tuple[HouseOverlay, ...] = ()
     angle_interactions: tuple[AngleInteraction, ...] = ()
+    ruler_interactions: tuple[RulerInteraction, ...] = ()
+    directional_themes: tuple[DirectionalTheme, ...] = ()
     warnings: tuple[WarningMessage, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
@@ -200,6 +269,12 @@ class SynastryChart:
             "bBodiesInAHouses": [overlay.to_dict() for overlay in self.b_bodies_in_a_houses],
             "angleInteractions": [
                 interaction.to_dict() for interaction in self.angle_interactions
+            ],
+            "rulerInteractions": [
+                interaction.to_dict() for interaction in self.ruler_interactions
+            ],
+            "directionalThemes": [
+                theme.to_dict() for theme in self.directional_themes
             ],
             "warnings": [warning.to_dict() for warning in self.warnings],
         }

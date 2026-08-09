@@ -304,6 +304,38 @@ class AngleInteractionPayload(_Schema):
     orb: float
 
 
+class RulerInteractionPayload(_Schema):
+    """A house ruler of one chart meeting something in the other.
+
+    A reframing, not a contact. `evidenceId` points at the cross aspect or
+    overlay this is a view of, which is the fact that was actually scored --
+    several rulerships may point at one fact and it is still counted once.
+    """
+
+    id: str
+    direction: str = Field(description="A_TO_B or B_TO_A.")
+    house: int
+    ruler: str
+    kind: str = Field(description="aspect or overlay.")
+    target: str
+    type: str | None = None
+    orb: float | None = None
+    evidenceId: str
+
+
+class DirectionalThemePayload(_Schema):
+    direction: str
+    theme: str
+    contactCount: int
+    evidenceIds: list[str] = Field(
+        description=(
+            "House overlays and angle contacts only. A cross aspect is a mutual "
+            "relation with no direction of influence, so grouping one here "
+            "would assert a direction the geometry does not have."
+        )
+    )
+
+
 class SynastryResponse(_Schema):
     schemaVersion: str
     meta: dict[str, Any]
@@ -320,6 +352,8 @@ class SynastryResponse(_Schema):
     aBodiesInBHouses: list[HouseOverlayPayload]
     bBodiesInAHouses: list[HouseOverlayPayload]
     angleInteractions: list[AngleInteractionPayload]
+    rulerInteractions: list[RulerInteractionPayload] = Field(default_factory=list)
+    directionalThemes: list[DirectionalThemePayload] = Field(default_factory=list)
     warnings: list[WarningPayload] = Field(default_factory=list)
 
 

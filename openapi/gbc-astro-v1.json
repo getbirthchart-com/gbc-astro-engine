@@ -1318,6 +1318,39 @@
         "title": "DirectionRequest",
         "type": "object"
       },
+      "DirectionalThemePayload": {
+        "additionalProperties": true,
+        "properties": {
+          "contactCount": {
+            "title": "Contactcount",
+            "type": "integer"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "evidenceIds": {
+            "description": "House overlays and angle contacts only. A cross aspect is a mutual relation with no direction of influence, so grouping one here would assert a direction the geometry does not have.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidenceids",
+            "type": "array"
+          },
+          "theme": {
+            "title": "Theme",
+            "type": "string"
+          }
+        },
+        "required": [
+          "direction",
+          "theme",
+          "contactCount",
+          "evidenceIds"
+        ],
+        "title": "DirectionalThemePayload",
+        "type": "object"
+      },
       "DispositorChainPayload": {
         "additionalProperties": true,
         "properties": {
@@ -2631,6 +2664,75 @@
         "title": "ReturnSearchResponse",
         "type": "object"
       },
+      "RulerInteractionPayload": {
+        "additionalProperties": true,
+        "description": "A house ruler of one chart meeting something in the other.\n\nA reframing, not a contact. `evidenceId` points at the cross aspect or\noverlay this is a view of, which is the fact that was actually scored --\nseveral rulerships may point at one fact and it is still counted once.",
+        "properties": {
+          "direction": {
+            "description": "A_TO_B or B_TO_A.",
+            "title": "Direction",
+            "type": "string"
+          },
+          "evidenceId": {
+            "title": "Evidenceid",
+            "type": "string"
+          },
+          "house": {
+            "title": "House",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "description": "aspect or overlay.",
+            "title": "Kind",
+            "type": "string"
+          },
+          "orb": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orb"
+          },
+          "ruler": {
+            "title": "Ruler",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          }
+        },
+        "required": [
+          "id",
+          "direction",
+          "house",
+          "ruler",
+          "kind",
+          "target",
+          "evidenceId"
+        ],
+        "title": "RulerInteractionPayload",
+        "type": "object"
+      },
       "RulerPlacementPayload": {
         "additionalProperties": true,
         "description": "A ruling planet and where it actually sits, not just its name.",
@@ -2835,10 +2937,24 @@
             "title": "Crossaspects",
             "type": "array"
           },
+          "directionalThemes": {
+            "items": {
+              "$ref": "#/components/schemas/DirectionalThemePayload"
+            },
+            "title": "Directionalthemes",
+            "type": "array"
+          },
           "meta": {
             "additionalProperties": true,
             "title": "Meta",
             "type": "object"
+          },
+          "rulerInteractions": {
+            "items": {
+              "$ref": "#/components/schemas/RulerInteractionPayload"
+            },
+            "title": "Rulerinteractions",
+            "type": "array"
           },
           "schemaVersion": {
             "title": "Schemaversion",
@@ -3230,7 +3346,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.6.0"
+    "x-gbc-engine-version": "1.7.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -3821,7 +3937,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.6.0",
+                    "engineVersion": "1.7.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },

@@ -10,6 +10,8 @@ that depend on them are omitted and a warning names them, never approximated.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from gbc_astro.aspects.engine import aspect_phase, match_aspect_rule
 from gbc_astro.astronomy.circular import shortest_angular_distance
 from gbc_astro.constants import ENGINE_NAME, ENGINE_VERSION, SYNASTRY_SCHEMA_VERSION
@@ -27,7 +29,15 @@ from gbc_astro.models.relationship import (
     RelationshipMeta,
     SynastryChart,
 )
+from gbc_astro.profiles.dimensions import (
+    SYNASTRY_DIMENSION_PROFILE_V1,
+    DimensionProfile,
+)
 from gbc_astro.profiles.model import RelationshipProfile
+from gbc_astro.relationship.directional import (
+    directional_themes,
+    ruler_interactions,
+)
 
 
 def calculate_cross_aspects(
@@ -165,6 +175,7 @@ def calculate_synastry(
     chart_a: NatalChart,
     chart_b: NatalChart,
     profile: RelationshipProfile,
+    dimension_profile: DimensionProfile = SYNASTRY_DIMENSION_PROFILE_V1,
 ) -> SynastryChart:
     _assert_comparable(chart_a, chart_b)
 
@@ -243,7 +254,7 @@ def calculate_synastry(
             )
         )
 
-    return SynastryChart(
+    chart = SynastryChart(
         schema_version=SYNASTRY_SCHEMA_VERSION,
         meta=RelationshipMeta(
             schema_version=SYNASTRY_SCHEMA_VERSION,
@@ -267,6 +278,17 @@ def calculate_synastry(
         ),
         angle_interactions=calculate_angle_interactions(chart_a, chart_b, profile),
         warnings=tuple(warnings),
+    )
+
+    # Both of these are views over the facts assembled above, so they are built
+    # from the finished chart rather than alongside it. Neither mints an
+    # evidence id and neither is scored: a ruler interaction cites the cross
+    # aspect or overlay it reframes, so the same geometry cannot enter the
+    # scoring twice under two names.
+    return replace(
+        chart,
+        ruler_interactions=ruler_interactions(chart, chart_a, chart_b),
+        directional_themes=directional_themes(chart, dimension_profile),
     )
 
 

@@ -70,7 +70,7 @@ class RelationshipRouteTests(unittest.TestCase):
         payload = response.json()
 
         self.assertNotIn("chart", payload)
-        self.assertEqual(payload["schemaVersion"], "1.1.0")
+        self.assertEqual(payload["schemaVersion"], "1.2.0")
         for key in ("crossAspects", "aBodiesInBHouses", "bBodiesInAHouses", "angleInteractions"):
             self.assertIn(key, payload)
         self.assertTrue(payload["crossAspects"])
