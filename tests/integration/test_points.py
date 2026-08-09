@@ -289,3 +289,91 @@ class RelocationTests(unittest.TestCase):
             self.relocated.points["south_node"].longitude,
             places=9,
         )
+
+
+@unittest.skipUnless(_swiss_available(), "Needs Swiss Ephemeris data")
+class PointContactTests(unittest.TestCase):
+    """Cross-chart contacts to the derived points."""
+
+    OTHER = ("1988-02-14T09:20:00", "Europe/Paris", 48.8566, 2.3522)
+
+    def setUp(self) -> None:
+        path = os.environ["GBC_SWISS_EPHE_PATH"]
+        self.engine = AstrologyEngine(
+            provider=SwissEphemerisProvider(ephemeris_path=path),
+            house_calculator=SwissHouseCalculator(ephemeris_path=path),
+        )
+        self.chart_a = self.engine.natal(*DAY)
+        self.chart_b = self.engine.natal(*self.OTHER)
+        self.synastry = self.engine.synastry(self.chart_a, self.chart_b)
+
+    def test_only_the_two_independent_points_form_contacts(self) -> None:
+        """The antivertex and south node are exact reflections.
+
+        Every contact they could form is one the other end already forms with
+        the aspect reflected, so admitting both would report one piece of
+        geometry twice under two names.
+        """
+        points = {contact.point for contact in self.synastry.point_contacts}
+        self.assertFalse(points & {"antivertex", "south_node"})
+        self.assertTrue(points <= {"vertex", "part_of_fortune"})
+
+    def test_the_reflection_that_justifies_the_exclusion_is_exact(self) -> None:
+        for point, body in (("south_node", "true_node"), ("antivertex", "vertex")):
+            with self.subTest(point=point):
+                origin = (
+                    self.chart_a.bodies[body].longitude
+                    if body in self.chart_a.bodies
+                    else self.chart_a.points[body].longitude
+                )
+                self.assertAlmostEqual(
+                    normalize_longitude(
+                        self.chart_a.points[point].longitude - origin
+                    ),
+                    180.0,
+                    places=9,
+                )
+
+    def test_contacts_are_conjunction_or_opposition_within_two_degrees(self) -> None:
+        for contact in self.synastry.point_contacts:
+            with self.subTest(contact=contact.id):
+                self.assertIn(contact.aspect_type, ("conjunction", "opposition"))
+                self.assertLessEqual(contact.orb, 2.0)
+
+    def test_contacts_are_directional_and_both_ways_are_produced(self) -> None:
+        for contact in self.synastry.point_contacts:
+            with self.subTest(contact=contact.id):
+                self.assertNotEqual(contact.point_chart, contact.body_chart)
+                self.assertTrue(contact.id.startswith("synastry.point."))
+
+    def test_a_pair_with_no_notable_point_contact_gets_an_empty_list(self) -> None:
+        """Twelve of thirty pairs measured have none. Padding would be dishonest."""
+        sparse = self.engine.synastry(
+            self.engine.natal("1975-04-22T08:15:00", "UTC", 40.0, -3.0),
+            self.engine.natal("1983-09-11T19:40:00", "UTC", 35.0, 139.0),
+        )
+        self.assertEqual(sparse.point_contacts, ())
+
+    def test_point_contacts_are_not_scored(self) -> None:
+        """Explicit no-scoring status, the same as house overlays."""
+        score = self.engine.compatibility(self.chart_a, self.chart_b)
+        for contribution in score.contributions:
+            with self.subTest(evidence=contribution.evidence_id):
+                self.assertNotIn(".point.", contribution.evidence_id)
+        for contact in self.synastry.point_contacts:
+            self.assertFalse(contact.scored)
+
+    def test_a_chart_with_no_birth_time_sends_no_points(self) -> None:
+        unknown = self.engine.natal(
+            "1988-02-14", "Europe/Paris", 48.8566, 2.3522, unknown_time=True
+        )
+        synastry = self.engine.synastry(self.chart_a, unknown)
+        self.assertFalse(
+            [c for c in synastry.point_contacts if c.point_chart == "B"]
+        )
+
+    def test_ids_are_unique_and_stable(self) -> None:
+        ids = [c.id for c in self.synastry.point_contacts]
+        self.assertEqual(len(ids), len(set(ids)))
+        again = self.engine.synastry(self.chart_a, self.chart_b)
+        self.assertEqual([c.id for c in again.point_contacts], ids)

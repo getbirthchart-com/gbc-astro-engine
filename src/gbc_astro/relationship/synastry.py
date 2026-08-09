@@ -38,6 +38,7 @@ from gbc_astro.relationship.directional import (
     directional_themes,
     ruler_interactions,
 )
+from gbc_astro.relationship.points import calculate_point_contacts
 
 
 def calculate_cross_aspects(
@@ -287,6 +288,9 @@ def calculate_synastry(
     # scoring twice under two names.
     return replace(
         chart,
+        point_contacts=calculate_point_contacts(
+            chart_a, chart_b, profile.synastry_bodies
+        ),
         ruler_interactions=ruler_interactions(chart, chart_a, chart_b),
         directional_themes=directional_themes(chart, dimension_profile),
     )

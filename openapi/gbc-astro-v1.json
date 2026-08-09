@@ -2342,6 +2342,68 @@
         "title": "PatternsResponse",
         "type": "object"
       },
+      "PointContactPayload": {
+        "additionalProperties": true,
+        "description": "A derived point of one chart aspecting a body of the other.\n\nOnly the vertex and the Lot of Fortune take part. The antivertex and the\nsouth node are their exact reflections, so every contact they could form is\none the other end already forms with the aspect reflected.",
+        "properties": {
+          "actualAngle": {
+            "title": "Actualangle",
+            "type": "number"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "bodyChart": {
+            "title": "Bodychart",
+            "type": "string"
+          },
+          "exactAngle": {
+            "title": "Exactangle",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "point": {
+            "title": "Point",
+            "type": "string"
+          },
+          "pointChart": {
+            "title": "Pointchart",
+            "type": "string"
+          },
+          "scored": {
+            "description": "Always false. Weighting a computed point against the planets needs another table of editorial numbers with nothing to validate it against, so these are reported and not fed into the score.",
+            "title": "Scored",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "conjunction or opposition only.",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "point",
+          "pointChart",
+          "body",
+          "bodyChart",
+          "type",
+          "exactAngle",
+          "actualAngle",
+          "orb",
+          "scored"
+        ],
+        "title": "PointContactPayload",
+        "type": "object"
+      },
       "RankedContactPayload": {
         "additionalProperties": true,
         "properties": {
@@ -3038,6 +3100,14 @@
             "title": "Meta",
             "type": "object"
           },
+          "pointContacts": {
+            "description": "Often empty, and that is a real answer: twelve of thirty measured pairs have no point contact inside two degrees.",
+            "items": {
+              "$ref": "#/components/schemas/PointContactPayload"
+            },
+            "title": "Pointcontacts",
+            "type": "array"
+          },
           "rulerInteractions": {
             "items": {
               "$ref": "#/components/schemas/RulerInteractionPayload"
@@ -3435,7 +3505,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.8.0"
+    "x-gbc-engine-version": "1.9.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -4026,7 +4096,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.8.0",
+                    "engineVersion": "1.9.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },

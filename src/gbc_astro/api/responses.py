@@ -333,6 +333,32 @@ class AngleInteractionPayload(_Schema):
     orb: float
 
 
+class PointContactPayload(_Schema):
+    """A derived point of one chart aspecting a body of the other.
+
+    Only the vertex and the Lot of Fortune take part. The antivertex and the
+    south node are their exact reflections, so every contact they could form is
+    one the other end already forms with the aspect reflected.
+    """
+
+    id: str
+    point: str
+    pointChart: str
+    body: str
+    bodyChart: str
+    type: str = Field(description="conjunction or opposition only.")
+    exactAngle: float
+    actualAngle: float
+    orb: float
+    scored: bool = Field(
+        description=(
+            "Always false. Weighting a computed point against the planets needs "
+            "another table of editorial numbers with nothing to validate it "
+            "against, so these are reported and not fed into the score."
+        )
+    )
+
+
 class RulerInteractionPayload(_Schema):
     """A house ruler of one chart meeting something in the other.
 
@@ -381,6 +407,13 @@ class SynastryResponse(_Schema):
     aBodiesInBHouses: list[HouseOverlayPayload]
     bBodiesInAHouses: list[HouseOverlayPayload]
     angleInteractions: list[AngleInteractionPayload]
+    pointContacts: list[PointContactPayload] = Field(
+        default_factory=list,
+        description=(
+            "Often empty, and that is a real answer: twelve of thirty "
+            "measured pairs have no point contact inside two degrees."
+        ),
+    )
     rulerInteractions: list[RulerInteractionPayload] = Field(default_factory=list)
     directionalThemes: list[DirectionalThemePayload] = Field(default_factory=list)
     warnings: list[WarningPayload] = Field(default_factory=list)

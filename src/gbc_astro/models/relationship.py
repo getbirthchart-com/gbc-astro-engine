@@ -130,6 +130,48 @@ class AngleInteraction:
 
 
 @dataclass(frozen=True)
+class PointContact:
+    """A derived point of one chart aspecting a body of the other.
+
+    Reported, never scored. Weighting the vertex and the Lot of Fortune against
+    the planets would need another table of editorial numbers with nothing to
+    validate it against, so `scored` is published as false rather than left to
+    be inferred.
+    """
+
+    point: str
+    point_chart: str
+    body: str
+    body_chart: str
+    aspect_type: str
+    exact_angle: float
+    actual_angle: float
+    orb: float
+    scored: bool = False
+
+    @property
+    def id(self) -> str:
+        return (
+            f"synastry.point.{self.point_chart.lower()}.{self.point}"
+            f".{self.aspect_type}.{self.body_chart.lower()}.{self.body}"
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "point": self.point,
+            "pointChart": self.point_chart,
+            "body": self.body,
+            "bodyChart": self.body_chart,
+            "type": self.aspect_type,
+            "exactAngle": self.exact_angle,
+            "actualAngle": self.actual_angle,
+            "orb": self.orb,
+            "scored": self.scored,
+        }
+
+
+@dataclass(frozen=True)
 class RulerInteraction:
     """A house ruler of one chart meeting something in the other.
 
@@ -254,6 +296,7 @@ class SynastryChart:
     a_bodies_in_b_houses: tuple[HouseOverlay, ...] = ()
     b_bodies_in_a_houses: tuple[HouseOverlay, ...] = ()
     angle_interactions: tuple[AngleInteraction, ...] = ()
+    point_contacts: tuple[PointContact, ...] = ()
     ruler_interactions: tuple[RulerInteraction, ...] = ()
     directional_themes: tuple[DirectionalTheme, ...] = ()
     warnings: tuple[WarningMessage, ...] = ()
@@ -270,6 +313,7 @@ class SynastryChart:
             "angleInteractions": [
                 interaction.to_dict() for interaction in self.angle_interactions
             ],
+            "pointContacts": [contact.to_dict() for contact in self.point_contacts],
             "rulerInteractions": [
                 interaction.to_dict() for interaction in self.ruler_interactions
             ],
