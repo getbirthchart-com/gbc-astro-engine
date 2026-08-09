@@ -276,3 +276,104 @@ class ProgressedCompositeTests(unittest.TestCase):
         first = self.engine.progressed_composite(self.chart_a, self.chart_b, TARGET)
         second = self.engine.progressed_composite(self.chart_a, self.chart_b, TARGET)
         self.assertEqual(first.to_dict(), second.to_dict())
+
+
+@unittest.skipUnless(_swiss_available(), "Needs Swiss Ephemeris data")
+class SiderealCompositeFrameTests(unittest.TestCase):
+    """A composite chart must sit wholly in one zodiac.
+
+    The composite angles are derived from the midpoint Midheaven by way of its
+    right ascension, and right ascension is measured from the true equinox --
+    so that conversion is only valid on a tropical longitude. On a sidereal
+    chart the two Midheavens arrive already rotated, and feeding their midpoint
+    to the conversion produced an ARMC wrong by the ayanamsa. The Ascendant that
+    came out was 13.6 degrees from where the rest of the chart sat, while the
+    bodies and the Midheaven were correct -- a chart half in each frame.
+
+    No test caught it, because none compared a sidereal composite's angles
+    against its own bodies. This one does.
+    """
+
+    def setUp(self) -> None:
+        import dataclasses
+
+        from gbc_astro.profiles.defaults import WESTERN_MODERN_V1
+
+        path = os.environ["GBC_SWISS_EPHE_PATH"]
+        provider = SwissEphemerisProvider(ephemeris_path=path)
+        houses = SwissHouseCalculator(ephemeris_path=path)
+        # Only the zodiac differs from the tropical default: same house system,
+        # same rulership. Anything that moves is a frame effect and nothing else.
+        self.tropical = AstrologyEngine(provider=provider, house_calculator=houses)
+        self.sidereal = AstrologyEngine(
+            provider=provider,
+            house_calculator=houses,
+            profile=dataclasses.replace(
+                WESTERN_MODERN_V1,
+                id="zodiac-isolation",
+                zodiac="sidereal",
+                ayanamsa="lahiri",
+            ),
+        )
+
+    def _offsets(self, tropical, sidereal) -> tuple[set[float], set[float]]:
+        bodies = {
+            round((tropical.bodies[k].longitude - sidereal.bodies[k].longitude) % 360, 6)
+            for k in tropical.bodies
+        }
+        angles = {
+            round((tropical.angles[k].longitude - sidereal.angles[k].longitude) % 360, 6)
+            for k in tropical.angles
+        }
+        return bodies, angles
+
+    def test_composite_angles_rotate_with_its_bodies(self) -> None:
+        tropical = self.tropical.composite(
+            self.tropical.natal(*CHART_A), self.tropical.natal(*CHART_B)
+        )
+        sidereal = self.sidereal.composite(
+            self.sidereal.natal(*CHART_A), self.sidereal.natal(*CHART_B)
+        )
+        bodies, angles = self._offsets(tropical, sidereal)
+
+        self.assertEqual(len(bodies), 1, "bodies must share one rotation")
+        self.assertEqual(len(angles), 1, "angles must share one rotation")
+        self.assertEqual(
+            bodies,
+            angles,
+            "the composite Ascendant was 13.6 degrees adrift from its own bodies",
+        )
+
+    def test_composite_cusps_rotate_with_its_bodies(self) -> None:
+        tropical = self.tropical.composite(
+            self.tropical.natal(*CHART_A), self.tropical.natal(*CHART_B)
+        )
+        sidereal = self.sidereal.composite(
+            self.sidereal.natal(*CHART_A), self.sidereal.natal(*CHART_B)
+        )
+        bodies, _ = self._offsets(tropical, sidereal)
+        cusps = {
+            round((a.cusp_longitude - b.cusp_longitude) % 360, 6)
+            for a, b in zip(tropical.houses, sidereal.houses, strict=True)
+        }
+        self.assertEqual(cusps, bodies)
+
+    def test_the_progressed_composite_inherits_the_fix(self) -> None:
+        tropical = self.tropical.progressed_composite(
+            self.tropical.natal(*CHART_A), self.tropical.natal(*CHART_B), TARGET
+        )
+        sidereal = self.sidereal.progressed_composite(
+            self.sidereal.natal(*CHART_A), self.sidereal.natal(*CHART_B), TARGET
+        )
+        bodies, angles = self._offsets(tropical, sidereal)
+        self.assertEqual(bodies, angles)
+
+    def test_a_tropical_composite_is_untouched_by_the_rotation_path(self) -> None:
+        """Zero offset must be a no-op, not a rebuild that perturbs anything."""
+        first = self.tropical.composite(
+            self.tropical.natal(*CHART_A), self.tropical.natal(*CHART_B)
+        )
+        second = self.tropical.composite(
+            self.tropical.natal(*CHART_A), self.tropical.natal(*CHART_B)
+        )
+        self.assertEqual(first.to_dict(), second.to_dict())

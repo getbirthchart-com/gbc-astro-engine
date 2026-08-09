@@ -43,9 +43,14 @@ from gbc_astro.astronomy.circular import (
 )
 from gbc_astro.constants import COMPOSITE_SCHEMA_VERSION, ENGINE_NAME, ENGINE_VERSION
 from gbc_astro.errors import HouseCalculationUnavailableError, InvalidCalculationProfileError
-from gbc_astro.houses.base import ArmcHouseCalculator, HouseCalculation, assign_house
+from gbc_astro.houses.base import (
+    ArmcHouseCalculator,
+    HouseCalculation,
+    assign_house,
+    build_house_cusps,
+)
 from gbc_astro.models.chart import NatalChart, WarningMessage
-from gbc_astro.models.position import BodyPosition
+from gbc_astro.models.position import AnglePosition, BodyPosition
 from gbc_astro.models.relationship import (
     CompositeChart,
     CompositeMidpoint,
@@ -240,13 +245,27 @@ def _composite_geometry(
     midheaven = shortest_arc_midpoint(mc_a.longitude, mc_b.longitude)
     midpoint_julian_day = (chart_a.subject.julian_day + chart_b.subject.julian_day) / 2.0
     obliquity = house_calculator.obliquity(midpoint_julian_day)
+
+    # Right ascension is measured from the true equinox, so the conversion below
+    # is only valid for a tropical longitude. On a sidereal chart the two
+    # Midheavens arrive already rotated, and their midpoint with them: feeding
+    # that to `right_ascension_of` produces an ARMC that is wrong by the
+    # ayanamsa, and every angle and cusp derived from it inherits the error.
+    # Measured before this was fixed, the composite Ascendant came out 13.6
+    # degrees away from where the rest of the chart sat.
+    #
+    # So the Midheaven is put back into the tropical frame for the geometry, and
+    # the whole result is rotated once at the end -- the same shape as
+    # `_to_sidereal_geometry` and the astrocartography un-rotation.
+    zodiac_offset = _zodiac_offset_of(chart_a, chart_b)
+    tropical_midheaven = normalize_longitude(midheaven + zodiac_offset)
     # Latitude does not wrap, so the plain mean is correct. Longitude is not
     # needed: ARMC already carries the whole of the composite's orientation.
     reference_latitude = (chart_a.subject.latitude + chart_b.subject.latitude) / 2.0
 
     try:
         geometry = house_calculator.calculate_from_armc(
-            armc=right_ascension_of(midheaven, obliquity),
+            armc=right_ascension_of(tropical_midheaven, obliquity),
             latitude=reference_latitude,
             obliquity=obliquity,
             house_system=profile.composite_house_system,
@@ -281,7 +300,61 @@ def _composite_geometry(
                 fields_affected=("angles", "houses"),
             )
         )
+    if zodiac_offset:
+        geometry = _rotate_geometry(geometry, zodiac_offset)
     return geometry, warnings
+
+
+def _zodiac_offset_of(chart_a: NatalChart, chart_b: NatalChart) -> float:
+    """How far the two charts have already been rotated, if at all.
+
+    Both sides are guaranteed by `_assert_comparable` to share a zodiac, but
+    each carries its own epoch's ayanamsa and those differ by a fraction of a
+    degree. The composite is a midpoint construction, so the midpoint of the two
+    is the consistent choice -- the same averaging the Midheaven itself uses.
+    """
+    if chart_a.meta.zodiac != "sidereal":
+        return 0.0
+    first = chart_a.meta.ayanamsa_degrees or 0.0
+    second = chart_b.meta.ayanamsa_degrees or 0.0
+    return (first + second) / 2.0
+
+
+def _rotate_geometry(geometry: HouseCalculation, offset: float) -> HouseCalculation:
+    """Move a tropical geometry into the chart's zodiac, whole.
+
+    Angles, cusps and vertex together, so no single tropical value survives
+    inside an otherwise sidereal object.
+    """
+    angles = {
+        name: _rotate_angle(angle, offset) for name, angle in geometry.angles.items()
+    }
+    cusps = build_house_cusps(
+        tuple(
+            normalize_longitude(cusp.cusp_longitude - offset)
+            for cusp in geometry.houses
+        )
+    )
+    return HouseCalculation(
+        angles=angles,
+        houses=cusps,
+        algorithm_version=f"{geometry.algorithm_version}:sidereal",
+        vertex=(
+            None
+            if geometry.vertex is None
+            else normalize_longitude(geometry.vertex - offset)
+        ),
+        sequence_degenerate=geometry.sequence_degenerate,
+    )
+
+
+def _rotate_angle(angle: AnglePosition, offset: float) -> AnglePosition:
+    zodiac = longitude_to_tropical(normalize_longitude(angle.longitude - offset))
+    return AnglePosition(
+        longitude=zodiac.longitude,
+        sign=zodiac.sign,
+        degree_in_sign=zodiac.degree_in_sign,
+    )
 
 
 def _with_house(body: BodyPosition, house: int) -> BodyPosition:
