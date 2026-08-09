@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter
@@ -18,12 +19,16 @@ from gbc_astro.api.models import ApiErrorEnvelope, NatalChartRequest, Relationsh
 from gbc_astro.api.responses import (
     CompatibilityResponse,
     CompositeChartResponse,
+    CompositeTransitResponse,
     DavisonChartResponse,
     EvidenceContextResponse,
+    ProgressedSynastryResponse,
+    RelationshipTransitResponse,
     ReportOutlineResponse,
     SynastryResponse,
 )
 from gbc_astro.engine import AstrologyEngine
+from gbc_astro.errors import InvalidCalculationProfileError
 from gbc_astro.models.chart import NatalChart
 
 logger = logging.getLogger("gbc_astro.api")
@@ -70,6 +75,114 @@ def calculate_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResp
     started = time.perf_counter()
     result = engine.synastry(_natal(engine, body.chart_a), _natal(engine, body.chart_b))
     logger.info("synastry_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
+    payload: dict[str, Any] = result.to_dict()
+    return JSONResponse(content=payload)
+
+
+def _instant(value: str, field: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise InvalidCalculationProfileError(
+            f"{field} is not a valid ISO 8601 instant.", {"value": value}
+        ) from exc
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def _target(body: RelationshipRequest) -> datetime:
+    if not body.target_instant:
+        raise InvalidCalculationProfileError(
+            "target_instant is required for a timing calculation. The engine "
+            "never assumes the current moment.",
+            {"field": "target_instant"},
+        )
+    return _instant(body.target_instant, "target_instant")
+
+
+@router.post(
+    "/timing/transits",
+    summary="What is active between two people at an instant",
+    response_description=(
+        "Both natal transit charts, kept whole and separate, plus every "
+        "synastry contact whose body is currently being transited."
+    ),
+    responses={**_ERROR_RESPONSES, 200: {"model": RelationshipTransitResponse}},
+)
+def relationship_transits(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
+    started = time.perf_counter()
+    result = engine.relationship_transits(
+        _natal(engine, body.chart_a), _natal(engine, body.chart_b), _target(body)
+    )
+    logger.info(
+        "relationship_transits_ok duration_ms=%.1f",
+        (time.perf_counter() - started) * 1000.0,
+    )
+    payload: dict[str, Any] = result.to_dict()
+    return JSONResponse(content=payload)
+
+
+@router.post(
+    "/timing/composite-transits",
+    summary="Transits against the composite chart",
+    response_description=(
+        "A statement about the relationship rather than about either person, "
+        "so it is kept apart from the two natal transit charts."
+    ),
+    responses={**_ERROR_RESPONSES, 200: {"model": CompositeTransitResponse}},
+)
+def composite_transits(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
+    started = time.perf_counter()
+    result = engine.composite_transits(
+        _natal(engine, body.chart_a), _natal(engine, body.chart_b), _target(body)
+    )
+    logger.info(
+        "composite_transits_ok duration_ms=%.1f",
+        (time.perf_counter() - started) * 1000.0,
+    )
+    payload: dict[str, Any] = result.to_dict()
+    return JSONResponse(content=payload)
+
+
+@router.post(
+    "/timing/progressed",
+    summary="The three progressed comparisons, grouped by direction",
+    response_description=(
+        "Progressed A to natal B, natal A to progressed B and progressed A to "
+        "progressed B. Three different questions, never pooled."
+    ),
+    responses={**_ERROR_RESPONSES, 200: {"model": ProgressedSynastryResponse}},
+)
+def progressed_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
+    started = time.perf_counter()
+    result = engine.progressed_synastry(
+        _natal(engine, body.chart_a), _natal(engine, body.chart_b), _target(body)
+    )
+    logger.info(
+        "progressed_synastry_ok duration_ms=%.1f",
+        (time.perf_counter() - started) * 1000.0,
+    )
+    payload: dict[str, Any] = result.to_dict()
+    return JSONResponse(content=payload)
+
+
+@router.post(
+    "/timing/progressed-composite",
+    summary="Progress each chart, then compose",
+    response_description=(
+        "A composite chart has no instant of its own to progress from, so each "
+        "natal chart is progressed first and the composite recomputed."
+    ),
+    responses={**_ERROR_RESPONSES, 200: {"model": CompositeChartResponse}},
+)
+def progressed_composite(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
+    started = time.perf_counter()
+    result = engine.progressed_composite(
+        _natal(engine, body.chart_a), _natal(engine, body.chart_b), _target(body)
+    )
+    logger.info(
+        "progressed_composite_ok duration_ms=%.1f",
+        (time.perf_counter() - started) * 1000.0,
+    )
     payload: dict[str, Any] = result.to_dict()
     return JSONResponse(content=payload)
 

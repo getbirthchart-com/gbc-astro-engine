@@ -130,6 +130,191 @@ class AngleInteraction:
 
 
 @dataclass(frozen=True)
+class SynastryActivation:
+    """A transit landing on a body that already carries a synastry contact.
+
+    Two existing facts joined through a shared body. Both are cited and neither
+    is re-minted: the transit is already in the transit result and the contact
+    is already in the synastry result, so the join adds a relationship between
+    them rather than a third piece of geometry.
+    """
+
+    chart: str
+    body: str
+    transit_body: str
+    transit_aspect: str
+    transit_orb: float
+    transit_evidence_id: str
+    synastry_evidence_id: str
+
+    @property
+    def id(self) -> str:
+        """Both halves of the join, because one transit can activate several.
+
+        Transiting Saturn square A's Uranus activates every synastry contact
+        A's Uranus takes part in. Naming only the transit would collapse those
+        into one id and lose which contact each activation is about.
+        """
+        contact = self.synastry_evidence_id.replace("synastry.", "")
+        return (
+            f"relationship.activation.{self.chart.lower()}.{self.body}"
+            f".by.{self.transit_body}.{self.transit_aspect}.of.{contact}"
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "chart": self.chart,
+            "body": self.body,
+            "transitBody": self.transit_body,
+            "transitAspect": self.transit_aspect,
+            "transitOrb": self.transit_orb,
+            "transitEvidenceId": self.transit_evidence_id,
+            "synastryEvidenceId": self.synastry_evidence_id,
+        }
+
+
+@dataclass(frozen=True)
+class RelationshipTransitResult:
+    """What is active between two people at one instant.
+
+    The two natal transit charts are kept whole and separate. Merging them would
+    lose which person a transit belongs to, which is the only thing that makes a
+    relationship transit different from an ordinary one.
+    """
+
+    schema_version: str
+    meta: dict[str, Any]
+    target_instant: str
+    transits_a: Any = None
+    transits_b: Any = None
+    activations: tuple[SynastryActivation, ...] = ()
+    top_activations: tuple[SynastryActivation, ...] = ()
+    warnings: tuple[WarningMessage, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schemaVersion": self.schema_version,
+            "meta": dict(self.meta),
+            "targetInstant": self.target_instant,
+            "transitsA": self.transits_a.to_dict() if self.transits_a else None,
+            "transitsB": self.transits_b.to_dict() if self.transits_b else None,
+            "activationCount": len(self.activations),
+            "activations": [item.to_dict() for item in self.activations],
+            "topActivations": [item.to_dict() for item in self.top_activations],
+            "warnings": [warning.to_dict() for warning in self.warnings],
+        }
+
+
+@dataclass(frozen=True)
+class CompositeTransitContact:
+    """A transiting body aspecting a composite position."""
+
+    transit_body: str
+    composite_body: str
+    aspect_type: str
+    exact_angle: float
+    actual_angle: float
+    orb: float
+
+    @property
+    def id(self) -> str:
+        return (
+            f"composite_transit.{self.transit_body}.{self.aspect_type}"
+            f".composite.{self.composite_body}"
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "transitBody": self.transit_body,
+            "compositeBody": self.composite_body,
+            "type": self.aspect_type,
+            "exactAngle": self.exact_angle,
+            "actualAngle": self.actual_angle,
+            "orb": self.orb,
+        }
+
+
+@dataclass(frozen=True)
+class CompositeTransitResult:
+    schema_version: str
+    meta: dict[str, Any]
+    target_instant: str
+    contacts: tuple[CompositeTransitContact, ...] = ()
+    warnings: tuple[WarningMessage, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schemaVersion": self.schema_version,
+            "meta": dict(self.meta),
+            "targetInstant": self.target_instant,
+            "contactCount": len(self.contacts),
+            "contacts": [contact.to_dict() for contact in self.contacts],
+            "warnings": [warning.to_dict() for warning in self.warnings],
+        }
+
+
+@dataclass(frozen=True)
+class ProgressedContact:
+    """One cross contact in a named progressed comparison.
+
+    `direction` is mandatory and never defaulted. Progressed A to natal B and
+    natal A to progressed B are different statements about different moments,
+    and a pooled list of both would be unreadable.
+    """
+
+    direction: str
+    body_a: str
+    body_b: str
+    aspect_type: str
+    exact_angle: float
+    actual_angle: float
+    orb: float
+
+    @property
+    def id(self) -> str:
+        return (
+            f"progressed.{self.direction}.a.{self.body_a}"
+            f".{self.aspect_type}.b.{self.body_b}"
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "direction": self.direction,
+            "a": self.body_a,
+            "b": self.body_b,
+            "type": self.aspect_type,
+            "exactAngle": self.exact_angle,
+            "actualAngle": self.actual_angle,
+            "orb": self.orb,
+        }
+
+
+@dataclass(frozen=True)
+class ProgressedSynastryResult:
+    schema_version: str
+    meta: dict[str, Any]
+    target_instant: str
+    contacts: tuple[ProgressedContact, ...] = ()
+    warnings: tuple[WarningMessage, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        by_direction: dict[str, list[dict[str, Any]]] = {}
+        for contact in self.contacts:
+            by_direction.setdefault(contact.direction, []).append(contact.to_dict())
+        return {
+            "schemaVersion": self.schema_version,
+            "meta": dict(self.meta),
+            "targetInstant": self.target_instant,
+            "contactCount": len(self.contacts),
+            "byDirection": by_direction,
+            "warnings": [warning.to_dict() for warning in self.warnings],
+        }
+
+
+@dataclass(frozen=True)
 class EvidenceContext:
     """A bounded slice of the geometry for one topic.
 

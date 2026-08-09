@@ -991,6 +991,95 @@
         "title": "CompositeChartResponse",
         "type": "object"
       },
+      "CompositeTransitContactPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "actualAngle": {
+            "title": "Actualangle",
+            "type": "number"
+          },
+          "compositeBody": {
+            "title": "Compositebody",
+            "type": "string"
+          },
+          "exactAngle": {
+            "title": "Exactangle",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "transitBody": {
+            "title": "Transitbody",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "transitBody",
+          "compositeBody",
+          "type",
+          "exactAngle",
+          "actualAngle",
+          "orb"
+        ],
+        "title": "CompositeTransitContactPayload",
+        "type": "object"
+      },
+      "CompositeTransitResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "contactCount": {
+            "title": "Contactcount",
+            "type": "integer"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/CompositeTransitContactPayload"
+            },
+            "title": "Contacts",
+            "type": "array"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "targetInstant": {
+            "title": "Targetinstant",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "targetInstant",
+          "contactCount",
+          "contacts"
+        ],
+        "title": "CompositeTransitResponse",
+        "type": "object"
+      },
       "CrossAspectPayload": {
         "additionalProperties": true,
         "description": "A natal aspect plus an evidence id.\n\nCross-chart contacts carry one and natal aspects do not, because everything\ndownstream of synastry -- score contributions, evidence bundles, the report\noutline, the timing layer's activation marks -- addresses facts by id.",
@@ -2477,6 +2566,104 @@
         "title": "PointContactPayload",
         "type": "object"
       },
+      "ProgressedContactPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "actualAngle": {
+            "title": "Actualangle",
+            "type": "number"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "direction": {
+            "description": "progressed_a_to_natal_b, natal_a_to_progressed_b or progressed_a_to_progressed_b. Mandatory: these are three different questions about three different moments and must not be pooled.",
+            "title": "Direction",
+            "type": "string"
+          },
+          "exactAngle": {
+            "title": "Exactangle",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "direction",
+          "a",
+          "b",
+          "type",
+          "exactAngle",
+          "actualAngle",
+          "orb"
+        ],
+        "title": "ProgressedContactPayload",
+        "type": "object"
+      },
+      "ProgressedSynastryResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "byDirection": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ProgressedContactPayload"
+              },
+              "type": "array"
+            },
+            "title": "Bydirection",
+            "type": "object"
+          },
+          "contactCount": {
+            "title": "Contactcount",
+            "type": "integer"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "targetInstant": {
+            "title": "Targetinstant",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "targetInstant",
+          "contactCount",
+          "byDirection"
+        ],
+        "title": "ProgressedSynastryResponse",
+        "type": "object"
+      },
       "RankedContactPayload": {
         "additionalProperties": true,
         "properties": {
@@ -2720,6 +2907,18 @@
             ],
             "description": "Compatibility, evidence and report only. Reweights the dimensions; the geometry is identical either way. Omitted resolves to `general`, not to `romantic` -- assuming a relationship is romantic would answer a question you did not ask."
           },
+          "target_instant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Timing routes only. UTC instant, ISO 8601. Always explicit -- the engine never assumes 'now'.",
+            "title": "Target Instant"
+          },
           "topic": {
             "anyOf": [
               {
@@ -2737,6 +2936,83 @@
           "chart_b"
         ],
         "title": "RelationshipRequest",
+        "type": "object"
+      },
+      "RelationshipTransitResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "activationCount": {
+            "title": "Activationcount",
+            "type": "integer"
+          },
+          "activations": {
+            "items": {
+              "$ref": "#/components/schemas/SynastryActivationPayload"
+            },
+            "title": "Activations",
+            "type": "array"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "string"
+          },
+          "targetInstant": {
+            "title": "Targetinstant",
+            "type": "string"
+          },
+          "topActivations": {
+            "items": {
+              "$ref": "#/components/schemas/SynastryActivationPayload"
+            },
+            "title": "Topactivations",
+            "type": "array"
+          },
+          "transitsA": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transitsa"
+          },
+          "transitsB": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transitsb"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningPayload"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "meta",
+          "targetInstant",
+          "activationCount",
+          "activations",
+          "topActivations"
+        ],
+        "title": "RelationshipTransitResponse",
         "type": "object"
       },
       "RelationshipType": {
@@ -3275,6 +3551,56 @@
         "title": "ScoreTotalsPayload",
         "type": "object"
       },
+      "SynastryActivationPayload": {
+        "additionalProperties": true,
+        "description": "A transit and a synastry contact sharing a body.\n\nBoth are cited and neither is re-minted. No meaning is inferred from the\njoin.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "chart": {
+            "title": "Chart",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "synastryEvidenceId": {
+            "title": "Synastryevidenceid",
+            "type": "string"
+          },
+          "transitAspect": {
+            "title": "Transitaspect",
+            "type": "string"
+          },
+          "transitBody": {
+            "title": "Transitbody",
+            "type": "string"
+          },
+          "transitEvidenceId": {
+            "title": "Transitevidenceid",
+            "type": "string"
+          },
+          "transitOrb": {
+            "title": "Transitorb",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "chart",
+          "body",
+          "transitBody",
+          "transitAspect",
+          "transitOrb",
+          "transitEvidenceId",
+          "synastryEvidenceId"
+        ],
+        "title": "SynastryActivationPayload",
+        "type": "object"
+      },
       "SynastryResponse": {
         "additionalProperties": true,
         "properties": {
@@ -3737,7 +4063,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.11.0"
+    "x-gbc-engine-version": "1.12.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -4409,7 +4735,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.11.0",
+                    "engineVersion": "1.12.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },
@@ -4723,6 +5049,330 @@
           }
         },
         "summary": "Calculate a synastry chart",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
+    "/v1/charts/timing/composite-transits": {
+      "post": {
+        "operationId": "composite_transits_v1_charts_timing_composite_transits_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompositeTransitResponse"
+                }
+              }
+            },
+            "description": "A statement about the relationship rather than about either person, so it is kept apart from the two natal transit charts."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Transits against the composite chart",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
+    "/v1/charts/timing/progressed": {
+      "post": {
+        "operationId": "progressed_synastry_v1_charts_timing_progressed_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressedSynastryResponse"
+                }
+              }
+            },
+            "description": "Progressed A to natal B, natal A to progressed B and progressed A to progressed B. Three different questions, never pooled."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "The three progressed comparisons, grouped by direction",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
+    "/v1/charts/timing/progressed-composite": {
+      "post": {
+        "operationId": "progressed_composite_v1_charts_timing_progressed_composite_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompositeChartResponse"
+                }
+              }
+            },
+            "description": "A composite chart has no instant of its own to progress from, so each natal chart is progressed first and the composite recomputed."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Progress each chart, then compose",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
+    "/v1/charts/timing/transits": {
+      "post": {
+        "operationId": "relationship_transits_v1_charts_timing_transits_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipTransitResponse"
+                }
+              }
+            },
+            "description": "Both natal transit charts, kept whole and separate, plus every synastry contact whose body is currently being transited."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "What is active between two people at an instant",
         "tags": [
           "charts"
         ]

@@ -335,6 +335,13 @@ class RelationshipRequest(BaseModel):
         default=None,
         description="Evidence context only. Defaults to `overall`.",
     )
+    target_instant: str | None = Field(
+        default=None,
+        description=(
+            "Timing routes only. UTC instant, ISO 8601. Always explicit -- the "
+            "engine never assumes 'now'."
+        ),
+    )
 
 
 class TransitRequest(BaseModel):

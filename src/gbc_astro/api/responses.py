@@ -333,6 +333,80 @@ class AngleInteractionPayload(_Schema):
     orb: float
 
 
+class SynastryActivationPayload(_Schema):
+    """A transit and a synastry contact sharing a body.
+
+    Both are cited and neither is re-minted. No meaning is inferred from the
+    join.
+    """
+
+    id: str
+    chart: str
+    body: str
+    transitBody: str
+    transitAspect: str
+    transitOrb: float
+    transitEvidenceId: str
+    synastryEvidenceId: str
+
+
+class RelationshipTransitResponse(_Schema):
+    schemaVersion: str
+    meta: dict[str, Any]
+    targetInstant: str
+    transitsA: dict[str, Any] | None = None
+    transitsB: dict[str, Any] | None = None
+    activationCount: int
+    activations: list[SynastryActivationPayload]
+    topActivations: list[SynastryActivationPayload]
+    warnings: list[WarningPayload] = Field(default_factory=list)
+
+
+class CompositeTransitContactPayload(_Schema):
+    id: str
+    transitBody: str
+    compositeBody: str
+    type: str
+    exactAngle: float
+    actualAngle: float
+    orb: float
+
+
+class CompositeTransitResponse(_Schema):
+    schemaVersion: str
+    meta: dict[str, Any]
+    targetInstant: str
+    contactCount: int
+    contacts: list[CompositeTransitContactPayload]
+    warnings: list[WarningPayload] = Field(default_factory=list)
+
+
+class ProgressedContactPayload(_Schema):
+    id: str
+    direction: str = Field(
+        description=(
+            "progressed_a_to_natal_b, natal_a_to_progressed_b or "
+            "progressed_a_to_progressed_b. Mandatory: these are three different "
+            "questions about three different moments and must not be pooled."
+        )
+    )
+    a: str
+    b: str
+    type: str
+    exactAngle: float
+    actualAngle: float
+    orb: float
+
+
+class ProgressedSynastryResponse(_Schema):
+    schemaVersion: str
+    meta: dict[str, Any]
+    targetInstant: str
+    contactCount: int
+    byDirection: dict[str, list[ProgressedContactPayload]]
+    warnings: list[WarningPayload] = Field(default_factory=list)
+
+
 class EvidenceContextResponse(_Schema):
     """A bounded slice of a pair's geometry for one topic.
 

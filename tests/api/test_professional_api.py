@@ -75,6 +75,10 @@ class SurfaceCoverageTests(unittest.TestCase):
             "optional_bodies": "/v1/capabilities",
             "evidence_context": "/v1/charts/evidence",
             "report_outline": "/v1/charts/report-outline",
+            "relationship_transits": "/v1/charts/timing/transits",
+            "composite_transits": "/v1/charts/timing/composite-transits",
+            "progressed_synastry": "/v1/charts/timing/progressed",
+            "progressed_composite": "/v1/charts/timing/progressed-composite",
         }
         capabilities = {
             name

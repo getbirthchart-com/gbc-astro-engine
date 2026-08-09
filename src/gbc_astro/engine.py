@@ -56,6 +56,11 @@ from gbc_astro.errors import (
     UnknownBirthTimeError,
     UnsupportedBodyError,
 )
+from gbc_astro.forecast.relationship import (
+    calculate_composite_transits,
+    calculate_progressed_synastry,
+    calculate_relationship_transits,
+)
 from gbc_astro.forecast.returns import calculate_returns
 from gbc_astro.forecast.transits import calculate_transits
 from gbc_astro.houses.base import (
@@ -86,9 +91,12 @@ from gbc_astro.models.input import ChartInput
 from gbc_astro.models.position import AnglePosition, BodyPosition, DerivedPoint
 from gbc_astro.models.relationship import (
     CompositeChart,
+    CompositeTransitResult,
     DavisonChart,
     EvidenceContext,
+    ProgressedSynastryResult,
     RelationshipScore,
+    RelationshipTransitResult,
     ReportOutline,
     SynastryChart,
 )
@@ -108,6 +116,10 @@ from gbc_astro.profiles.progression import (
     SECONDARY_PROGRESSION_V1,
     SOLAR_ARC_V1,
     ProgressionProfile,
+)
+from gbc_astro.profiles.relationship_timing import (
+    RELATIONSHIP_TIMING_V1,
+    RelationshipTimingProfile,
 )
 from gbc_astro.profiles.relationship_types import resolve_relationship_type
 from gbc_astro.profiles.report import COUPLE_REPORT_V1, ReportProfile
@@ -151,6 +163,7 @@ from gbc_astro.zodiac.sidereal import (
     longitude_to_sidereal,
     resolve_ayanamsa_profile,
 )
+from gbc_astro.zodiac.tropical import longitude_to_tropical
 
 
 class AstrologyEngine:
@@ -170,6 +183,7 @@ class AstrologyEngine:
         dominant_profile: DominantProfile = DOMINANT_WESTERN_V1,
         dimension_profile: DimensionProfile = SYNASTRY_DIMENSION_PROFILE_V1,
         report_profile: ReportProfile = COUPLE_REPORT_V1,
+        timing_profile: RelationshipTimingProfile = RELATIONSHIP_TIMING_V1,
     ) -> None:
         self._provider = provider
         self.profile = profile
@@ -182,6 +196,7 @@ class AstrologyEngine:
         self.dominant_profile = dominant_profile
         self.dimension_profile = dimension_profile
         self.report_profile = report_profile
+        self.timing_profile = timing_profile
         self._house_calculator = house_calculator
         self._ayanamsa_calculator: AyanamsaCalculator | None = None
         self._validate_profile(profile)
@@ -452,6 +467,118 @@ class AstrologyEngine:
             self.synastry(chart_a, chart_b),
             self.compatibility(chart_a, chart_b, relationship_type),
             self.report_profile,
+        )
+
+    def relationship_transits(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        target_instant: datetime,
+    ) -> RelationshipTransitResult:
+        """What is active between two people at one instant.
+
+        Both natal transit charts, kept whole and separate, plus every synastry
+        contact whose body is currently being transited. The two charts are not
+        merged: which person a transit lands on is the only thing that makes it
+        a relationship transit rather than an ordinary one.
+        """
+        return calculate_relationship_transits(
+            self.synastry(chart_a, chart_b),
+            self.transits(chart_a, target_instant),
+            self.transits(chart_b, target_instant),
+            target_instant,
+            self.timing_profile,
+        )
+
+    def composite_transits(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        target_instant: datetime,
+    ) -> CompositeTransitResult:
+        """Transiting bodies against the composite chart's own positions.
+
+        A statement about the relationship rather than about either person, so
+        it is kept apart from the two natal transit charts.
+        """
+        instant = target_instant.astimezone(timezone.utc)
+        provider = self._get_provider()
+        offset = self._zodiac_offset(datetime_to_julian_day(instant))
+        transiting: dict[str, BodyPosition] = {}
+        for body_id in self.transit_profile.transiting_bodies:
+            if not provider.supports_body(body_id):
+                continue
+            position = normalize_body_position(
+                body_id, provider.position(body_id, instant)
+            )
+            transiting[body_id] = (
+                position if offset == 0.0 else _shift_body(position, offset)
+            )
+
+        return calculate_composite_transits(
+            self.composite(chart_a, chart_b),
+            transiting,
+            instant,
+            self.transit_profile.aspect_profile,
+            self.timing_profile,
+        )
+
+    def progressed_synastry(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        target_instant: datetime,
+    ) -> ProgressedSynastryResult:
+        """The three progressed comparisons, each labelled and never pooled."""
+        return calculate_progressed_synastry(
+            chart_a.bodies,
+            chart_b.bodies,
+            self.progressions(chart_a, target_instant),
+            self.progressions(chart_b, target_instant),
+            target_instant,
+            self.relationship_profile.synastry_bodies,
+            self.relationship_profile.synastry_aspect_profile,
+            self.timing_profile,
+        )
+
+    def progressed_composite(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        target_instant: datetime,
+    ) -> CompositeChart:
+        """Progress each chart, then compose -- not the other way round.
+
+        A composite chart has no birth instant, so progressing it directly would
+        mean inventing one. Progressing each natal chart first uses two steps
+        that are each already validated: the progression numerics against
+        external references, and the composite midpoint geometry against its own
+        fixtures. The profile records which method was used.
+        """
+        relocated_a = self._chart_from_progression(chart_a, target_instant)
+        relocated_b = self._chart_from_progression(chart_b, target_instant)
+        return self.composite(relocated_a, relocated_b)
+
+    def _chart_from_progression(
+        self, chart: NatalChart, target_instant: datetime
+    ) -> NatalChart:
+        """Recast the progressed moment as an ordinary chart.
+
+        The composite builder needs two natal charts, and a progressed chart is
+        an ordinary chart cast for the progressed instant -- which is exactly
+        what the progression module already produces internally.
+        """
+        progressed = self.progressions(chart, target_instant)
+        instant = datetime.fromisoformat(
+            str(progressed.meta["progressedInstant"]).replace("Z", "+00:00")
+        )
+        return self.natal(
+            local_datetime=instant.replace(tzinfo=None),
+            timezone="UTC",
+            latitude=chart.subject.latitude,
+            longitude=chart.subject.longitude,
+            altitude_m=chart.subject.altitude_m,
+            house_system=chart.meta.house_system,
         )
 
     def transits(
@@ -920,6 +1047,27 @@ class AstrologyEngine:
             # Resolving here means an unusable profile fails at construction
             # rather than on the first chart.
             resolve_ayanamsa_profile(profile.ayanamsa or "")
+
+
+def _shift_body(body: BodyPosition, offset: float) -> BodyPosition:
+    """Rotate a provider position into the engine's zodiac.
+
+    Providers always answer tropically, so a sidereal engine has to rotate
+    anything that reaches one directly -- the lesson from the seven frame bugs
+    the previous audit found.
+    """
+    zodiac = longitude_to_tropical(normalize_longitude(body.longitude - offset))
+    return BodyPosition(
+        body_id=body.body_id,
+        longitude=zodiac.longitude,
+        latitude=body.latitude,
+        distance=body.distance,
+        speed_longitude=body.speed_longitude,
+        retrograde=body.retrograde,
+        sign=zodiac.sign,
+        degree_in_sign=zodiac.degree_in_sign,
+        house=body.house,
+    )
 
 
 def _replace_point_house(point: DerivedPoint, house: int | None) -> DerivedPoint:
