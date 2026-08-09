@@ -16,6 +16,11 @@ class HouseCalculation:
     angles: dict[str, AnglePosition]
     houses: tuple[HouseCusp, ...]
     algorithm_version: str
+    # The western intersection of the prime vertical with the ecliptic, which
+    # Swiss Ephemeris has been returning in the same call all along. Optional
+    # because the ARMC path builds a HouseCalculation too and has no observer
+    # position to derive one from.
+    vertex: float | None = None
     # True when the cusps do not advance in zodiacal order. Beyond the polar
     # circles quadrant systems such as Campanus and Regiomontanus invert: cusp 2
     # falls behind cusp 1 and the houses run backwards. The result is

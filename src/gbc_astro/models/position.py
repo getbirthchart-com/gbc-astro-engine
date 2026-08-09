@@ -81,3 +81,35 @@ class HouseCusp:
             "degreeInSign": self.degree_in_sign,
         }
 
+
+
+@dataclass(frozen=True)
+class DerivedPoint:
+    """A position derived from the chart rather than looked up in an ephemeris.
+
+    `alternative_longitude` is populated only where a real convention dispute
+    changed the answer -- currently the Part of Fortune in a night chart. It is
+    not a margin of error; it is where the other school would have put the same
+    point, published so that a difference against another program reads as a
+    documented choice rather than as a defect.
+    """
+
+    point_id: str
+    longitude: float
+    sign: str
+    degree_in_sign: float
+    house: int | None
+    method: str
+    requires_birth_time: bool
+    alternative_longitude: float | None = None
+
+    def to_dict(self) -> dict[str, float | int | str | bool | None]:
+        return {
+            "longitude": self.longitude,
+            "sign": self.sign,
+            "degreeInSign": self.degree_in_sign,
+            "house": self.house,
+            "method": self.method,
+            "requiresBirthTime": self.requires_birth_time,
+            "alternativeLongitude": self.alternative_longitude,
+        }

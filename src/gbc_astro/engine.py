@@ -35,6 +35,13 @@ from gbc_astro.derived.balances import (
 )
 from gbc_astro.derived.moon_phase import calculate_moon_phase
 from gbc_astro.derived.patterns import ChartPattern, find_patterns
+from gbc_astro.derived.points import (
+    PART_OF_FORTUNE,
+    VERTEX,
+    part_of_fortune,
+    south_node,
+    vertex_points,
+)
 from gbc_astro.derived.rulership import (
     chart_ruler,
     dignities,
@@ -76,7 +83,7 @@ from gbc_astro.models.chart import (
 )
 from gbc_astro.models.forecast import EventSearchResult, ReturnSearchResult, TransitChart
 from gbc_astro.models.input import ChartInput
-from gbc_astro.models.position import AnglePosition, BodyPosition
+from gbc_astro.models.position import AnglePosition, BodyPosition, DerivedPoint
 from gbc_astro.models.relationship import (
     CompositeChart,
     DavisonChart,
@@ -91,6 +98,10 @@ from gbc_astro.profiles.dimensions import (
 )
 from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
 from gbc_astro.profiles.pattern import PATTERN_PROFILE_V1, PatternProfile
+from gbc_astro.profiles.points import (
+    VERTEX_SENSITIVE_LATITUDE,
+    resolve_point_profile,
+)
 from gbc_astro.profiles.progression import (
     SECONDARY_PROGRESSION_V1,
     SOLAR_ARC_V1,
@@ -276,6 +287,16 @@ class AstrologyEngine:
                 )
             )
 
+        # Derived points are built here, after any sidereal rotation, because
+        # the two kinds behave differently under it. The vertex arrives from
+        # Swiss Ephemeris in the tropical frame and is rotated explicitly; the
+        # Lot and the south node are arithmetic on longitudes the chart already
+        # holds, so the ayanamsa cancels through and rotating again would count
+        # it twice.
+        points = self._calculate_points(bodies, house_calculation, chart_input.latitude)
+        for point_warning in _point_warnings(points, chart_input.latitude):
+            warnings.append(point_warning)
+
         # Aspects first: the dominance score inside `derived` weighs how much of
         # the chart each planet aspects, so it needs them already calculated.
         aspects = calculate_aspects(
@@ -290,6 +311,8 @@ class AstrologyEngine:
             ephemeris_data_version=provider.data_version,
             timezone_data_version=time_norm.timezone_data_version,
             calculation_profile=self.profile.id,
+            point_profile=resolve_point_profile(self.profile.points).id,
+            point_profile_version=resolve_point_profile(self.profile.points).version,
             rulership_profile=resolve_rulership_profile(self.profile.rulership).id,
             rulership_profile_version=resolve_rulership_profile(
                 self.profile.rulership
@@ -322,6 +345,7 @@ class AstrologyEngine:
             subject=subject,
             angles=house_calculation.angles if house_calculation else {},
             bodies=bodies,
+            points=points,
             houses=house_calculation.houses if house_calculation else (),
             aspects=aspects,
             derived=derived,
@@ -572,6 +596,8 @@ class AstrologyEngine:
             self._get_house_calculator(),
             house_system=house_system,
             altitude_m=altitude_m,
+            build_derived=self._calculate_derived,
+            build_points=self._calculate_points,
         )
 
     def astrocartography(
@@ -729,6 +755,48 @@ class AstrologyEngine:
             bodies[body_id] = normalize_body_position(body_id, raw)
         return bodies
 
+    def _calculate_points(
+        self,
+        bodies: dict[str, BodyPosition],
+        house_calculation: HouseCalculation | None,
+        latitude: float,
+    ) -> dict[str, DerivedPoint]:
+        """Vertex, antivertex, Lot of Fortune and south node, where available.
+
+        The vertex and the Lot both need an Ascendant, so a chart with no birth
+        time gets neither and nothing is substituted. The south node needs only
+        the node itself and survives.
+        """
+        profile = resolve_point_profile(self.profile.points)
+        points: dict[str, DerivedPoint] = {}
+
+        node_id = "true_node" if self.profile.node_type == "true" else "mean_node"
+        node = bodies.get(node_id)
+        if profile.include_south_node and node is not None:
+            point = south_node(node)
+            points[point.point_id] = point
+
+        if house_calculation is None:
+            return points
+
+        ascendant = house_calculation.angles["ascendant"].longitude
+        if house_calculation.vertex is not None:
+            for point in vertex_points(house_calculation.vertex, profile):
+                points[point.point_id] = point
+
+        sun = bodies.get("sun")
+        moon = bodies.get("moon")
+        if profile.include_part_of_fortune and sun is not None and moon is not None:
+            point = part_of_fortune(sun, moon, ascendant, profile)
+            points[point.point_id] = point
+
+        return {
+            point_id: _replace_point_house(
+                point, assign_house(point.longitude, house_calculation.houses)
+            )
+            for point_id, point in points.items()
+        }
+
     def _calculate_derived(
         self,
         bodies: dict[str, BodyPosition],
@@ -807,6 +875,61 @@ class AstrologyEngine:
             resolve_ayanamsa_profile(profile.ayanamsa or "")
 
 
+def _replace_point_house(point: DerivedPoint, house: int | None) -> DerivedPoint:
+    return DerivedPoint(
+        point_id=point.point_id,
+        longitude=point.longitude,
+        sign=point.sign,
+        degree_in_sign=point.degree_in_sign,
+        house=house,
+        method=point.method,
+        requires_birth_time=point.requires_birth_time,
+        alternative_longitude=point.alternative_longitude,
+    )
+
+
+def _point_warnings(
+    points: dict[str, DerivedPoint], latitude: float
+) -> list[WarningMessage]:
+    """Say where a published point is more fragile than it looks."""
+    warnings: list[WarningMessage] = []
+
+    if VERTEX in points and abs(latitude) < VERTEX_SENSITIVE_LATITUDE:
+        warnings.append(
+            WarningMessage(
+                code="VERTEX_LOW_LATITUDE_SENSITIVITY",
+                severity="info",
+                message=(
+                    "The vertex moves very fast with latitude near the equator -- "
+                    "measured, about 170 degrees across four degrees of latitude "
+                    "below five degrees north. It is stable at high latitudes and "
+                    "fragile here, so a birth place recorded only to the nearest "
+                    "city may not pin it. The value is exact for the coordinates "
+                    "given."
+                ),
+                fields_affected=("points.vertex", "points.antivertex"),
+            )
+        )
+
+    lot = points.get(PART_OF_FORTUNE)
+    if lot is not None and lot.alternative_longitude is not None:
+        warnings.append(
+            WarningMessage(
+                code="PART_OF_FORTUNE_SECT_CONVENTION",
+                severity="info",
+                message=(
+                    "This is a night chart, where the two conventions for the Lot "
+                    "of Fortune disagree. The profile's rule was used and the "
+                    "longitude the other convention would give is published as "
+                    "`alternativeLongitude`, so a difference against another "
+                    "program is a documented choice rather than an error."
+                ),
+                fields_affected=("points.part_of_fortune",),
+            )
+        )
+    return warnings
+
+
 def _to_sidereal_body(body: BodyPosition, ayanamsa: float) -> BodyPosition:
     """Rotate one body into the sidereal zodiac.
 
@@ -862,6 +985,16 @@ def _to_sidereal_geometry(
         angles=angles,
         houses=cusps,
         algorithm_version=f"{calculation.algorithm_version}:sidereal",
+        # The vertex is rotated here with everything else, so that a
+        # HouseCalculation is always wholly in the chart's own zodiac. Carrying
+        # it through untouched would leave one tropical value inside an
+        # otherwise sidereal object, which is precisely the mixed-frame shape
+        # that produced seven bugs in the previous audit.
+        vertex=(
+            None
+            if calculation.vertex is None
+            else normalize_longitude(calculation.vertex - ayanamsa)
+        ),
         sequence_degenerate=is_sequence_degenerate(cusps),
     )
 

@@ -7,7 +7,12 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from gbc_astro.models.aspect import Aspect
-from gbc_astro.models.position import AnglePosition, BodyPosition, HouseCusp
+from gbc_astro.models.position import (
+    AnglePosition,
+    BodyPosition,
+    DerivedPoint,
+    HouseCusp,
+)
 from gbc_astro.models.rulership import (
     Dignity,
     DispositorChain,
@@ -49,6 +54,8 @@ class ChartMeta:
     ayanamsa: str | None = None
     ayanamsa_version: str | None = None
     ayanamsa_degrees: float | None = None
+    point_profile: str | None = None
+    point_profile_version: str | None = None
     rulership_profile: str | None = None
     rulership_profile_version: str | None = None
     dominant_profile: str | None = None
@@ -66,6 +73,8 @@ class ChartMeta:
             "aspectProfile": self.aspect_profile,
             "zodiac": self.zodiac,
             "houseAlgorithmVersion": self.house_algorithm_version,
+            "pointProfile": self.point_profile,
+            "pointProfileVersion": self.point_profile_version,
             "rulershipProfile": self.rulership_profile,
             "rulershipProfileVersion": self.rulership_profile_version,
             "dominantProfile": self.dominant_profile,
@@ -167,6 +176,7 @@ class NatalChart:
     subject: ChartSubject
     angles: dict[str, AnglePosition]
     bodies: dict[str, BodyPosition]
+    points: dict[str, DerivedPoint]
     houses: tuple[HouseCusp, ...]
     aspects: tuple[Aspect, ...]
     derived: DerivedNatal
@@ -179,6 +189,7 @@ class NatalChart:
             "subject": self.subject.to_dict(),
             "angles": {name: angle.to_dict() for name, angle in self.angles.items()},
             "bodies": {name: body.to_dict() for name, body in self.bodies.items()},
+            "points": {name: point.to_dict() for name, point in self.points.items()},
             "houses": [house.to_dict() for house in self.houses],
             "aspects": [aspect.to_dict() for aspect in self.aspects],
             "derived": self.derived.to_dict(),

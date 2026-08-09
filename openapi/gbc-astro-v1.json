@@ -667,6 +667,28 @@
             ],
             "title": "Housesystem"
           },
+          "pointProfile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pointprofile"
+          },
+          "pointProfileVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pointprofileversion"
+          },
           "rulershipProfile": {
             "anyOf": [
               {
@@ -1212,6 +1234,65 @@
           "quadrants"
         ],
         "title": "DerivedPayload",
+        "type": "object"
+      },
+      "DerivedPointPayload": {
+        "additionalProperties": true,
+        "description": "A position derived from the chart rather than read from an ephemeris.",
+        "properties": {
+          "alternativeLongitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the other school would put this point, populated only where a real convention dispute changed the answer -- currently the Lot of Fortune in a night chart. Not a margin of error: a documented choice, so a difference against another program reads as one.",
+            "title": "Alternativelongitude"
+          },
+          "degreeInSign": {
+            "title": "Degreeinsign",
+            "type": "number"
+          },
+          "house": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "House"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "method": {
+            "description": "The formula used, named rather than implied.",
+            "title": "Method",
+            "type": "string"
+          },
+          "requiresBirthTime": {
+            "title": "Requiresbirthtime",
+            "type": "boolean"
+          },
+          "sign": {
+            "title": "Sign",
+            "type": "string"
+          }
+        },
+        "required": [
+          "longitude",
+          "sign",
+          "degreeInSign",
+          "method",
+          "requiresBirthTime"
+        ],
+        "title": "DerivedPointPayload",
         "type": "object"
       },
       "DignityPayload": {
@@ -2144,6 +2225,14 @@
           },
           "meta": {
             "$ref": "#/components/schemas/ChartMetaPayload"
+          },
+          "points": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DerivedPointPayload"
+            },
+            "description": "Vertex, antivertex, Lot of Fortune and south node. All but the south node need a birth time and are absent without one.",
+            "title": "Points",
+            "type": "object"
           },
           "schemaVersion": {
             "title": "Schemaversion",
@@ -3346,7 +3435,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.7.0"
+    "x-gbc-engine-version": "1.8.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -3937,7 +4026,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.7.0",
+                    "engineVersion": "1.8.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },

@@ -85,6 +85,9 @@ class SwissHouseCalculator:
             angles=angles,
             houses=cusps,
             algorithm_version=f"swisseph:{_version(self._swe)}:{system}",
+            # ascmc carries eight values and the engine used two. The vertex is
+            # index 3 and has been available on every chart ever calculated.
+            vertex=normalize_longitude(float(ascmc[3])),
             sequence_degenerate=is_sequence_degenerate(cusps),
         )
 

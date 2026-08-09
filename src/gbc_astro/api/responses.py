@@ -60,6 +60,26 @@ class BodyPayload(_Schema):
     )
 
 
+class DerivedPointPayload(_Schema):
+    """A position derived from the chart rather than read from an ephemeris."""
+
+    longitude: float
+    sign: str
+    degreeInSign: float
+    house: int | None = None
+    method: str = Field(description="The formula used, named rather than implied.")
+    requiresBirthTime: bool
+    alternativeLongitude: float | None = Field(
+        default=None,
+        description=(
+            "Where the other school would put this point, populated only where "
+            "a real convention dispute changed the answer -- currently the Lot "
+            "of Fortune in a night chart. Not a margin of error: a documented "
+            "choice, so a difference against another program reads as one."
+        ),
+    )
+
+
 class HouseCuspPayload(_Schema):
     number: int
     cuspLongitude: float
@@ -103,6 +123,8 @@ class ChartMetaPayload(_Schema):
     aspectProfile: str
     zodiac: str
     houseAlgorithmVersion: str | None = None
+    pointProfile: str | None = None
+    pointProfileVersion: str | None = None
     rulershipProfile: str | None = None
     rulershipProfileVersion: str | None = None
     dominantProfile: str | None = None
@@ -232,6 +254,13 @@ class NatalChartResponse(_Schema):
         description="Empty when the birth time is unknown. No substitute is used."
     )
     bodies: dict[str, BodyPayload]
+    points: dict[str, DerivedPointPayload] = Field(
+        default_factory=dict,
+        description=(
+            "Vertex, antivertex, Lot of Fortune and south node. All but the "
+            "south node need a birth time and are absent without one."
+        ),
+    )
     houses: list[HouseCuspPayload] = Field(
         description="Empty when the birth time is unknown."
     )

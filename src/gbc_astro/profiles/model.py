@@ -74,6 +74,10 @@ class CalculationProfile:
     # the Vedic tradition uses the classical seven, and offering it Pluto as the
     # ruler of Scorpio would be answering in the wrong system entirely.
     rulership: str = "modern"
+    # Which derived points are produced, and which convention the Lot of
+    # Fortune follows below the horizon. Profile-scoped for the same reason the
+    # ayanamsa is: the two conventions disagree on about half of all charts.
+    points: str = "western"
     # Required when `zodiac` is "sidereal", ignored otherwise. No default is
     # applied for a sidereal profile: the schools disagree by whole degrees, so
     # picking one silently would be picking an answer.

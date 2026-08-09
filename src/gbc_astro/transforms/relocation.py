@@ -18,6 +18,8 @@ which effect a reader was looking at.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from gbc_astro.aspects.engine import calculate_aspects
 from gbc_astro.constants import ENGINE_NAME, ENGINE_VERSION, SCHEMA_VERSION
 from gbc_astro.errors import InvalidCalculationProfileError
@@ -30,9 +32,15 @@ from gbc_astro.houses.base import (
 )
 from gbc_astro.houses.systems import SIGN_ANCHORED
 from gbc_astro.houses.whole_sign import whole_sign_cusp_longitudes
-from gbc_astro.models.chart import ChartMeta, ChartSubject, NatalChart, WarningMessage
+from gbc_astro.models.chart import (
+    ChartMeta,
+    ChartSubject,
+    DerivedNatal,
+    NatalChart,
+    WarningMessage,
+)
 from gbc_astro.models.input import ChartInput
-from gbc_astro.models.position import AnglePosition, BodyPosition
+from gbc_astro.models.position import AnglePosition, BodyPosition, DerivedPoint
 from gbc_astro.profiles.model import CalculationProfile
 from gbc_astro.zodiac.sidereal import longitude_to_sidereal
 
@@ -47,6 +55,8 @@ def calculate_relocation(
     house_calculator: HouseCalculator,
     house_system: str | None = None,
     altitude_m: float | None = None,
+    build_derived: Callable[..., DerivedNatal] | None = None,
+    build_points: Callable[..., dict[str, DerivedPoint]] | None = None,
 ) -> NatalChart:
     """Recast `chart`'s moment for a different place.
 
@@ -153,17 +163,34 @@ def calculate_relocation(
         ayanamsa_version=chart.meta.ayanamsa_version,
         ayanamsa_degrees=chart.meta.ayanamsa_degrees,
     )
+    # Recalculated, not carried over. Most of the derived block is a function
+    # of the angles and cusps this relocation has just changed: the rising sign,
+    # the chart ruler, every house ruler, the hemisphere and quadrant counts.
+    # Copying the source chart's would leave a chart that contradicts itself --
+    # a London relocation reporting a Scorpio Ascendant beside a Pisces rising
+    # sign, and a first-house ruler for a cusp the chart no longer has.
+    aspects = calculate_aspects(
+        bodies, calculation_profile.aspect_profile, calculation_profile.aspect_bodies
+    )
+    points = (
+        build_points(bodies, geometry, latitude)
+        if build_points is not None
+        else {}
+    )
     return NatalChart(
         schema_version=SCHEMA_VERSION,
         meta=meta,
         subject=subject,
         angles=geometry.angles,
         bodies=bodies,
+        points=points,
         houses=geometry.houses,
-        aspects=calculate_aspects(
-            bodies, calculation_profile.aspect_profile, calculation_profile.aspect_bodies
+        aspects=aspects,
+        derived=(
+            build_derived(bodies, geometry, aspects)
+            if build_derived is not None
+            else chart.derived
         ),
-        derived=chart.derived,
         warnings=tuple(warnings),
     )
 
