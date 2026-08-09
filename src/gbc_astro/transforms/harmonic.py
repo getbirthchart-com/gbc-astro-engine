@@ -101,7 +101,9 @@ def calculate_harmonic(
         angles=angles,
         # Recomputed, not carried over: collapsing an aspect family onto
         # conjunctions is the point of the transform.
-        aspects=calculate_aspects(bodies, profile.aspect_profile),
+        aspects=calculate_aspects(
+            bodies, profile.aspect_profile, profile.aspect_bodies
+        ),
         warnings=tuple(warnings),
     )
 

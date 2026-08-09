@@ -271,7 +271,9 @@ class AstrologyEngine:
 
         # Aspects first: the dominance score inside `derived` weighs how much of
         # the chart each planet aspects, so it needs them already calculated.
-        aspects = calculate_aspects(bodies, self.profile.aspect_profile)
+        aspects = calculate_aspects(
+            bodies, self.profile.aspect_profile, self.profile.aspect_bodies
+        )
         derived = self._calculate_derived(bodies, house_calculation, aspects)
         meta = ChartMeta(
             schema_version=SCHEMA_VERSION,
@@ -757,6 +759,21 @@ class AstrologyEngine:
 
     @staticmethod
     def _validate_profile(profile: CalculationProfile) -> None:
+        # The true and the mean lunar node are one point computed two ways,
+        # about a degree apart. A profile that lets both aspect doubles every
+        # node contact and adds a "node conjunct node" that is true of every
+        # chart ever cast. Refused here rather than left to the defaults being
+        # written correctly, because the defaults are not the only profiles.
+        nodes = {"true_node", "mean_node"} & set(profile.aspect_bodies)
+        if len(nodes) > 1:
+            raise InvalidCalculationProfileError(
+                "A profile may make at most one lunar node eligible to aspect. "
+                "The true and mean nodes are the same point computed two ways, "
+                "so admitting both counts every node contact twice and makes "
+                "the two of them permanently conjunct.",
+                {"aspectBodies": list(profile.aspect_bodies), "nodes": sorted(nodes)},
+            )
+
         if profile.zodiac not in {"tropical", "sidereal"}:
             raise InvalidCalculationProfileError(
                 "Unsupported zodiac.",

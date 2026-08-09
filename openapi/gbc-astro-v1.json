@@ -96,6 +96,10 @@
             "title": "Exactangle",
             "type": "number"
           },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
           "orb": {
             "title": "Orb",
             "type": "number"
@@ -106,6 +110,7 @@
           }
         },
         "required": [
+          "id",
           "body",
           "bodyChart",
           "angle",
@@ -923,6 +928,57 @@
         "title": "CompositeChartResponse",
         "type": "object"
       },
+      "CrossAspectPayload": {
+        "additionalProperties": true,
+        "description": "A natal aspect plus an evidence id.\n\nCross-chart contacts carry one and natal aspects do not, because everything\ndownstream of synastry -- score contributions, evidence bundles, the report\noutline, the timing layer's activation marks -- addresses facts by id.",
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "actualAngle": {
+            "title": "Actualangle",
+            "type": "number"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "exactAngle": {
+            "title": "Exactangle",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "phase": {
+            "description": "applying, separating, exact, or indeterminate. Indeterminate is a real answer, not a failure: two natal charts share no timeline, so cross-aspects between them have no direction of travel.",
+            "title": "Phase",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "type",
+          "exactAngle",
+          "actualAngle",
+          "orb",
+          "phase",
+          "id"
+        ],
+        "title": "CrossAspectPayload",
+        "type": "object"
+      },
       "DavisonChartResponse": {
         "additionalProperties": true,
         "properties": {
@@ -1652,9 +1708,14 @@
           "houseChart": {
             "title": "Housechart",
             "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
           }
         },
         "required": [
+          "id",
           "body",
           "bodyChart",
           "houseChart",
@@ -2578,7 +2639,7 @@
           "crossAspects": {
             "description": "Phase is always indeterminate here. Two natal charts are two frozen instants and share no timeline, so applying and separating have nothing to describe. Use a Davison chart for a real direction of travel.",
             "items": {
-              "$ref": "#/components/schemas/AspectPayload"
+              "$ref": "#/components/schemas/CrossAspectPayload"
             },
             "title": "Crossaspects",
             "type": "array"
@@ -2978,7 +3039,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.2.0"
+    "x-gbc-engine-version": "1.3.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -3569,7 +3630,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.2.0",
+                    "engineVersion": "1.3.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },

@@ -32,8 +32,25 @@ class CrossAspect:
     orb: float
     phase: str = "indeterminate"
 
+    @property
+    def id(self) -> str:
+        """Deterministic, derived only from whose body aspects whose.
+
+        A and B are part of the identity and never collapse: `a.sun.trine.b.moon`
+        and `a.moon.trine.b.sun` are two different facts about two different
+        people, and a caller keying interpretation or user state off the id has
+        to be able to tell them apart.
+
+        The orb and the profile are deliberately absent. Orbs move when a
+        profile version changes, and an id that changed with them could not be
+        referenced by a stored result. Which profile produced the contact is
+        already in the result's provenance.
+        """
+        return f"synastry.cross.a.{self.body_a}.{self.aspect_type}.b.{self.body_b}"
+
     def to_dict(self) -> dict[str, float | str]:
         return {
+            "id": self.id,
             "a": self.body_a,
             "b": self.body_b,
             "type": self.aspect_type,
@@ -54,8 +71,22 @@ class HouseOverlay:
     house: int
     body_longitude: float
 
+    @property
+    def id(self) -> str:
+        """Direction is the fact here, so it is the first thing in the id.
+
+        A's Sun in B's seventh house and B's Sun in A's seventh house are
+        different statements about different people, and an overlay that
+        flattened them would say neither.
+        """
+        return (
+            f"synastry.overlay.{self.body_chart.lower()}.{self.body}"
+            f".in.{self.house_chart.lower()}.house_{self.house}"
+        )
+
     def to_dict(self) -> dict[str, float | int | str]:
         return {
+            "id": self.id,
             "body": self.body,
             "bodyChart": self.body_chart,
             "houseChart": self.house_chart,
@@ -77,8 +108,16 @@ class AngleInteraction:
     actual_angle: float
     orb: float
 
+    @property
+    def id(self) -> str:
+        return (
+            f"synastry.angle.{self.body_chart.lower()}.{self.body}"
+            f".{self.aspect_type}.{self.angle_chart.lower()}.{self.angle}"
+        )
+
     def to_dict(self) -> dict[str, float | str]:
         return {
+            "id": self.id,
             "body": self.body,
             "bodyChart": self.body_chart,
             "angle": self.angle,

@@ -272,7 +272,19 @@ class PatternsResponse(_Schema):
 # --- relationship -----------------------------------------------------------
 
 
+class CrossAspectPayload(AspectPayload):
+    """A natal aspect plus an evidence id.
+
+    Cross-chart contacts carry one and natal aspects do not, because everything
+    downstream of synastry -- score contributions, evidence bundles, the report
+    outline, the timing layer's activation marks -- addresses facts by id.
+    """
+
+    id: str
+
+
 class HouseOverlayPayload(_Schema):
+    id: str
     body: str
     bodyChart: str
     houseChart: str
@@ -281,6 +293,7 @@ class HouseOverlayPayload(_Schema):
 
 
 class AngleInteractionPayload(_Schema):
+    id: str
     body: str
     bodyChart: str
     angle: str
@@ -296,7 +309,7 @@ class SynastryResponse(_Schema):
     meta: dict[str, Any]
     chartA: NatalChartResponse
     chartB: NatalChartResponse
-    crossAspects: list[AspectPayload] = Field(
+    crossAspects: list[CrossAspectPayload] = Field(
         description=(
             "Phase is always indeterminate here. Two natal charts are two frozen "
             "instants and share no timeline, so applying and separating have "

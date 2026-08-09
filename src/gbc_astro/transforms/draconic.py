@@ -85,7 +85,9 @@ def calculate_draconic(
         subject=chart.subject,
         bodies=bodies,
         angles=angles,
-        aspects=calculate_aspects(bodies, profile.aspect_profile),
+        aspects=calculate_aspects(
+            bodies, profile.aspect_profile, profile.aspect_bodies
+        ),
         warnings=tuple(warnings),
     )
 

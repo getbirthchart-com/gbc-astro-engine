@@ -40,7 +40,12 @@ EXPECTED_DAVISON = {
 }
 EXPECTED_OVERLAYS_A_IN_B = {"sun": 4, "moon": 7}
 EXPECTED_OVERLAYS_B_IN_A = {"sun": 4, "moon": 3}
-EXPECTED_COUNTS = {"crossAspects": 52, "angleInteractions": 39, "compositeAspects": 28}
+# Down from 52/39/28. Two changes, both deliberate: the mean node no longer
+# aspects (it is the true node computed a second way, so every node contact was
+# counted twice), and cross aspects moved off the natal orb profile onto
+# SYNASTRY_ASPECT_PROFILE_V1. Composite fell too because it shares the body
+# filter, though it keeps the natal orbs.
+EXPECTED_COUNTS = {"crossAspects": 38, "angleInteractions": 30, "compositeAspects": 22}
 
 
 def _swiss_available() -> bool:

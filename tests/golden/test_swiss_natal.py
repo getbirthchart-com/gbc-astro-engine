@@ -45,7 +45,10 @@ class SwissNatalGoldenTests(unittest.TestCase):
         self.assertEqual(chart.derived.big_three["sun"], "scorpio")
         self.assertEqual(chart.derived.big_three["moon"], "aquarius")
         self.assertEqual(chart.derived.big_three["rising"], "pisces")
-        self.assertEqual(len(chart.aspects), 18)
+        # 14, not 18. Four of the old aspects were the mean node repeating what
+        # the true node already said, including a "true_node conjunct mean_node"
+        # that appeared in every chart the engine had ever produced.
+        self.assertEqual(len(chart.aspects), 14)
 
     def test_high_latitude_placidus_is_explicit_error(self) -> None:
         with self.assertRaises(HouseCalculationUnavailableError):

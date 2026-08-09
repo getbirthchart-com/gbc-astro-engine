@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-from gbc_astro.constants import BODY_IDS, CLASSICAL_BALANCE_BODIES
+from gbc_astro.constants import (
+    ASPECT_BODIES,
+    CLASSICAL_BALANCE_BODIES,
+)
 from gbc_astro.profiles.model import (
     AspectProfile,
     AspectRule,
     CalculationProfile,
     RelationshipProfile,
 )
+from gbc_astro.profiles.synastry import SYNASTRY_ASPECT_PROFILE_V1
 
 MODERN_MAJOR_V1 = AspectProfile(
     id="modern-major-v1",
@@ -31,6 +35,7 @@ WESTERN_MODERN_V1 = CalculationProfile(
     aspect_profile=MODERN_MAJOR_V1,
     unknown_time_policy="local_date_start_with_uncertainty_warning",
     balance_bodies=CLASSICAL_BALANCE_BODIES,
+    aspect_bodies=ASPECT_BODIES,
     rulership="modern",
 )
 
@@ -46,6 +51,7 @@ VEDIC_SIDEREAL_V1 = CalculationProfile(
     aspect_profile=MODERN_MAJOR_V1,
     unknown_time_policy="local_date_start_with_uncertainty_warning",
     balance_bodies=CLASSICAL_BALANCE_BODIES,
+    aspect_bodies=ASPECT_BODIES,
     ayanamsa="lahiri",
     # The classical seven. Vedic practice does not assign Scorpio to Pluto or
     # Aquarius to Uranus, so answering a sidereal chart from the modern table
@@ -59,7 +65,8 @@ RELATIONSHIP_WESTERN_V1 = RelationshipProfile(
     id="relationship-western-v1",
     version="1.0.0",
     aspect_profile=MODERN_MAJOR_V1,
-    synastry_bodies=BODY_IDS,
+    synastry_aspect_profile=SYNASTRY_ASPECT_PROFILE_V1,
+    synastry_bodies=ASPECT_BODIES,
     synastry_angles=("ascendant", "mc", "descendant", "ic"),
     # Shortest-arc midpoint of each corresponding pair of body longitudes.
     composite_position_method="shortest_arc_midpoint",

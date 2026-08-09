@@ -51,7 +51,7 @@ def calculate_cross_aspects(
             if body_b is None:
                 continue
             separation = shortest_angular_distance(body_a.longitude, body_b.longitude)
-            matched = match_aspect_rule(separation, profile.aspect_profile)
+            matched = match_aspect_rule(separation, profile.synastry_aspect_profile)
             if matched is None:
                 continue
             rule, orb = matched
@@ -89,7 +89,7 @@ def _cross_aspect_phase(
     if profile.cross_aspect_phase_policy != "natal_speed_convention":
         return AspectPhase.INDETERMINATE.value
     return aspect_phase(
-        body_a, body_b, exact_angle, orb, profile.aspect_profile.exact_epsilon_deg
+        body_a, body_b, exact_angle, orb, profile.synastry_aspect_profile.exact_epsilon_deg
     ).value
 
 
@@ -142,7 +142,7 @@ def calculate_angle_interactions(
                 if angle is None:
                     continue
                 separation = shortest_angular_distance(body.longitude, angle.longitude)
-                matched = match_aspect_rule(separation, profile.aspect_profile)
+                matched = match_aspect_rule(separation, profile.synastry_aspect_profile)
                 if matched is None:
                     continue
                 rule, orb = matched
@@ -250,7 +250,7 @@ def calculate_synastry(
             engine=ENGINE_NAME,
             engine_version=ENGINE_VERSION,
             relationship_profile=profile.id,
-            aspect_profile=profile.aspect_profile.id,
+            aspect_profile=profile.synastry_aspect_profile.id,
             zodiac=chart_a.meta.zodiac,
             chart_a_schema_version=chart_a.schema_version,
             chart_b_schema_version=chart_b.schema_version,

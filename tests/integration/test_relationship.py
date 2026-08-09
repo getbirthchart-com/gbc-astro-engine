@@ -77,8 +77,12 @@ class RelationshipTests(unittest.TestCase):
     def test_house_overlays_run_both_directions_against_the_right_chart(self) -> None:
         synastry = self.engine.synastry(self.chart_a, self.chart_b)
 
-        self.assertEqual(len(synastry.a_bodies_in_b_houses), len(self.chart_a.bodies))
-        self.assertEqual(len(synastry.b_bodies_in_a_houses), len(self.chart_b.bodies))
+        # Against the profile's declared body set, not the chart's. A chart
+        # reports more bodies than may take part -- both lunar nodes, for one --
+        # and the two coinciding was an accident, not the invariant.
+        eligible = len(self.engine.relationship_profile.synastry_bodies)
+        self.assertEqual(len(synastry.a_bodies_in_b_houses), eligible)
+        self.assertEqual(len(synastry.b_bodies_in_a_houses), eligible)
         for overlay in synastry.a_bodies_in_b_houses:
             self.assertEqual(overlay.body_chart, "A")
             self.assertEqual(overlay.house_chart, "B")
@@ -123,7 +127,9 @@ class RelationshipTests(unittest.TestCase):
             for aspect in synastry.cross_aspects
             if aspect.body_a == aspect.body_b
         }
-        self.assertEqual(len(same_body), len(self.chart_a.bodies))
+        self.assertEqual(
+            len(same_body), len(self.engine.relationship_profile.synastry_bodies)
+        )
         for aspect in same_body.values():
             self.assertEqual(aspect.aspect_type, "conjunction")
             self.assertAlmostEqual(aspect.orb, 0.0, places=9)
@@ -293,7 +299,7 @@ class RelationshipTests(unittest.TestCase):
                 "warnings",
             },
         )
-        self.assertEqual(payload["schemaVersion"], "1.0.0")
+        self.assertEqual(payload["schemaVersion"], "1.1.0")
         self.assertEqual(payload["meta"]["relationshipProfile"], "relationship-western-v1")
 
     def test_relationship_json_is_deterministic(self) -> None:

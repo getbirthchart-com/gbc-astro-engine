@@ -185,7 +185,9 @@ def calculate_composite(
         bodies=bodies,
         angles=geometry.angles if geometry else {},
         houses=geometry.houses if geometry else (),
-        aspects=calculate_aspects(bodies, profile.aspect_profile),
+        aspects=calculate_aspects(
+            bodies, profile.aspect_profile, profile.synastry_bodies
+        ),
         midpoints=tuple(midpoints),
         warnings=tuple(warnings),
     )

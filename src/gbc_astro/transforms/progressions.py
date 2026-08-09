@@ -172,7 +172,9 @@ def calculate_solar_arc(
         subject=chart.subject,
         bodies=bodies,
         angles=angles,
-        aspects=calculate_aspects(bodies, calculation_profile.aspect_profile),
+        aspects=calculate_aspects(
+            bodies, calculation_profile.aspect_profile, calculation_profile.aspect_bodies
+        ),
         warnings=(
             WarningMessage(
                 code="SOLAR_ARC_IS_A_ROTATION",

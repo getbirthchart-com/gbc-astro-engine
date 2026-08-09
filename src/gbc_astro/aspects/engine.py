@@ -64,9 +64,28 @@ def classify_aspect(
 def calculate_aspects(
     bodies: dict[str, BodyPosition],
     profile: AspectProfile,
+    eligible_bodies: tuple[str, ...] = (),
 ) -> tuple[Aspect, ...]:
+    """Every aspect among the eligible bodies.
+
+    `eligible_bodies` is narrower than what the chart reports. A chart carries
+    both the true and the mean lunar node so a caller can have either, but they
+    are one point computed two ways: aspecting both doubles every node contact
+    and yields a permanent "node conjunct node" that is true of every chart and
+    says nothing. Empty means no filtering, which is what a direct caller
+    testing the aspect engine itself wants.
+    """
+    selected = (
+        bodies
+        if not eligible_bodies
+        else {
+            body_id: body
+            for body_id, body in bodies.items()
+            if body_id in eligible_bodies
+        }
+    )
     aspects = []
-    for body_a, body_b in combinations(bodies.values(), 2):
+    for body_a, body_b in combinations(selected.values(), 2):
         aspect = classify_aspect(body_a, body_b, profile)
         if aspect is not None:
             aspects.append(aspect)

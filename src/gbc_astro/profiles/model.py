@@ -31,7 +31,13 @@ class RelationshipProfile:
 
     id: str
     version: str
+    # Composite aspects. A composite chart is a chart -- midpoint positions read
+    # the way a natal chart is read -- so it keeps the natal orb policy.
     aspect_profile: AspectProfile
+    # Cross-chart aspects, versioned separately so a future change to natal orbs
+    # cannot silently move every synastry contact and invalidate the evidence IDs
+    # already referenced by stored scores.
+    synastry_aspect_profile: AspectProfile
     synastry_bodies: tuple[str, ...]
     synastry_angles: tuple[str, ...]
     composite_position_method: str
@@ -55,6 +61,13 @@ class CalculationProfile:
     unknown_time_policy: str
     balance_bodies: tuple[str, ...]
     cusp_policy: str = "exact_cusp_belongs_to_following_house"
+    # Which bodies may form an aspect. Narrower than the bodies the chart
+    # reports, and deliberately so: a chart publishes both the true and the mean
+    # lunar node because a caller may want either, but they are one point
+    # computed two ways. Aspecting both doubles every node contact and produces
+    # a permanent "node conjunct node" in every chart ever cast. The engine
+    # refuses a profile that lists both -- see `AstrologyEngine._validate_profile`.
+    aspect_bodies: tuple[str, ...] = ()
     # Which rulership table names the chart ruler, the house rulers and every
     # dispositor chain. It belongs to the profile rather than to the request
     # because it is not independent of the rest of it: a sidereal chart cast in

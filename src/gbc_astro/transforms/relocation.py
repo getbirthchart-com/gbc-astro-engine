@@ -160,7 +160,9 @@ def calculate_relocation(
         angles=geometry.angles,
         bodies=bodies,
         houses=geometry.houses,
-        aspects=calculate_aspects(bodies, calculation_profile.aspect_profile),
+        aspects=calculate_aspects(
+            bodies, calculation_profile.aspect_profile, calculation_profile.aspect_bodies
+        ),
         derived=chart.derived,
         warnings=tuple(warnings),
     )
