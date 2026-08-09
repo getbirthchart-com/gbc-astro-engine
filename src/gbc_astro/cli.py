@@ -91,6 +91,15 @@ def _build_parser() -> argparse.ArgumentParser:
             pair.add_argument(f"--{side}-lng", type=float, required=True)
             pair.add_argument(f"--{side}-fold", type=int, choices=(0, 1))
         pair.add_argument("--house-system", default=WESTERN_MODERN_V1.house_system)
+        if name == "compatibility":
+            pair.add_argument(
+                "--relationship-type",
+                choices=("general", "romantic", "friendship", "family", "work"),
+                help=(
+                    "Reweights the dimensions; the geometry is identical either "
+                    "way. Omitted means general, not romantic."
+                ),
+            )
         pair.add_argument("--swiss-ephe-path")
         pair.add_argument("--json", action="store_true", help="Emit canonical JSON.")
 
@@ -360,7 +369,9 @@ def _relationship(args: argparse.Namespace) -> int:
     elif args.command == "davison":
         result = engine.davison(*charts)
     else:
-        result = engine.compatibility(*charts)
+        result = engine.compatibility(
+            charts[0], charts[1], getattr(args, "relationship_type", None)
+        )
     if args.json:
         print(result.to_json(indent=2))
     else:

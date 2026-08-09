@@ -85,6 +85,10 @@ from gbc_astro.models.relationship import (
 )
 from gbc_astro.models.transform import TransformedChart
 from gbc_astro.profiles.defaults import RELATIONSHIP_WESTERN_V1, WESTERN_MODERN_V1
+from gbc_astro.profiles.dimensions import (
+    SYNASTRY_DIMENSION_PROFILE_V1,
+    DimensionProfile,
+)
 from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
 from gbc_astro.profiles.pattern import PATTERN_PROFILE_V1, PatternProfile
 from gbc_astro.profiles.progression import (
@@ -92,6 +96,7 @@ from gbc_astro.profiles.progression import (
     SOLAR_ARC_V1,
     ProgressionProfile,
 )
+from gbc_astro.profiles.relationship_types import resolve_relationship_type
 from gbc_astro.profiles.rulership import (
     DOMINANT_WESTERN_V1,
     DominantProfile,
@@ -145,6 +150,7 @@ class AstrologyEngine:
         solar_arc_profile: ProgressionProfile = SOLAR_ARC_V1,
         pattern_profile: PatternProfile = PATTERN_PROFILE_V1,
         dominant_profile: DominantProfile = DOMINANT_WESTERN_V1,
+        dimension_profile: DimensionProfile = SYNASTRY_DIMENSION_PROFILE_V1,
     ) -> None:
         self._provider = provider
         self.profile = profile
@@ -155,6 +161,7 @@ class AstrologyEngine:
         self.solar_arc_profile = solar_arc_profile
         self.pattern_profile = pattern_profile
         self.dominant_profile = dominant_profile
+        self.dimension_profile = dimension_profile
         self._house_calculator = house_calculator
         self._ayanamsa_calculator: AyanamsaCalculator | None = None
         self._validate_profile(profile)
@@ -347,18 +354,31 @@ class AstrologyEngine:
         """
         return calculate_davison(chart_a, chart_b, self.relationship_profile, self.natal)
 
-    def compatibility(self, chart_a: NatalChart, chart_b: NatalChart) -> RelationshipScore:
+    def compatibility(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        relationship_type: str | None = None,
+    ) -> RelationshipScore:
         """Score a pair under the configured scoring profile.
 
         The only calculation in this engine with no independent reference: the
         weights are an editorial opinion, not a measurement. Reported as three
         totals rather than a percentage, and every contact that fed them is
         listed so the figure can be shown rather than asserted.
+
+        `relationship_type` reweights the dimensions and nothing else -- the
+        geometry is identical whether two people are lovers or colleagues. Left
+        unset it resolves to the neutral profile rather than to romantic, since
+        assuming a relationship is romantic would answer a question the caller
+        never asked.
         """
         return calculate_relationship_score(
             self.synastry(chart_a, chart_b),
             self.relationship_profile,
             self.scoring_profile,
+            self.dimension_profile,
+            resolve_relationship_type(relationship_type),
         )
 
     def transits(

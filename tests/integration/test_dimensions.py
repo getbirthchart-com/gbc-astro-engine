@@ -261,3 +261,115 @@ class MissingDataTests(unittest.TestCase):
         for contribution in self.sparse.contributions:
             with self.subTest(evidence=contribution.evidence_id):
                 self.assertNotEqual(contribution.value, 0.0)
+
+
+@unittest.skipUnless(_swiss_available(), "Needs Swiss Ephemeris data")
+class RelationshipTypeTests(unittest.TestCase):
+    """The type changes what counts, never what is true."""
+
+    TYPES = ("general", "romantic", "friendship", "family", "work")
+
+    def setUp(self) -> None:
+        path = os.environ["GBC_SWISS_EPHE_PATH"]
+        self.engine = AstrologyEngine(
+            provider=SwissEphemerisProvider(ephemeris_path=path),
+            house_calculator=SwissHouseCalculator(ephemeris_path=path),
+        )
+        self.chart_a = self.engine.natal(*CHART_A)
+        self.chart_b = self.engine.natal(*CHART_B)
+        self.scores = {
+            name: self.engine.compatibility(self.chart_a, self.chart_b, name)
+            for name in self.TYPES
+        }
+
+    def test_the_geometry_is_identical_under_every_type(self) -> None:
+        """The absolute rule: relationship type reweights, it does not recalculate."""
+        for name, score in self.scores.items():
+            with self.subTest(relationship_type=name):
+                self.assertEqual(
+                    [c.evidence_id for c in score.contributions],
+                    [c.evidence_id for c in self.scores["general"].contributions],
+                )
+                self.assertEqual(
+                    [c.orb for c in score.contributions],
+                    [c.orb for c in self.scores["general"].contributions],
+                )
+                self.assertAlmostEqual(
+                    score.activity, self.scores["general"].activity, places=9
+                )
+
+    def test_each_type_produces_a_different_dimension_reading(self) -> None:
+        readings = {
+            name: tuple(round(d.activity, 6) for d in score.dimensions)
+            for name, score in self.scores.items()
+        }
+        self.assertEqual(len(set(readings.values())), len(self.TYPES))
+
+    def test_the_declared_intent_of_each_profile_holds(self) -> None:
+        """Not just "different" -- different in the documented direction."""
+        activity = {
+            name: {d.dimension: d.activity for d in score.dimensions}
+            for name, score in self.scores.items()
+        }
+        general = activity["general"]
+        self.assertGreater(activity["romantic"]["attraction"], general["attraction"])
+        self.assertGreater(activity["work"]["communication"], general["communication"])
+        self.assertGreater(activity["work"]["stability"], general["stability"])
+        self.assertGreater(activity["family"]["emotional"], general["emotional"])
+        self.assertGreater(activity["friendship"]["growth"], general["growth"])
+        # Attraction is demoted furthest for the two least romantic readings.
+        self.assertLess(activity["work"]["attraction"], activity["friendship"]["attraction"])
+        self.assertLess(activity["family"]["attraction"], activity["friendship"]["attraction"])
+
+    def test_a_demoted_dimension_is_reduced_not_deleted(self) -> None:
+        """Zeroing attraction would delete evidence rather than reweight it."""
+        for name in ("friendship", "family", "work"):
+            attraction = next(
+                d for d in self.scores[name].dimensions if d.dimension == "attraction"
+            )
+            with self.subTest(relationship_type=name):
+                self.assertGreater(attraction.contact_count, 0)
+                self.assertNotEqual(attraction.activity, 0.0)
+
+    def test_the_decomposition_still_holds_under_every_type(self) -> None:
+        """Reweighting inside the contribution is what preserves this."""
+        for name, score in self.scores.items():
+            for dimension in score.dimensions:
+                values = [
+                    c.dimension_values[dimension.dimension]
+                    for c in score.contributions
+                    if dimension.dimension in c.dimension_values
+                ]
+                with self.subTest(relationship_type=name, dimension=dimension.dimension):
+                    self.assertAlmostEqual(
+                        dimension.supportive,
+                        sum(v for v in values if v > 0.0),
+                        places=9,
+                    )
+
+    def test_the_weight_actually_applied_is_published(self) -> None:
+        for dimension in self.scores["work"].dimensions:
+            if dimension.dimension != "attraction":
+                continue
+            self.assertAlmostEqual(dimension.profile_weight, 0.15, places=9)
+
+    def test_omitting_the_type_is_neutral_rather_than_romantic(self) -> None:
+        """Assuming romantic would answer a question the caller never asked."""
+        unspecified = self.engine.compatibility(self.chart_a, self.chart_b)
+        self.assertEqual(unspecified.relationship_type, "general-v1")
+        self.assertEqual(
+            unspecified.to_dict(), self.scores["general"].to_dict()
+        )
+        self.assertNotEqual(
+            unspecified.to_dict()["dimensions"],
+            self.scores["romantic"].to_dict()["dimensions"],
+        )
+        for dimension in unspecified.dimensions:
+            with self.subTest(dimension=dimension.dimension):
+                self.assertEqual(dimension.profile_weight, 1.0)
+
+    def test_an_unknown_type_is_refused_rather_than_defaulted(self) -> None:
+        from gbc_astro.errors import InvalidCalculationProfileError
+
+        with self.assertRaises(InvalidCalculationProfileError):
+            self.engine.compatibility(self.chart_a, self.chart_b, "situationship")

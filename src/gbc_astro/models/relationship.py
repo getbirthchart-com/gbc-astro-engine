@@ -347,6 +347,9 @@ class DimensionScore:
     challenging: float
     activity: float
     contact_count: int
+    # The relationship-type multiplier already folded into the numbers above,
+    # published so a caller can see it without dividing it back out.
+    profile_weight: float = 1.0
     evidence_ids: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
@@ -356,6 +359,7 @@ class DimensionScore:
             "challenging": self.challenging,
             "activity": self.activity,
             "contactCount": self.contact_count,
+            "profileWeight": self.profile_weight,
             "evidenceIds": list(self.evidence_ids),
         }
 
@@ -384,8 +388,11 @@ class RelationshipScore:
     dimensions: tuple[DimensionScore, ...] = ()
     dimension_profile: str | None = None
     dimension_profile_version: str | None = None
+    relationship_type: str | None = None
+    relationship_type_version: str | None = None
     profile_detail: dict[str, Any] = field(default_factory=dict)
     dimension_profile_detail: dict[str, Any] = field(default_factory=dict)
+    relationship_type_detail: dict[str, Any] = field(default_factory=dict)
     notes: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
@@ -398,9 +405,12 @@ class RelationshipScore:
                 "scoringProfileVersion": self.scoring_profile_version,
                 "dimensionProfile": self.dimension_profile,
                 "dimensionProfileVersion": self.dimension_profile_version,
+                "relationshipType": self.relationship_type,
+                "relationshipTypeVersion": self.relationship_type_version,
             },
             "dimensions": [dimension.to_dict() for dimension in self.dimensions],
             "dimensionProfile": self.dimension_profile_detail,
+            "relationshipTypeProfile": self.relationship_type_detail,
             "totals": {
                 "supportive": self.supportive,
                 "challenging": self.challenging,

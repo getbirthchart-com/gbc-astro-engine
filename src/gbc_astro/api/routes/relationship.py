@@ -83,7 +83,11 @@ def calculate_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResp
 )
 def calculate_compatibility(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
-    result = engine.compatibility(_natal(engine, body.chart_a), _natal(engine, body.chart_b))
+    result = engine.compatibility(
+        _natal(engine, body.chart_a),
+        _natal(engine, body.chart_b),
+        body.relationship_type.value if body.relationship_type else None,
+    )
     logger.info("compatibility_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
     payload: dict[str, Any] = result.to_dict()
     return JSONResponse(content=payload)

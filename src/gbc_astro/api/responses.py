@@ -378,6 +378,13 @@ class DimensionScorePayload(_Schema):
     supportive: float
     challenging: float = Field(description="Zero or negative. Never netted against supportive.")
     activity: float
+    profileWeight: float = Field(
+        default=1.0,
+        description=(
+            "The relationship-type multiplier already folded into the numbers "
+            "above, published so it need not be divided back out."
+        ),
+    )
     contactCount: int = Field(
         description=(
             "Coverage. A dimension with no contacts is not a zero -- zero means "
@@ -423,6 +430,10 @@ class CompatibilityResponse(_Schema):
     dimensions: list[DimensionScorePayload]
     profile: dict[str, Any]
     dimensionProfile: dict[str, Any]
+    relationshipTypeProfile: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Which relationship type reweighted the dimensions, and by how much.",
+    )
     notes: list[str] = Field(default_factory=list)
 
 

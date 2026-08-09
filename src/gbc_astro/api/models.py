@@ -261,6 +261,20 @@ class ApiErrorEnvelope(BaseModel):
     error: ApiErrorBody
 
 
+class RelationshipType(str, Enum):
+    """Which kind of relationship a compatibility score is being asked about.
+
+    Reweights the dimensions; the geometry is identical either way. Omitting it
+    resolves to `general`, not to `romantic`.
+    """
+
+    general = "general"
+    romantic = "romantic"
+    friendship = "friendship"
+    family = "family"
+    work = "work"
+
+
 class RelationshipRequest(BaseModel):
     """Two natal subjects for a synastry or composite chart.
 
@@ -294,6 +308,15 @@ class RelationshipRequest(BaseModel):
 
     chart_a: NatalChartRequest = Field(..., description="First subject.")
     chart_b: NatalChartRequest = Field(..., description="Second subject.")
+    relationship_type: RelationshipType | None = Field(
+        default=None,
+        description=(
+            "Compatibility only. Reweights the dimensions; the geometry is "
+            "identical either way. Omitted resolves to `general`, not to "
+            "`romantic` -- assuming a relationship is romantic would answer a "
+            "question you did not ask."
+        ),
+    )
 
 
 class TransitRequest(BaseModel):

@@ -38,6 +38,10 @@ from gbc_astro.profiles.dimensions import (
     DimensionProfile,
 )
 from gbc_astro.profiles.model import RelationshipProfile
+from gbc_astro.profiles.relationship_types import (
+    GENERAL_V1,
+    RelationshipTypeProfile,
+)
 from gbc_astro.profiles.scoring import ScoringProfile
 
 
@@ -55,6 +59,7 @@ def _dimension_values(
     aspect_type: str,
     value: float,
     profile: DimensionProfile,
+    relationship_type: RelationshipTypeProfile,
 ) -> dict[str, float]:
     """Split one contact's value across the dimensions its two ends speak to.
 
@@ -79,11 +84,20 @@ def _dimension_values(
         friction = abs(value) * profile.conflict_aspect_weight
         values[CONFLICT] = values.get(CONFLICT, 0.0) - friction
 
-    return values
+    # The relationship type reweights here, inside the contribution, rather than
+    # afterwards on the dimension totals. Applied afterwards it would scale the
+    # totals away from the contributions cited under them, and a dimension score
+    # that is no longer the sum of its own evidence is exactly what the evidence
+    # rule forbids.
+    return {
+        dimension: amount * relationship_type.weight_for(dimension)
+        for dimension, amount in values.items()
+    }
 
 
 def _dimension_scores(
     contributions: list[ScoreContribution],
+    relationship_type: RelationshipTypeProfile,
 ) -> tuple[DimensionScore, ...]:
     """Aggregate contributions per dimension, keeping the two signals apart.
 
@@ -112,6 +126,7 @@ def _dimension_scores(
                 challenging=challenging,
                 activity=supportive - challenging,
                 contact_count=len(evidence),
+                profile_weight=relationship_type.weight_for(dimension),
                 evidence_ids=tuple(sorted(set(evidence))),
             )
         )
@@ -161,6 +176,7 @@ def calculate_relationship_score(
     relationship_profile: RelationshipProfile,
     scoring_profile: ScoringProfile,
     dimension_profile: DimensionProfile = SYNASTRY_DIMENSION_PROFILE_V1,
+    relationship_type: RelationshipTypeProfile = GENERAL_V1,
 ) -> RelationshipScore:
     # The profile that PRODUCED these contacts, not the natal one. Orb tightness
     # is a fraction of the orb a contact was allowed, so dividing by a different
@@ -209,6 +225,7 @@ def calculate_relationship_score(
                     aspect.aspect_type,
                     value,
                     dimension_profile,
+                    relationship_type,
                 ),
             )
         )
@@ -245,6 +262,7 @@ def calculate_relationship_score(
                     interaction.aspect_type,
                     value,
                     dimension_profile,
+                    relationship_type,
                 ),
             )
         )
@@ -269,11 +287,14 @@ def calculate_relationship_score(
         balance_band=scoring_profile.band_for(balance, scoring_profile.balance_bands),
         contribution_count=len(ordered),
         contributions=ordered,
-        dimensions=_dimension_scores(contributions),
+        dimensions=_dimension_scores(contributions, relationship_type),
         dimension_profile=dimension_profile.id,
         dimension_profile_version=dimension_profile.version,
+        relationship_type=relationship_type.id,
+        relationship_type_version=relationship_type.version,
         profile_detail=scoring_profile.to_dict(),
         dimension_profile_detail=dimension_profile.to_dict(),
+        relationship_type_detail=relationship_type.to_dict(),
         notes=(
             "Activity is the headline figure: a strongly bound relationship can be "
             "full of hard contacts, and a forgettable one full of mild easy ones, "
