@@ -130,6 +130,76 @@ class AngleInteraction:
 
 
 @dataclass(frozen=True)
+class EvidenceContext:
+    """A bounded slice of the geometry for one topic.
+
+    `available_count` and `truncated` travel with it so a consumer cannot
+    mistake the top of a list for the whole of one -- which is exactly how a
+    downstream model ends up asserting whichever contacts happened to fit.
+    """
+
+    topic: str
+    evidence_ids: tuple[str, ...]
+    available_count: int
+    truncated: bool
+    dimension: Any = None
+    provenance: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "topic": self.topic,
+            "evidenceIds": list(self.evidence_ids),
+            "evidenceCount": len(self.evidence_ids),
+            "availableCount": self.available_count,
+            "truncated": self.truncated,
+            "dimension": self.dimension.to_dict() if self.dimension else None,
+            "provenance": dict(self.provenance),
+        }
+
+
+@dataclass(frozen=True)
+class ReportSectionResult:
+    """One section of the outline: an identifier and what feeds it, never prose."""
+
+    section_id: str
+    priority: int
+    topic: str
+    evidence_ids: tuple[str, ...] = ()
+    available_count: int = 0
+    truncated: bool = False
+    score_ids: tuple[str, ...] = ()
+    available: bool = True
+    unavailable_reason: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "sectionId": self.section_id,
+            "priority": self.priority,
+            "topic": self.topic,
+            "evidenceIds": list(self.evidence_ids),
+            "availableCount": self.available_count,
+            "truncated": self.truncated,
+            "scoreIds": list(self.score_ids),
+            "available": self.available,
+            "unavailableReason": self.unavailable_reason,
+        }
+
+
+@dataclass(frozen=True)
+class ReportOutline:
+    profile: str
+    profile_version: str
+    sections: tuple[ReportSectionResult, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "profile": self.profile,
+            "profileVersion": self.profile_version,
+            "sections": [section.to_dict() for section in self.sections],
+        }
+
+
+@dataclass(frozen=True)
 class RelationshipPattern:
     """A named configuration between two charts.
 

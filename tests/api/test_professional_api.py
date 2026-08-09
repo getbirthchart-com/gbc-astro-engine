@@ -73,6 +73,8 @@ class SurfaceCoverageTests(unittest.TestCase):
             "astrocartography": "/v1/maps/astrocartography",
             "ephemeris": "/v1/ephemeris",
             "optional_bodies": "/v1/capabilities",
+            "evidence_context": "/v1/charts/evidence",
+            "report_outline": "/v1/charts/report-outline",
         }
         capabilities = {
             name

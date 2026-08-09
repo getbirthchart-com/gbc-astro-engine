@@ -333,6 +333,52 @@ class AngleInteractionPayload(_Schema):
     orb: float
 
 
+class EvidenceContextResponse(_Schema):
+    """A bounded slice of a pair's geometry for one topic.
+
+    Facts and identifiers only. No prose is produced here and no model is
+    called -- this selects and orders evidence that already exists.
+    """
+
+    topic: str
+    evidenceIds: list[str]
+    evidenceCount: int
+    availableCount: int = Field(
+        description=(
+            "How many were available before the cap, so the top of a list "
+            "is not mistaken for the whole of one."
+        )
+    )
+    truncated: bool
+    dimension: dict[str, Any] | None = None
+    provenance: dict[str, Any]
+
+
+class ReportSectionPayload(_Schema):
+    sectionId: str
+    priority: int
+    topic: str
+    evidenceIds: list[str]
+    availableCount: int
+    truncated: bool
+    scoreIds: list[str]
+    available: bool
+    unavailableReason: str | None = Field(
+        default=None,
+        description=(
+            "Why a section has nothing to show. A silently missing section "
+            "reads as a topic that did not apply rather than one the geometry "
+            "could not answer."
+        ),
+    )
+
+
+class ReportOutlineResponse(_Schema):
+    profile: str
+    profileVersion: str
+    sections: list[ReportSectionPayload]
+
+
 class RelationshipPatternPayload(_Schema):
     """A named configuration between two charts.
 

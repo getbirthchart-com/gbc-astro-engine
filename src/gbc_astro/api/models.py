@@ -275,6 +275,20 @@ class RelationshipType(str, Enum):
     work = "work"
 
 
+class EvidenceTopic(str, Enum):
+    """What an evidence context is being asked about."""
+
+    overall = "overall"
+    emotional = "emotional"
+    communication = "communication"
+    attraction = "attraction"
+    stability = "stability"
+    growth = "growth"
+    conflict = "conflict"
+    patterns = "patterns"
+    direction = "direction"
+
+
 class RelationshipRequest(BaseModel):
     """Two natal subjects for a synastry or composite chart.
 
@@ -311,11 +325,15 @@ class RelationshipRequest(BaseModel):
     relationship_type: RelationshipType | None = Field(
         default=None,
         description=(
-            "Compatibility only. Reweights the dimensions; the geometry is "
-            "identical either way. Omitted resolves to `general`, not to "
-            "`romantic` -- assuming a relationship is romantic would answer a "
-            "question you did not ask."
+            "Compatibility, evidence and report only. Reweights the dimensions; "
+            "the geometry is identical either way. Omitted resolves to "
+            "`general`, not to `romantic` -- assuming a relationship is romantic "
+            "would answer a question you did not ask."
         ),
+    )
+    topic: EvidenceTopic | None = Field(
+        default=None,
+        description="Evidence context only. Defaults to `overall`.",
     )
 
 

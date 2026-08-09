@@ -1828,6 +1828,79 @@
         "title": "EventSearchResponse",
         "type": "object"
       },
+      "EvidenceContextResponse": {
+        "additionalProperties": true,
+        "description": "A bounded slice of a pair's geometry for one topic.\n\nFacts and identifiers only. No prose is produced here and no model is\ncalled -- this selects and orders evidence that already exists.",
+        "properties": {
+          "availableCount": {
+            "description": "How many were available before the cap, so the top of a list is not mistaken for the whole of one.",
+            "title": "Availablecount",
+            "type": "integer"
+          },
+          "dimension": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension"
+          },
+          "evidenceCount": {
+            "title": "Evidencecount",
+            "type": "integer"
+          },
+          "evidenceIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidenceids",
+            "type": "array"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "title": "Provenance",
+            "type": "object"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "topic",
+          "evidenceIds",
+          "evidenceCount",
+          "availableCount",
+          "truncated",
+          "provenance"
+        ],
+        "title": "EvidenceContextResponse",
+        "type": "object"
+      },
+      "EvidenceTopic": {
+        "description": "What an evidence context is being asked about.",
+        "enum": [
+          "overall",
+          "emotional",
+          "communication",
+          "attraction",
+          "stability",
+          "growth",
+          "conflict",
+          "patterns",
+          "direction"
+        ],
+        "title": "EvidenceTopic",
+        "type": "string"
+      },
       "HealthResponse": {
         "properties": {
           "api_version": {
@@ -2645,7 +2718,18 @@
                 "type": "null"
               }
             ],
-            "description": "Compatibility only. Reweights the dimensions; the geometry is identical either way. Omitted resolves to `general`, not to `romantic` -- assuming a relationship is romantic would answer a question you did not ask."
+            "description": "Compatibility, evidence and report only. Reweights the dimensions; the geometry is identical either way. Omitted resolves to `general`, not to `romantic` -- assuming a relationship is romantic would answer a question you did not ask."
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceTopic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Evidence context only. Defaults to `overall`."
           }
         },
         "required": [
@@ -2705,6 +2789,100 @@
           "longitude"
         ],
         "title": "RelocationRequest",
+        "type": "object"
+      },
+      "ReportOutlineResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "profile": {
+            "title": "Profile",
+            "type": "string"
+          },
+          "profileVersion": {
+            "title": "Profileversion",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/ReportSectionPayload"
+            },
+            "title": "Sections",
+            "type": "array"
+          }
+        },
+        "required": [
+          "profile",
+          "profileVersion",
+          "sections"
+        ],
+        "title": "ReportOutlineResponse",
+        "type": "object"
+      },
+      "ReportSectionPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "availableCount": {
+            "title": "Availablecount",
+            "type": "integer"
+          },
+          "evidenceIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidenceids",
+            "type": "array"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "integer"
+          },
+          "scoreIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scoreids",
+            "type": "array"
+          },
+          "sectionId": {
+            "title": "Sectionid",
+            "type": "string"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "unavailableReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why a section has nothing to show. A silently missing section reads as a topic that did not apply rather than one the geometry could not answer.",
+            "title": "Unavailablereason"
+          }
+        },
+        "required": [
+          "sectionId",
+          "priority",
+          "topic",
+          "evidenceIds",
+          "availableCount",
+          "truncated",
+          "scoreIds",
+          "available"
+        ],
+        "title": "ReportSectionPayload",
         "type": "object"
       },
       "ReturnHitPayload": {
@@ -3559,7 +3737,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.10.0"
+    "x-gbc-engine-version": "1.11.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -4042,6 +4220,87 @@
         ]
       }
     },
+    "/v1/charts/evidence": {
+      "post": {
+        "operationId": "build_evidence_v1_charts_evidence_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceContextResponse"
+                }
+              }
+            },
+            "description": "Evidence ids, how many were available, and whether the list was cut. Facts and identifiers only -- no prose is produced and no model is called."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "A bounded evidence context for one topic",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
     "/v1/charts/harmonic": {
       "post": {
         "operationId": "calculate_harmonic_v1_charts_harmonic_post",
@@ -4150,7 +4409,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.10.0",
+                    "engineVersion": "1.11.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },
@@ -4302,6 +4561,87 @@
           }
         },
         "summary": "Recast the same birth moment for a different place",
+        "tags": [
+          "charts"
+        ]
+      }
+    },
+    "/v1/charts/report-outline": {
+      "post": {
+        "operationId": "build_outline_v1_charts_report_outline_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOutlineResponse"
+                }
+              }
+            },
+            "description": "A structure for something else to render. A section with no evidence is returned as unavailable with the reason rather than dropped."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Section identifiers in order, with the evidence each rests on",
         "tags": [
           "charts"
         ]

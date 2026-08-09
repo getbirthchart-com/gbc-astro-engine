@@ -19,6 +19,8 @@ from gbc_astro.api.responses import (
     CompatibilityResponse,
     CompositeChartResponse,
     DavisonChartResponse,
+    EvidenceContextResponse,
+    ReportOutlineResponse,
     SynastryResponse,
 )
 from gbc_astro.engine import AstrologyEngine
@@ -68,6 +70,50 @@ def calculate_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResp
     started = time.perf_counter()
     result = engine.synastry(_natal(engine, body.chart_a), _natal(engine, body.chart_b))
     logger.info("synastry_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
+    payload: dict[str, Any] = result.to_dict()
+    return JSONResponse(content=payload)
+
+
+@router.post(
+    "/evidence",
+    summary="A bounded evidence context for one topic",
+    response_description=(
+        "Evidence ids, how many were available, and whether the list was cut. "
+        "Facts and identifiers only -- no prose is produced and no model is "
+        "called."
+    ),
+    responses={**_ERROR_RESPONSES, 200: {"model": EvidenceContextResponse}},
+)
+def build_evidence(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
+    started = time.perf_counter()
+    result = engine.evidence_context(
+        _natal(engine, body.chart_a),
+        _natal(engine, body.chart_b),
+        body.topic.value if body.topic else "overall",
+        body.relationship_type.value if body.relationship_type else None,
+    )
+    logger.info("evidence_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
+    payload: dict[str, Any] = result.to_dict()
+    return JSONResponse(content=payload)
+
+
+@router.post(
+    "/report-outline",
+    summary="Section identifiers in order, with the evidence each rests on",
+    response_description=(
+        "A structure for something else to render. A section with no evidence "
+        "is returned as unavailable with the reason rather than dropped."
+    ),
+    responses={**_ERROR_RESPONSES, 200: {"model": ReportOutlineResponse}},
+)
+def build_outline(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
+    started = time.perf_counter()
+    result = engine.report_outline(
+        _natal(engine, body.chart_a),
+        _natal(engine, body.chart_b),
+        body.relationship_type.value if body.relationship_type else None,
+    )
+    logger.info("outline_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
     payload: dict[str, Any] = result.to_dict()
     return JSONResponse(content=payload)
 

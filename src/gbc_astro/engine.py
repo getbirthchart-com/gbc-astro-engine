@@ -87,7 +87,9 @@ from gbc_astro.models.position import AnglePosition, BodyPosition, DerivedPoint
 from gbc_astro.models.relationship import (
     CompositeChart,
     DavisonChart,
+    EvidenceContext,
     RelationshipScore,
+    ReportOutline,
     SynastryChart,
 )
 from gbc_astro.models.transform import TransformedChart
@@ -108,6 +110,7 @@ from gbc_astro.profiles.progression import (
     ProgressionProfile,
 )
 from gbc_astro.profiles.relationship_types import resolve_relationship_type
+from gbc_astro.profiles.report import COUPLE_REPORT_V1, ReportProfile
 from gbc_astro.profiles.rulership import (
     DOMINANT_WESTERN_V1,
     DominantProfile,
@@ -124,6 +127,10 @@ from gbc_astro.providers.normalization import normalize_body_position
 from gbc_astro.providers.swiss import SwissEphemerisProvider
 from gbc_astro.relationship.composite import calculate_composite
 from gbc_astro.relationship.davison import calculate_davison
+from gbc_astro.relationship.report import (
+    build_evidence_context,
+    build_report_outline,
+)
 from gbc_astro.relationship.scoring import calculate_relationship_score
 from gbc_astro.relationship.synastry import calculate_synastry
 from gbc_astro.search.events import (
@@ -162,6 +169,7 @@ class AstrologyEngine:
         pattern_profile: PatternProfile = PATTERN_PROFILE_V1,
         dominant_profile: DominantProfile = DOMINANT_WESTERN_V1,
         dimension_profile: DimensionProfile = SYNASTRY_DIMENSION_PROFILE_V1,
+        report_profile: ReportProfile = COUPLE_REPORT_V1,
     ) -> None:
         self._provider = provider
         self.profile = profile
@@ -173,6 +181,7 @@ class AstrologyEngine:
         self.pattern_profile = pattern_profile
         self.dominant_profile = dominant_profile
         self.dimension_profile = dimension_profile
+        self.report_profile = report_profile
         self._house_calculator = house_calculator
         self._ayanamsa_calculator: AyanamsaCalculator | None = None
         self._validate_profile(profile)
@@ -405,6 +414,44 @@ class AstrologyEngine:
             self.scoring_profile,
             self.dimension_profile,
             resolve_relationship_type(relationship_type),
+        )
+
+    def evidence_context(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        topic: str = "overall",
+        relationship_type: str | None = None,
+    ) -> EvidenceContext:
+        """A bounded, deterministic slice of a pair's geometry for one topic.
+
+        Built for a downstream feature that puts facts in front of a language
+        model. No prose is produced here and no model is called: this selects
+        and orders evidence that already exists, caps it, and says how much it
+        left behind.
+        """
+        return build_evidence_context(
+            self.synastry(chart_a, chart_b),
+            self.compatibility(chart_a, chart_b, relationship_type),
+            topic,
+            self.report_profile,
+        )
+
+    def report_outline(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        relationship_type: str | None = None,
+    ) -> ReportOutline:
+        """Section identifiers in order, with the evidence each rests on.
+
+        A structure for something else to render. The core supplies facts and
+        identifiers; the words belong to whatever renders them.
+        """
+        return build_report_outline(
+            self.synastry(chart_a, chart_b),
+            self.compatibility(chart_a, chart_b, relationship_type),
+            self.report_profile,
         )
 
     def transits(
