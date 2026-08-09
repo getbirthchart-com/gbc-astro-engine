@@ -135,7 +135,12 @@ class RelationshipPatternTests(unittest.TestCase):
         random.seed(13)
         charts = []
         for _ in range(20):
-            stamp = f"{random.randint(1950, 2005):04d}-{random.randint(1, 12):02d}-{random.randint(1, 28):02d}T{random.randint(0, 23):02d}:{random.randint(0, 59):02d}:00"
+            year = random.randint(1950, 2005)
+            month = random.randint(1, 12)
+            day = random.randint(1, 28)
+            hour = random.randint(0, 23)
+            minute = random.randint(0, 59)
+            stamp = f"{year:04d}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:00"
             charts.append(
                 self.engine.natal(
                     stamp, "UTC", random.uniform(-45, 55), random.uniform(-170, 170)
