@@ -415,6 +415,26 @@ class ScoreContributionPayload(_Schema):
     )
 
 
+class RankedContactPayload(_Schema):
+    rank: int
+    evidenceId: str
+    kind: str
+    a: str
+    b: str
+    type: str
+    orb: float
+    value: float
+    dimensions: list[str]
+    selectionScore: float = Field(
+        description=(
+            "The diversity-adjusted basis this contact was ranked on, as "
+            "opposed to `value` which is its raw contribution. A strong contact "
+            "placed low was demoted for repeating a dimension an earlier pick "
+            "already covered, and the two numbers together show it."
+        )
+    )
+
+
 class CompatibilityResponse(_Schema):
     """A published scoring scheme, not a verdict.
 
@@ -430,6 +450,18 @@ class CompatibilityResponse(_Schema):
     dimensions: list[DimensionScorePayload]
     profile: dict[str, Any]
     dimensionProfile: dict[str, Any]
+    topStrengths: list[RankedContactPayload] = Field(
+        default_factory=list,
+        description="Up to five, chosen for strength and penalised for repeating a theme.",
+    )
+    topChallenges: list[RankedContactPayload] = Field(
+        default_factory=list,
+        description=(
+            "Friction, not fault. Challenging geometry is not universally bad "
+            "and nothing here scores a pair worse for having it."
+        ),
+    )
+    rankingProfile: dict[str, Any] = Field(default_factory=dict)
     relationshipTypeProfile: dict[str, Any] = Field(
         default_factory=dict,
         description="Which relationship type reweighted the dimensions, and by how much.",

@@ -854,6 +854,11 @@
             "title": "Profile",
             "type": "object"
           },
+          "rankingProfile": {
+            "additionalProperties": true,
+            "title": "Rankingprofile",
+            "type": "object"
+          },
           "relationshipTypeProfile": {
             "additionalProperties": true,
             "description": "Which relationship type reweighted the dimensions, and by how much.",
@@ -863,6 +868,22 @@
           "schemaVersion": {
             "title": "Schemaversion",
             "type": "string"
+          },
+          "topChallenges": {
+            "description": "Friction, not fault. Challenging geometry is not universally bad and nothing here scores a pair worse for having it.",
+            "items": {
+              "$ref": "#/components/schemas/RankedContactPayload"
+            },
+            "title": "Topchallenges",
+            "type": "array"
+          },
+          "topStrengths": {
+            "description": "Up to five, chosen for strength and penalised for repeating a theme.",
+            "items": {
+              "$ref": "#/components/schemas/RankedContactPayload"
+            },
+            "title": "Topstrengths",
+            "type": "array"
           },
           "totals": {
             "$ref": "#/components/schemas/ScoreTotalsPayload"
@@ -2199,6 +2220,69 @@
         "title": "PatternsResponse",
         "type": "object"
       },
+      "RankedContactPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "dimensions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "evidenceId": {
+            "title": "Evidenceid",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "selectionScore": {
+            "description": "The diversity-adjusted basis this contact was ranked on, as opposed to `value` which is its raw contribution. A strong contact placed low was demoted for repeating a dimension an earlier pick already covered, and the two numbers together show it.",
+            "title": "Selectionscore",
+            "type": "number"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "rank",
+          "evidenceId",
+          "kind",
+          "a",
+          "b",
+          "type",
+          "orb",
+          "value",
+          "dimensions",
+          "selectionScore"
+        ],
+        "title": "RankedContactPayload",
+        "type": "object"
+      },
       "ReadinessResponse": {
         "description": "Whether the service can actually calculate, not merely whether it is up.\n\n`/health` answering `ok` says the process is alive. It says nothing about\nwhether ephemeris data was provisioned, and a container missing that data\nstarts happily and then fails every chart request. This endpoint runs a real\ncalculation so a deploy fails at the readiness probe instead of in front of\nusers.",
         "properties": {
@@ -3146,7 +3230,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.5.0"
+    "x-gbc-engine-version": "1.6.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -3737,7 +3821,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.5.0",
+                    "engineVersion": "1.6.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },

@@ -373,3 +373,128 @@ class RelationshipTypeTests(unittest.TestCase):
 
         with self.assertRaises(InvalidCalculationProfileError):
             self.engine.compatibility(self.chart_a, self.chart_b, "situationship")
+
+
+@unittest.skipUnless(_swiss_available(), "Needs Swiss Ephemeris data")
+class RankingTests(unittest.TestCase):
+    """Top strengths and challenges, and the diversity that shapes them."""
+
+    def setUp(self) -> None:
+        path = os.environ["GBC_SWISS_EPHE_PATH"]
+        self.engine = AstrologyEngine(
+            provider=SwissEphemerisProvider(ephemeris_path=path),
+            house_calculator=SwissHouseCalculator(ephemeris_path=path),
+        )
+        self.chart_a = self.engine.natal(*CHART_A)
+        self.chart_b = self.engine.natal(*CHART_B)
+        self.synastry = self.engine.synastry(self.chart_a, self.chart_b)
+        self.score = self.engine.compatibility(self.chart_a, self.chart_b)
+
+    def test_both_lists_are_returned_and_ranked_from_one(self) -> None:
+        for label, contacts in (
+            ("strengths", self.score.top_strengths),
+            ("challenges", self.score.top_challenges),
+        ):
+            with self.subTest(list=label):
+                self.assertTrue(contacts)
+                self.assertLessEqual(len(contacts), 5)
+                self.assertEqual(
+                    [c.rank for c in contacts], list(range(1, len(contacts) + 1))
+                )
+
+    def test_the_lists_are_split_by_sign_and_never_overlap(self) -> None:
+        for contact in self.score.top_strengths:
+            with self.subTest(evidence=contact.evidence_id):
+                self.assertGreater(contact.value, 0.0)
+        for contact in self.score.top_challenges:
+            with self.subTest(evidence=contact.evidence_id):
+                self.assertLess(contact.value, 0.0)
+        self.assertFalse(
+            {c.evidence_id for c in self.score.top_strengths}
+            & {c.evidence_id for c in self.score.top_challenges}
+        )
+
+    def test_every_ranked_contact_resolves_to_a_real_fact(self) -> None:
+        facts = {a.id for a in self.synastry.cross_aspects} | {
+            a.id for a in self.synastry.angle_interactions
+        }
+        for contact in self.score.top_strengths + self.score.top_challenges:
+            with self.subTest(evidence=contact.evidence_id):
+                self.assertIn(contact.evidence_id, facts)
+
+    def test_no_contact_is_ranked_twice_in_one_list(self) -> None:
+        for contacts in (self.score.top_strengths, self.score.top_challenges):
+            ids = [c.evidence_id for c in contacts]
+            self.assertEqual(len(ids), len(set(ids)))
+
+    def test_ranking_is_deterministic(self) -> None:
+        again = self.engine.compatibility(self.chart_a, self.chart_b)
+        self.assertEqual(
+            [c.to_dict() for c in again.top_strengths],
+            [c.to_dict() for c in self.score.top_strengths],
+        )
+
+    def test_selection_score_falls_monotonically_down_the_list(self) -> None:
+        """Greedy selection cannot pick a higher-scoring candidate later.
+
+        This is what makes a surprising order explainable: a strong contact
+        placed low was demoted for repeating a dimension, and the two published
+        numbers show exactly that.
+        """
+        for contacts in (self.score.top_strengths, self.score.top_challenges):
+            scores = [c.selection_score for c in contacts]
+            self.assertEqual(scores, sorted(scores, reverse=True))
+
+    def test_a_lower_ranked_contact_may_be_stronger_than_a_higher_one(self) -> None:
+        """The point of the penalty. If this never happened it would do nothing."""
+        contacts = self.score.top_challenges
+        self.assertTrue(
+            any(
+                abs(later.value) > abs(earlier.value)
+                for earlier, later in zip(contacts, contacts[1:], strict=False)
+            )
+        )
+
+    def test_turning_the_penalty_off_reduces_it_to_a_plain_sort(self) -> None:
+        import dataclasses
+
+        from gbc_astro.profiles.ranking import SYNASTRY_RANKING_V1
+        from gbc_astro.relationship.scoring import calculate_relationship_score
+
+        plain = calculate_relationship_score(
+            self.synastry,
+            self.engine.relationship_profile,
+            self.engine.scoring_profile,
+            self.engine.dimension_profile,
+            ranking_profile=dataclasses.replace(
+                SYNASTRY_RANKING_V1, diversity_penalty=1.0
+            ),
+        )
+        scores = [c.selection_score for c in plain.top_strengths]
+        self.assertEqual(scores, sorted(scores, reverse=True))
+        self.assertNotEqual(
+            [c.evidence_id for c in plain.top_strengths],
+            [c.evidence_id for c in self.score.top_strengths],
+        )
+
+    def test_the_ranking_follows_the_relationship_type(self) -> None:
+        """Without the ranking profile knowing relationship types exist."""
+        work = self.engine.compatibility(self.chart_a, self.chart_b, "work")
+        romantic = self.engine.compatibility(self.chart_a, self.chart_b, "romantic")
+        self.assertNotEqual(
+            [c.evidence_id for c in work.top_strengths],
+            [c.evidence_id for c in romantic.top_strengths],
+        )
+
+    def test_the_profile_that_produced_the_order_is_published(self) -> None:
+        payload = self.score.to_dict()
+        self.assertEqual(payload["meta"]["rankingProfile"], "synastry-ranking-v1")
+        self.assertEqual(payload["rankingProfile"]["diversityPenalty"], 0.55)
+
+    def test_a_sparse_pair_still_gets_a_list(self) -> None:
+        """The penalty reorders; it never removes a contact from consideration."""
+        sparse = self.engine.compatibility(
+            self.chart_a, self.engine.natal(*UNKNOWN_B, unknown_time=True)
+        )
+        self.assertTrue(sparse.top_strengths)
+        self.assertTrue(sparse.top_challenges)

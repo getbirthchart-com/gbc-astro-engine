@@ -27,6 +27,7 @@ from gbc_astro.constants import ENGINE_NAME, ENGINE_VERSION, SCORE_SCHEMA_VERSIO
 from gbc_astro.models.relationship import (
     AngleInteraction,
     DimensionScore,
+    RankedContact,
     RelationshipScore,
     ScoreContribution,
     SynastryChart,
@@ -38,6 +39,7 @@ from gbc_astro.profiles.dimensions import (
     DimensionProfile,
 )
 from gbc_astro.profiles.model import RelationshipProfile
+from gbc_astro.profiles.ranking import SYNASTRY_RANKING_V1, RankingProfile
 from gbc_astro.profiles.relationship_types import (
     GENERAL_V1,
     RelationshipTypeProfile,
@@ -133,6 +135,75 @@ def _dimension_scores(
     return tuple(scores)
 
 
+def _rank_basis(contribution: ScoreContribution) -> float:
+    """How much a contact contributes across every dimension it touches.
+
+    Not the raw value. The dimension values already carry both the dimension
+    mapping and the relationship-type weight, so ranking on them makes a working
+    relationship's top contacts differ from a romantic one's without the ranking
+    profile knowing that relationship types exist. A contact touching no scored
+    dimension sums to zero, which is the right answer: it bears on nothing being
+    scored.
+    """
+    return sum(abs(value) for value in contribution.dimension_values.values())
+
+
+def _select_diverse(
+    candidates: list[ScoreContribution],
+    profile: RankingProfile,
+) -> tuple[RankedContact, ...]:
+    """Pick the strongest contacts, penalising repeats of a dimension already taken.
+
+    Greedy: take the best candidate, record which dimensions it covered, then
+    re-score the rest with each already-covered dimension worth
+    `diversity_penalty` less. Two picks into one dimension are penalised twice,
+    three three times.
+
+    Round-robin across dimensions was the obvious alternative and is worse: it
+    promotes a weak contact over a much stronger one purely for being
+    unrepresented, and caps the list at the number of dimensions. A penalty lets
+    a dominant theme hold two slots while making a third expensive.
+
+    Nothing is excluded -- the penalty reorders, it never removes -- so a pair
+    whose entire story is one dimension still receives a full list.
+    """
+    # Sorted by evidence id up front so that a tie is always broken the same
+    # way: the strict comparison below keeps the first candidate seen.
+    remaining = sorted(candidates, key=lambda item: item.evidence_id)
+    covered: dict[str, int] = {}
+    selected: list[RankedContact] = []
+
+    while remaining and len(selected) < profile.top_count:
+        best: ScoreContribution | None = None
+        best_score = float("-inf")
+        for candidate in remaining:
+            score = _rank_basis(candidate)
+            for dimension in candidate.dimension_values:
+                score *= profile.diversity_penalty ** covered.get(dimension, 0)
+            if score > best_score:
+                best, best_score = candidate, score
+
+        assert best is not None
+        remaining.remove(best)
+        for dimension in best.dimension_values:
+            covered[dimension] = covered.get(dimension, 0) + 1
+        selected.append(
+            RankedContact(
+                rank=len(selected) + 1,
+                evidence_id=best.evidence_id,
+                kind=best.kind,
+                subject_a=best.subject_a,
+                subject_b=best.subject_b,
+                aspect_type=best.aspect_type,
+                orb=best.orb,
+                value=best.value,
+                dimensions=tuple(sorted(best.dimension_values)),
+                selection_score=best_score,
+            )
+        )
+    return tuple(selected)
+
+
 def _one_contact_per_axis(
     synastry: SynastryChart,
     scoring_profile: ScoringProfile,
@@ -177,6 +248,7 @@ def calculate_relationship_score(
     scoring_profile: ScoringProfile,
     dimension_profile: DimensionProfile = SYNASTRY_DIMENSION_PROFILE_V1,
     relationship_type: RelationshipTypeProfile = GENERAL_V1,
+    ranking_profile: RankingProfile = SYNASTRY_RANKING_V1,
 ) -> RelationshipScore:
     # The profile that PRODUCED these contacts, not the natal one. Orb tightness
     # is a fraction of the orb a contact was allowed, so dividing by a different
@@ -288,6 +360,14 @@ def calculate_relationship_score(
         contribution_count=len(ordered),
         contributions=ordered,
         dimensions=_dimension_scores(contributions, relationship_type),
+        top_strengths=_select_diverse(
+            [item for item in contributions if item.value > 0.0], ranking_profile
+        ),
+        top_challenges=_select_diverse(
+            [item for item in contributions if item.value < 0.0], ranking_profile
+        ),
+        ranking_profile=ranking_profile.id,
+        ranking_profile_version=ranking_profile.version,
         dimension_profile=dimension_profile.id,
         dimension_profile_version=dimension_profile.version,
         relationship_type=relationship_type.id,
@@ -295,6 +375,7 @@ def calculate_relationship_score(
         profile_detail=scoring_profile.to_dict(),
         dimension_profile_detail=dimension_profile.to_dict(),
         relationship_type_detail=relationship_type.to_dict(),
+        ranking_profile_detail=ranking_profile.to_dict(),
         notes=(
             "Activity is the headline figure: a strongly bound relationship can be "
             "full of hard contacts, and a forgettable one full of mild easy ones, "

@@ -365,6 +365,43 @@ class DimensionScore:
 
 
 @dataclass(frozen=True)
+class RankedContact:
+    """One contact selected for the strengths or challenges list.
+
+    Carries its evidence id, so it can be looked up in the synastry result, and
+    the two numbers behind its position: the raw contribution value and the
+    diversity-adjusted basis it was actually ranked on. Publishing both is what
+    keeps a surprising order explainable -- a strong contact placed low was
+    demoted for repeating a dimension, and the numbers show it.
+    """
+
+    rank: int
+    evidence_id: str
+    kind: str
+    subject_a: str
+    subject_b: str
+    aspect_type: str
+    orb: float
+    value: float
+    dimensions: tuple[str, ...]
+    selection_score: float
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "rank": self.rank,
+            "evidenceId": self.evidence_id,
+            "kind": self.kind,
+            "a": self.subject_a,
+            "b": self.subject_b,
+            "type": self.aspect_type,
+            "orb": self.orb,
+            "value": self.value,
+            "dimensions": list(self.dimensions),
+            "selectionScore": self.selection_score,
+        }
+
+
+@dataclass(frozen=True)
 class RelationshipScore:
     """A profile-scoped relationship score, reported as three totals.
 
@@ -390,9 +427,14 @@ class RelationshipScore:
     dimension_profile_version: str | None = None
     relationship_type: str | None = None
     relationship_type_version: str | None = None
+    ranking_profile: str | None = None
+    ranking_profile_version: str | None = None
+    top_strengths: tuple[RankedContact, ...] = ()
+    top_challenges: tuple[RankedContact, ...] = ()
     profile_detail: dict[str, Any] = field(default_factory=dict)
     dimension_profile_detail: dict[str, Any] = field(default_factory=dict)
     relationship_type_detail: dict[str, Any] = field(default_factory=dict)
+    ranking_profile_detail: dict[str, Any] = field(default_factory=dict)
     notes: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
@@ -407,10 +449,15 @@ class RelationshipScore:
                 "dimensionProfileVersion": self.dimension_profile_version,
                 "relationshipType": self.relationship_type,
                 "relationshipTypeVersion": self.relationship_type_version,
+                "rankingProfile": self.ranking_profile,
+                "rankingProfileVersion": self.ranking_profile_version,
             },
             "dimensions": [dimension.to_dict() for dimension in self.dimensions],
             "dimensionProfile": self.dimension_profile_detail,
             "relationshipTypeProfile": self.relationship_type_detail,
+            "rankingProfile": self.ranking_profile_detail,
+            "topStrengths": [contact.to_dict() for contact in self.top_strengths],
+            "topChallenges": [contact.to_dict() for contact in self.top_challenges],
             "totals": {
                 "supportive": self.supportive,
                 "challenging": self.challenging,
