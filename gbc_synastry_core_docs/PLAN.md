@@ -201,3 +201,70 @@ contacts exist after IDs are in use would invalidate stored references.
 Deliverable: every cross aspect, angle contact and overlay carries a stable
 `id`; a test asserts IDs are unique within a result, stable across runs, and
 unchanged when the orb profile version changes but the geometry does not.
+
+
+---
+
+# Status — all slices complete
+
+| Slice | Contents | Shipped |
+|---|---|---|
+| S1 | Deterministic IDs, `SYNASTRY_ASPECT_PROFILE_V1` | v1.3.0 |
+| S2 | Dimensions, evidence rule | v1.4.0 |
+| S3 | Relationship-type profiles | v1.5.0 |
+| S4 | Strengths and challenges | v1.6.0 |
+| S5 | Directional themes, ruler interactions | v1.7.0 |
+| S6a | Vertex, Part of Fortune, south node (natal) | v1.8.0 |
+| S6b | Cross-chart point contacts | v1.9.0 |
+| S7 | Relationship patterns | v1.10.0 |
+| S8 | Evidence contexts, report outline | v1.11.0 |
+| S9–S12 | The timing layer | v1.12.0 |
+
+V1, V1.5, V2 and V2.5 of the roadmap are complete.
+
+## The one thing deliberately not built
+
+The overall 0–100 compatibility score. The roadmap permits deferring it at V1.5
+section 4, and the reason has not changed since S2: summing dimensions rewards
+the pair that happens to have more available data, and dividing by availability
+rewards the sparse pair with one strong contact. Dimension scores with explicit
+per-dimension coverage are honest and useful now; a single headline number is
+not, until it is tested against the calibration fixtures V2 section 10 asks for
+— including sparse unknown-time geometry, which is exactly the case that breaks
+both naive approaches.
+
+## Bugs found along the way
+
+Nine, none of them in the slice that was being built at the time. Every one was
+a feature meeting another feature that nobody had run together:
+
+1. **Both lunar nodes aspecting** (S1). The true and mean node are one point
+   computed two ways, so every node contact was doubled and every chart ever
+   cast carried a "node conjunct node" that was always true and said nothing.
+2. **The scorer dividing by the wrong orb limit** (S2). My own, from S1: after
+   splitting the synastry orb profile from the natal one, the scorer kept using
+   the natal limits, so a near-miss scored as though it were close.
+3. **Relocation carrying the source chart's derived block** (S6a). A chart
+   relocated to London reported a Scorpio Ascendant beside a Pisces rising sign
+   and house rulers for cusps it no longer had.
+4. **The day/night test inverted** (S6a). Caught in a smoke test; it would have
+   put the Lot of Fortune at the reflection of the right place on exactly the
+   charts where the two conventions disagree.
+5. **`_to_sidereal_geometry` dropping the vertex** (S6a), so sidereal charts had
+   none at all.
+6. **Cross yods citing nothing, permanently** (S7), because a yod is defined by
+   quincunxes and the synastry profile does not treat a quincunx as a contact.
+7. **Report sections citing every contribution** (S8). A communication section
+   citing all fifty scored contacts is citing the whole chart and calling it
+   communication — worse than citing nothing, because it looks specific.
+8. **Activation ids not unique** (S9). One transit activating three contacts
+   produced three rows with the same id.
+9. **Thresholds producing 29.4 patterns per pair** (S7), which is not a list of
+   notable patterns.
+
+The recurring shape is worth naming, because it appeared four times in different
+clothes: **the same geometry reported twice under two names.** Both nodes, ruler
+interactions, reflected points, and pattern scoring each would have counted one
+fact as two. The fix is always the same — cite the existing fact rather than
+minting a new one — and it is now the default assumption for anything that
+reframes geometry rather than producing it.
