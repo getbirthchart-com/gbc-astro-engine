@@ -295,6 +295,10 @@ class ScoreContribution:
     """One scored contact, with every factor that produced it kept visible."""
 
     kind: str
+    # The synastry fact this line scores, by its canonical id. The roadmap's
+    # evidence rule turns on this: no score may exist that cannot be taken apart
+    # into contacts a caller can look up.
+    evidence_id: str
     subject_a: str
     subject_b: str
     aspect_type: str
@@ -303,10 +307,15 @@ class ScoreContribution:
     pair_weight: float
     orb_factor: float
     value: float
+    # Which dimensions this contact speaks to, and what it contributed to each.
+    # Empty when the bodies involved are mapped to no dimension, which is a
+    # statement rather than an oversight -- see `profiles.dimensions`.
+    dimension_values: dict[str, float] = field(default_factory=dict)
 
-    def to_dict(self) -> dict[str, float | str]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "kind": self.kind,
+            "evidenceId": self.evidence_id,
             "a": self.subject_a,
             "b": self.subject_b,
             "type": self.aspect_type,
@@ -315,6 +324,39 @@ class ScoreContribution:
             "pairWeight": self.pair_weight,
             "orbFactor": self.orb_factor,
             "value": self.value,
+            "dimensionValues": dict(self.dimension_values),
+        }
+
+
+@dataclass(frozen=True)
+class DimensionScore:
+    """One dimension, its two signals, and the contacts they came from.
+
+    `supportive` and `challenging` are kept apart rather than netted. A pair
+    with strong attraction and strong friction in the same dimension is not the
+    same as a pair with neither, and a single net figure cannot tell them apart.
+
+    `contact_count` is the coverage signal. A dimension with no contacts is not
+    a zero: zero means the geometry is neutral, absent means it is silent, and a
+    pair with an unknown birth time is silent about everything the angles would
+    have said.
+    """
+
+    dimension: str
+    supportive: float
+    challenging: float
+    activity: float
+    contact_count: int
+    evidence_ids: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dimension": self.dimension,
+            "supportive": self.supportive,
+            "challenging": self.challenging,
+            "activity": self.activity,
+            "contactCount": self.contact_count,
+            "evidenceIds": list(self.evidence_ids),
         }
 
 
@@ -339,7 +381,11 @@ class RelationshipScore:
     balance_band: str | None
     contribution_count: int
     contributions: tuple[ScoreContribution, ...] = ()
+    dimensions: tuple[DimensionScore, ...] = ()
+    dimension_profile: str | None = None
+    dimension_profile_version: str | None = None
     profile_detail: dict[str, Any] = field(default_factory=dict)
+    dimension_profile_detail: dict[str, Any] = field(default_factory=dict)
     notes: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
@@ -350,7 +396,11 @@ class RelationshipScore:
                 "engineVersion": self.engine_version,
                 "scoringProfile": self.scoring_profile,
                 "scoringProfileVersion": self.scoring_profile_version,
+                "dimensionProfile": self.dimension_profile,
+                "dimensionProfileVersion": self.dimension_profile_version,
             },
+            "dimensions": [dimension.to_dict() for dimension in self.dimensions],
+            "dimensionProfile": self.dimension_profile_detail,
             "totals": {
                 "supportive": self.supportive,
                 "challenging": self.challenging,

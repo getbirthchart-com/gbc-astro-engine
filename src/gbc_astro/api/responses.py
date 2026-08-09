@@ -373,8 +373,27 @@ class ScoreTotalsPayload(_Schema):
     balanceBand: str
 
 
+class DimensionScorePayload(_Schema):
+    dimension: str
+    supportive: float
+    challenging: float = Field(description="Zero or negative. Never netted against supportive.")
+    activity: float
+    contactCount: int = Field(
+        description=(
+            "Coverage. A dimension with no contacts is not a zero -- zero means "
+            "the geometry is neutral, absent means it is silent, and a pair with "
+            "an unknown birth time is silent about everything the angles would "
+            "have said."
+        )
+    )
+    evidenceIds: list[str]
+
+
 class ScoreContributionPayload(_Schema):
     kind: str
+    evidenceId: str = Field(
+        description="The synastry fact this line scores, resolvable in the synastry result."
+    )
     a: str
     b: str
     type: str
@@ -383,6 +402,10 @@ class ScoreContributionPayload(_Schema):
     pairWeight: float
     orbFactor: float
     value: float
+    dimensionValues: dict[str, float] = Field(
+        default_factory=dict,
+        description="What this contact contributed to each dimension it speaks to.",
+    )
 
 
 class CompatibilityResponse(_Schema):
@@ -397,7 +420,9 @@ class CompatibilityResponse(_Schema):
     totals: ScoreTotalsPayload
     contributionCount: int
     contributions: list[ScoreContributionPayload]
+    dimensions: list[DimensionScorePayload]
     profile: dict[str, Any]
+    dimensionProfile: dict[str, Any]
     notes: list[str] = Field(default_factory=list)
 
 

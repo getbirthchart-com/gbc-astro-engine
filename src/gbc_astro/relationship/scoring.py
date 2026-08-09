@@ -26,9 +26,16 @@ from __future__ import annotations
 from gbc_astro.constants import ENGINE_NAME, ENGINE_VERSION, SCORE_SCHEMA_VERSION
 from gbc_astro.models.relationship import (
     AngleInteraction,
+    DimensionScore,
     RelationshipScore,
     ScoreContribution,
     SynastryChart,
+)
+from gbc_astro.profiles.dimensions import (
+    CONFLICT,
+    DIMENSION_IDS,
+    SYNASTRY_DIMENSION_PROFILE_V1,
+    DimensionProfile,
 )
 from gbc_astro.profiles.model import RelationshipProfile
 from gbc_astro.profiles.scoring import ScoringProfile
@@ -40,6 +47,75 @@ def orb_factor(orb: float, maximum_orb: float, floor: float) -> float:
         return 1.0
     tightness = max(0.0, min(1.0, 1.0 - orb / maximum_orb))
     return floor + (1.0 - floor) * tightness
+
+
+def _dimension_values(
+    subject_a: str,
+    subject_b: str,
+    aspect_type: str,
+    value: float,
+    profile: DimensionProfile,
+) -> dict[str, float]:
+    """Split one contact's value across the dimensions its two ends speak to.
+
+    Both ends contribute. A Moon-Mercury contact is heard by emotional life and
+    by communication, and taking only one end would drop half of what the
+    contact says. Weights are averaged rather than summed so that a contact
+    between two bodies mapped to the same dimension does not outweigh itself.
+
+    Hard aspects add to conflict on top of that, because friction is a property
+    of the angle rather than of the bodies -- which is the one place the aspect
+    is allowed to decide a dimension.
+    """
+    values: dict[str, float] = {}
+    weights_a = profile.weights_for(subject_a)
+    weights_b = profile.weights_for(subject_b)
+    for dimension in DIMENSION_IDS:
+        weight = (weights_a.get(dimension, 0.0) + weights_b.get(dimension, 0.0)) / 2.0
+        if weight:
+            values[dimension] = value * weight
+
+    if aspect_type in profile.conflict_aspects:
+        friction = abs(value) * profile.conflict_aspect_weight
+        values[CONFLICT] = values.get(CONFLICT, 0.0) - friction
+
+    return values
+
+
+def _dimension_scores(
+    contributions: list[ScoreContribution],
+) -> tuple[DimensionScore, ...]:
+    """Aggregate contributions per dimension, keeping the two signals apart.
+
+    Every dimension is returned, including those no contact reached. An absent
+    dimension reported as zero would be indistinguishable from a neutral one,
+    and `contact_count` is what tells them apart.
+    """
+    scores: list[DimensionScore] = []
+    for dimension in DIMENSION_IDS:
+        supportive = 0.0
+        challenging = 0.0
+        evidence: list[str] = []
+        for contribution in contributions:
+            value = contribution.dimension_values.get(dimension)
+            if value is None:
+                continue
+            evidence.append(contribution.evidence_id)
+            if value > 0.0:
+                supportive += value
+            else:
+                challenging += value
+        scores.append(
+            DimensionScore(
+                dimension=dimension,
+                supportive=supportive,
+                challenging=challenging,
+                activity=supportive - challenging,
+                contact_count=len(evidence),
+                evidence_ids=tuple(sorted(set(evidence))),
+            )
+        )
+    return tuple(scores)
 
 
 def _one_contact_per_axis(
@@ -84,9 +160,16 @@ def calculate_relationship_score(
     synastry: SynastryChart,
     relationship_profile: RelationshipProfile,
     scoring_profile: ScoringProfile,
+    dimension_profile: DimensionProfile = SYNASTRY_DIMENSION_PROFILE_V1,
 ) -> RelationshipScore:
+    # The profile that PRODUCED these contacts, not the natal one. Orb tightness
+    # is a fraction of the orb a contact was allowed, so dividing by a different
+    # profile's limit scores a near-miss as though it were close: a sextile at
+    # 2.86 degrees sits at 95% of the synastry limit and would read as 57% of the
+    # natal one. Cross aspects and angle contacts both come from here.
     maximum_orbs = {
-        rule.aspect_type: rule.orb for rule in relationship_profile.aspect_profile.rules
+        rule.aspect_type: rule.orb
+        for rule in relationship_profile.synastry_aspect_profile.rules
     }
     contributions: list[ScoreContribution] = []
 
@@ -107,9 +190,11 @@ def calculate_relationship_score(
             maximum_orbs.get(aspect.aspect_type, 0.0),
             scoring_profile.orb_floor,
         )
+        value = aspect_weight * pair_weight * tightness
         contributions.append(
             ScoreContribution(
                 kind="cross_aspect",
+                evidence_id=aspect.id,
                 subject_a=f"A.{aspect.body_a}",
                 subject_b=f"B.{aspect.body_b}",
                 aspect_type=aspect.aspect_type,
@@ -117,7 +202,14 @@ def calculate_relationship_score(
                 aspect_weight=aspect_weight,
                 pair_weight=pair_weight,
                 orb_factor=tightness,
-                value=aspect_weight * pair_weight * tightness,
+                value=value,
+                dimension_values=_dimension_values(
+                    aspect.body_a,
+                    aspect.body_b,
+                    aspect.aspect_type,
+                    value,
+                    dimension_profile,
+                ),
             )
         )
 
@@ -134,9 +226,11 @@ def calculate_relationship_score(
             maximum_orbs.get(interaction.aspect_type, 0.0),
             scoring_profile.orb_floor,
         )
+        value = aspect_weight * pair_weight * tightness
         contributions.append(
             ScoreContribution(
                 kind="angle_interaction",
+                evidence_id=interaction.id,
                 subject_a=f"{interaction.body_chart}.{interaction.body}",
                 subject_b=f"{interaction.angle_chart}.{interaction.angle}",
                 aspect_type=interaction.aspect_type,
@@ -144,7 +238,14 @@ def calculate_relationship_score(
                 aspect_weight=aspect_weight,
                 pair_weight=pair_weight,
                 orb_factor=tightness,
-                value=aspect_weight * pair_weight * tightness,
+                value=value,
+                dimension_values=_dimension_values(
+                    interaction.body,
+                    interaction.angle,
+                    interaction.aspect_type,
+                    value,
+                    dimension_profile,
+                ),
             )
         )
 
@@ -168,7 +269,11 @@ def calculate_relationship_score(
         balance_band=scoring_profile.band_for(balance, scoring_profile.balance_bands),
         contribution_count=len(ordered),
         contributions=ordered,
+        dimensions=_dimension_scores(contributions),
+        dimension_profile=dimension_profile.id,
+        dimension_profile_version=dimension_profile.version,
         profile_detail=scoring_profile.to_dict(),
+        dimension_profile_detail=dimension_profile.to_dict(),
         notes=(
             "Activity is the headline figure: a strongly bound relationship can be "
             "full of hard contacts, and a forgettable one full of mild easy ones, "
