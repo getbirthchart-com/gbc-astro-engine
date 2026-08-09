@@ -333,6 +333,26 @@ class AngleInteractionPayload(_Schema):
     orb: float
 
 
+class RelationshipPatternPayload(_Schema):
+    """A named configuration between two charts.
+
+    Discrete where a dimension score is continuous, and never scored: every
+    contact behind a pattern is already scored once as itself.
+    """
+
+    id: str
+    type: str
+    members: list[str]
+    evidenceIds: list[str] = Field(
+        description=(
+            "Empty only for a cross stellium, which is defined by bodies sharing "
+            "a sign rather than by an aspect, so there may be no contact to cite."
+        )
+    )
+    detail: dict[str, Any] = Field(default_factory=dict)
+    scored: bool
+
+
 class PointContactPayload(_Schema):
     """A derived point of one chart aspecting a body of the other.
 
@@ -407,6 +427,7 @@ class SynastryResponse(_Schema):
     aBodiesInBHouses: list[HouseOverlayPayload]
     bBodiesInAHouses: list[HouseOverlayPayload]
     angleInteractions: list[AngleInteractionPayload]
+    patterns: list[RelationshipPatternPayload] = Field(default_factory=list)
     pointContacts: list[PointContactPayload] = Field(
         default_factory=list,
         description=(

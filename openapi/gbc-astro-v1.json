@@ -2559,6 +2559,53 @@
         "title": "ReadinessResponse",
         "type": "object"
       },
+      "RelationshipPatternPayload": {
+        "additionalProperties": true,
+        "description": "A named configuration between two charts.\n\nDiscrete where a dimension score is continuous, and never scored: every\ncontact behind a pattern is already scored once as itself.",
+        "properties": {
+          "detail": {
+            "additionalProperties": true,
+            "title": "Detail",
+            "type": "object"
+          },
+          "evidenceIds": {
+            "description": "Empty only for a cross stellium, which is defined by bodies sharing a sign rather than by an aspect, so there may be no contact to cite.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidenceids",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "scored": {
+            "title": "Scored",
+            "type": "boolean"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "members",
+          "evidenceIds",
+          "scored"
+        ],
+        "title": "RelationshipPatternPayload",
+        "type": "object"
+      },
       "RelationshipRequest": {
         "additionalProperties": false,
         "description": "Two natal subjects for a synastry or composite chart.\n\nEach side carries the same fields as a natal request, so historical\ntimezone and DST interpretation stay with the engine on both sides.",
@@ -3100,6 +3147,13 @@
             "title": "Meta",
             "type": "object"
           },
+          "patterns": {
+            "items": {
+              "$ref": "#/components/schemas/RelationshipPatternPayload"
+            },
+            "title": "Patterns",
+            "type": "array"
+          },
           "pointContacts": {
             "description": "Often empty, and that is a real answer: twelve of thirty measured pairs have no point contact inside two degrees.",
             "items": {
@@ -3505,7 +3559,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.9.0"
+    "x-gbc-engine-version": "1.10.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -4096,7 +4150,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.9.0",
+                    "engineVersion": "1.10.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },

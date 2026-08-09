@@ -34,10 +34,16 @@ from gbc_astro.profiles.dimensions import (
     DimensionProfile,
 )
 from gbc_astro.profiles.model import RelationshipProfile
+from gbc_astro.profiles.pattern import PATTERN_PROFILE_V1, PatternProfile
+from gbc_astro.profiles.relationship_patterns import (
+    RELATIONSHIP_PATTERNS_V1,
+    RelationshipPatternProfile,
+)
 from gbc_astro.relationship.directional import (
     directional_themes,
     ruler_interactions,
 )
+from gbc_astro.relationship.patterns import find_relationship_patterns
 from gbc_astro.relationship.points import calculate_point_contacts
 
 
@@ -177,6 +183,8 @@ def calculate_synastry(
     chart_b: NatalChart,
     profile: RelationshipProfile,
     dimension_profile: DimensionProfile = SYNASTRY_DIMENSION_PROFILE_V1,
+    pattern_profile: RelationshipPatternProfile = RELATIONSHIP_PATTERNS_V1,
+    natal_pattern_profile: PatternProfile = PATTERN_PROFILE_V1,
 ) -> SynastryChart:
     _assert_comparable(chart_a, chart_b)
 
@@ -288,6 +296,14 @@ def calculate_synastry(
     # scoring twice under two names.
     return replace(
         chart,
+        patterns=find_relationship_patterns(
+            chart,
+            chart_a,
+            chart_b,
+            profile.synastry_bodies,
+            natal_pattern_profile,
+            pattern_profile,
+        ),
         point_contacts=calculate_point_contacts(
             chart_a, chart_b, profile.synastry_bodies
         ),

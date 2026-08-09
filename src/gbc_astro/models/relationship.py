@@ -130,6 +130,37 @@ class AngleInteraction:
 
 
 @dataclass(frozen=True)
+class RelationshipPattern:
+    """A named configuration between two charts.
+
+    Discrete where a dimension score is continuous: present or absent, with the
+    contacts it rests on named. Not scored -- every contact behind it is already
+    scored once as itself, and scoring the pattern too would count the same
+    geometry a second time for having been noticed.
+    """
+
+    pattern_type: str
+    members: tuple[str, ...]
+    evidence_ids: tuple[str, ...] = ()
+    detail: dict[str, Any] = field(default_factory=dict)
+    scored: bool = False
+
+    @property
+    def id(self) -> str:
+        return f"synastry.pattern.{self.pattern_type}." + ".".join(self.members)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "type": self.pattern_type,
+            "members": list(self.members),
+            "evidenceIds": list(self.evidence_ids),
+            "detail": self.detail,
+            "scored": self.scored,
+        }
+
+
+@dataclass(frozen=True)
 class PointContact:
     """A derived point of one chart aspecting a body of the other.
 
@@ -297,6 +328,7 @@ class SynastryChart:
     b_bodies_in_a_houses: tuple[HouseOverlay, ...] = ()
     angle_interactions: tuple[AngleInteraction, ...] = ()
     point_contacts: tuple[PointContact, ...] = ()
+    patterns: tuple[RelationshipPattern, ...] = ()
     ruler_interactions: tuple[RulerInteraction, ...] = ()
     directional_themes: tuple[DirectionalTheme, ...] = ()
     warnings: tuple[WarningMessage, ...] = ()
@@ -314,6 +346,7 @@ class SynastryChart:
                 interaction.to_dict() for interaction in self.angle_interactions
             ],
             "pointContacts": [contact.to_dict() for contact in self.point_contacts],
+            "patterns": [pattern.to_dict() for pattern in self.patterns],
             "rulerInteractions": [
                 interaction.to_dict() for interaction in self.ruler_interactions
             ],
