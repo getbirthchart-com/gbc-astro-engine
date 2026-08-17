@@ -13,6 +13,9 @@ services:
     environment:
       GBC_SWISS_EPHE_PATH: /opt/gbc/ephemeris/swiss
       GBC_JPL_EPHEMERIS_PATH: /opt/gbc/ephemeris/jpl/de440s.bsp
+      # Required in production. Unset locally so tests and laptop uvicorn work.
+      # GBC_ASTRO_API_SECRET: replace-me
+      # GBC_ASTRO_REQUIRE_SECRET: "1"
       # Left unset on purpose: CORS stays off unless explicitly configured,
       # because the frontend calls this from its server, never from a browser.
       # GBC_API_CORS_ORIGINS: https://getbirthchart.com

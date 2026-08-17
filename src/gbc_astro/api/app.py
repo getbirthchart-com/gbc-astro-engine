@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from gbc_astro.api.auth import InternalSecretMiddleware
 from gbc_astro.api.dependencies import API_VERSION, build_engine
 from gbc_astro.api.errors import register_exception_handlers
 from gbc_astro.api.routes import (
@@ -70,9 +71,10 @@ def create_app() -> FastAPI:
             CORSMiddleware,
             allow_origins=origins,
             allow_methods=["GET", "POST", "OPTIONS"],
-            allow_headers=["Content-Type", "Accept"],
+            allow_headers=["Content-Type", "Accept", "Authorization"],
         )
 
+    app.add_middleware(InternalSecretMiddleware)
     register_exception_handlers(app)
     app.include_router(health.router)
     app.include_router(natal.router)

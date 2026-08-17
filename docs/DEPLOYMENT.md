@@ -84,6 +84,8 @@ uvicorn gbc_astro.api.app:app --host 0.0.0.0 --port 8000
 |---|---|---|
 | `GBC_SWISS_EPHE_PATH` | yes | Directory holding the `.se1` files |
 | `GBC_JPL_EPHEMERIS_PATH` | no | Only for validation gates |
+| `GBC_ASTRO_API_SECRET` | production | Shared bearer secret. Alias: `ASTROLOGY_API_SECRET`. Must match Vercel. |
+| `GBC_ASTRO_REQUIRE_SECRET` | production | Set `1` so a missing secret is 401 instead of an open API |
 | `GBC_API_CORS_ORIGINS` | no | Comma-separated. **Leave unset** unless a browser genuinely calls this service directly |
 
 CORS is off by default and should usually stay off. The intended path is
@@ -107,23 +109,21 @@ feature. Set the startup probe to `/ready`.
 
 ## Before going live
 
-Not implemented here, deliberately, because they belong to the deployment rather
-than the engine:
-
-- **Authentication.** The API is unauthenticated. If it is reachable from
-  outside your network, put a proxy with an API key or mTLS in front of it.
-- **Rate limiting.** Same.
-
-Both were flagged as deployment concerns when the HTTP adapter was built, and
-that has not changed. Do not expose this service to the public internet
-unauthenticated.
+- **Authentication.** Calculation routes require `Authorization: Bearer <GBC_ASTRO_API_SECRET>` when the secret is set. In production set the secret **and** `GBC_ASTRO_REQUIRE_SECRET=1` so forgetting the secret cannot leave the calculator open. `/health` and `/ready` stay public. The browser must never hold this secret — only the Next.js server.
+- **Rate limiting** still belongs at the proxy if you need it beyond the frontend.
 
 ## Verifying a deployment
 
 ```bash
 curl -fsS "$URL/ready"                                  # must be 200 "ready"
+curl -sS -o /dev/null -w '%{http_code}\n' -X POST "$URL/v1/charts/natal" \
+  -H 'Content-Type: application/json' \
+  -d '{"local_date":"1992-11-03","local_time":"14:35",
+       "timezone":"Asia/Ho_Chi_Minh","latitude":21.0285,"longitude":105.8542}'
+# expect 401 when the secret is required
 curl -fsS -X POST "$URL/v1/charts/natal" \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $GBC_ASTRO_API_SECRET" \
   -d '{"local_date":"1992-11-03","local_time":"14:35",
        "timezone":"Asia/Ho_Chi_Minh","latitude":21.0285,"longitude":105.8542}'
 ```
