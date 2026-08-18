@@ -27,8 +27,14 @@ ENV PYTHONUNBUFFERED=1 \
     GBC_SWISS_EPHE_PATH=/opt/gbc/ephemeris/swiss \
     GBC_JPL_EPHEMERIS_PATH=/opt/gbc/ephemeris/jpl/de440s.bsp
 
+# pyswisseph has no manylinux wheel for this image; compile it here then drop the toolchain.
 RUN --mount=type=bind,from=builder,source=/dist,target=/dist \
-    python -m pip install "$(ls /dist/*.whl)[api,swiss]"
+    apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && python -m pip install "$(ls /dist/*.whl)[api,swiss]" \
+    && apt-get purge -y build-essential \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 
 # Run as a non-root user. Nothing here writes to disk at runtime.
 RUN useradd --system --create-home --uid 10001 gbc \
