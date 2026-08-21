@@ -1,0 +1,121 @@
+[
+  {
+    "id": "natal-known-time-hanoi-1992",
+    "category": "known_time_natal",
+    "input": {
+      "local_datetime": "1992-11-03T14:35:00",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "latitude": 21.0285,
+      "longitude": 105.8542,
+      "house_system": "placidus"
+    },
+    "expected": {
+      "sun_longitude": 221.14154838535987,
+      "moon_longitude": 321.2929834918872,
+      "chiron_longitude": 142.609580564659,
+      "ascendant_longitude": 350.1088136374758,
+      "mc_longitude": 263.03877867919044,
+      "first_house_cusp_longitude": 27.07390716301976,
+      "big_three": { "sun": "scorpio", "moon": "aquarius", "rising": "pisces" },
+      "aspect_count": 14
+    },
+    "source_test": "tests/golden/test_swiss_natal.py::test_hanoi_1992_placidus_sample"
+  },
+  {
+    "id": "relationship-composite-and-synastry-1992-1990",
+    "category": "relationship",
+    "source_test": "tests/golden/test_relationship_golden.py",
+    "expected": {
+      "composite_sun_longitude": 155.38752593172458,
+      "composite_moon_longitude": 14.75116120868654,
+      "composite_ascendant_longitude": 72.76795156915098,
+      "composite_mc_longitude": 321.0547419221317,
+      "cross_aspect_count": 38,
+      "angle_interaction_count": 30,
+      "composite_aspect_count": 22
+    }
+  },
+  {
+    "id": "natal-unknown-time-omits-time-sensitive-fields",
+    "category": "unknown_time",
+    "input": {
+      "local_datetime": "1992-11-03",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "latitude": 21.0285,
+      "longitude": 105.8542,
+      "house_system": "equal",
+      "unknown_time": true
+    },
+    "expected": {
+      "angles": [],
+      "houses": [],
+      "warning_code": "UNKNOWN_BIRTH_TIME",
+      "moon_sign_policy": "product_layer_interval_check"
+    },
+    "source_test": "tests/integration/test_engine_natal.py::test_unknown_time_omits_time_sensitive_fields"
+  },
+  {
+    "id": "dst-nonexistent-local-time",
+    "category": "timezone_boundary",
+    "input": {
+      "local_datetime": "2024-03-10T02:30:00",
+      "timezone": "America/New_York"
+    },
+    "expected": { "behavior": "error", "error_type": "NonexistentLocalTimeError" },
+    "source_fixture": "tests/fixtures/hostile_natal_cases.json::dst-us-ny-nonexistent-2024"
+  },
+  {
+    "id": "dst-ambiguous-local-time-requires-fold",
+    "category": "timezone_boundary",
+    "input": {
+      "local_datetime": "2024-11-03T01:30:00",
+      "timezone": "America/New_York"
+    },
+    "expected": { "behavior": "error", "error_type": "AmbiguousLocalTimeError" },
+    "source_fixture": "tests/fixtures/hostile_natal_cases.json::dst-us-ny-ambiguous-2024"
+  },
+  {
+    "id": "dst-ambiguous-local-time-folds-are-explicit",
+    "category": "timezone_boundary",
+    "input": {
+      "local_datetime": "2024-11-03T01:30:00",
+      "timezone": "America/New_York",
+      "folds": [0, 1]
+    },
+    "expected": { "behavior": "success", "utc_values_differ": true },
+    "source_fixture": "tests/fixtures/hostile_natal_cases.json::dst-us-ny-fold0-2024, dst-us-ny-fold1-2024"
+  },
+  {
+    "id": "high-latitude-placidus-fails-explicitly",
+    "category": "house_system_boundary",
+    "input": {
+      "local_datetime": "1992-06-21T12:00:00",
+      "timezone": "UTC",
+      "latitude": 70.0,
+      "longitude": 0.0,
+      "house_system": "placidus"
+    },
+    "expected": { "behavior": "error", "error_type": "HouseCalculationUnavailableError" },
+    "source_test": "tests/golden/test_swiss_natal.py::test_high_latitude_placidus_is_explicit_error"
+  },
+  {
+    "id": "hostile-corpus-required-boundaries",
+    "category": "regression_coverage",
+    "expected": {
+      "fixture": "tests/fixtures/hostile_natal_cases.json",
+      "minimum_cases": 100,
+      "required_categories": [
+        "dst",
+        "zodiac_boundary",
+        "circular_boundary",
+        "house_cusp",
+        "high_latitude",
+        "retrograde_station",
+        "unknown_time",
+        "date_line",
+        "leap_day"
+      ]
+    },
+    "source_test": "tests/edge_cases/test_hostile_corpus.py"
+  }
+]
