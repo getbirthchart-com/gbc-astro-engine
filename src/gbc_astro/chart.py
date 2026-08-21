@@ -7,7 +7,8 @@ public inputs and delegates to `AstrologyEngine.natal`.
 from __future__ import annotations
 
 import re
-from datetime import date as date_cls, time as time_cls
+from datetime import date as date_cls
+from datetime import time as time_cls
 
 from gbc_astro.astronomy.circular import normalize_longitude
 from gbc_astro.engine import AstrologyEngine

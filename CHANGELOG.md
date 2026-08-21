@@ -12,5 +12,6 @@ PyPI packaging of GetBirthChart Core `1.12.1`.
 - `pyswisseph` is a runtime dependency; Swiss Ephemeris `.se1` files are not
   shipped
 - Unknown birth time omits angles and houses; no noon substitution
-- FastAPI HTTP adapter is kept out of the published wheel
+- FastAPI adapter source ships in the wheel; `fastapi`/`uvicorn` remain behind
+  the optional `[api]` extra
 - License remains AGPL-3.0-only

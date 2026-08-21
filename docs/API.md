@@ -8,13 +8,13 @@ geocoding, persistence, or interpretation lives in this layer.
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[api,swiss]" --config-settings editable_mode=compat
+python -m pip install -e ".[api]" --config-settings editable_mode=compat
 ```
 
 For development (tests + HTTP client):
 
 ```bash
-python -m pip install -e ".[dev,api,swiss]" --config-settings editable_mode=compat
+python -m pip install -e ".[dev,api]" --config-settings editable_mode=compat
 ```
 
 Library-only consumers do **not** need the `api` extra.

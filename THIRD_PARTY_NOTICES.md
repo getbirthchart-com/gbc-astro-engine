@@ -19,5 +19,5 @@ terms.
 Official licensing information:
 <https://www.astro.com/swisseph/swephinfo_e.htm>
 
-The Python binding used by the optional `swiss` extra is `pyswisseph`:
+The Python binding used as a runtime dependency is `pyswisseph`:
 <https://pypi.org/project/pyswisseph/>

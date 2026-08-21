@@ -21,7 +21,6 @@ include docs/RELOCATION_AND_ACG.md
 include docs/SIDEREAL.md
 include docs/TRANSFORMS.md
 include docs/TRANSITS.md
-prune src/gbc_astro/api
 prune evidence
 prune GetBirthChart_Astrology_Engine_Spec
 prune gbc_synastry_core_docs

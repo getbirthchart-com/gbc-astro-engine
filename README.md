@@ -8,9 +8,9 @@ astrology calculation engine.
 The canonical source repository is maintained at
 [github.com/getbirthchart-com/gbc-astro-engine](https://github.com/getbirthchart-com/gbc-astro-engine).
 
-Project: [GetBirthChart](https://getbirthchart.com/)  
-Website: <https://getbirthchart.com/>  
-Maintainer: [Luis Pham](https://getbirthchart.com/author/luis-pham/)
+- Project: [GetBirthChart](https://getbirthchart.com/)
+- Website: <https://getbirthchart.com/>
+- Maintainer: [Luis Pham](https://getbirthchart.com/author/luis-pham/)
 
 It computes natal chart facts: planetary positions, tropical zodiac signs,
 houses, Ascendant, Midheaven, aspects, lunar nodes, and Chiron. It does not
@@ -31,13 +31,7 @@ This installs the `pyswisseph` binding. Swiss Ephemeris `.se1` data files are
 directory:
 
 ```bash
-export GBC_SWISS_EPHE_PATH=/path/to/swiss/ephemeris/files
-```
-
-Example on one development machine (not a default path):
-
-```bash
-export GBC_SWISS_EPHE_PATH=/Users/huypq/ephemeris/swiss
+export GBC_SWISS_EPHE_PATH=/path/to/swiss/ephemeris
 ```
 
 Required files for the modern-era natal path: `sepl_18.se1`, `semo_18.se1`,
@@ -73,6 +67,15 @@ print(chart.angles["ascendant"].longitude)
 ```
 
 `timezone` is required. Coordinates are geographic degrees, not a place name.
+
+To run the HTTP adapter locally or on the VPS:
+
+```bash
+pip install "gbc-astro[api]"
+uvicorn gbc_astro.api.app:app --host 127.0.0.1 --port 8000
+```
+
+`pip install gbc-astro` does not install FastAPI or uvicorn.
 
 ## Timed birth chart
 
@@ -222,7 +225,7 @@ is not treated as a scientifically validated predictive system.
 - Swiss Ephemeris `.se1` files are not on PyPI and must be provisioned
 - unknown birth time omits angles and houses; body positions use local midnight
 - altitude is stored but not applied to positions or houses
-- the public wheel does not include the FastAPI HTTP adapter
+- FastAPI adapter source is in the wheel; install `gbc-astro[api]` for the HTTP server
 - closed-source distribution of this package is incompatible with AGPL-3.0
 - Swiss Ephemeris itself is dual-licensed; this project uses the AGPL path
 
