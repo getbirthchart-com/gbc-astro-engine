@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,8 @@ version = "1.12.1"
 description = "Deterministic astrology calculation engine for GetBirthChart."
 readme = "README.md"
 requires-python = ">=3.12"
-license = { text = "Proprietary" }
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
 authors = [{ name = "GetBirthChart" }]
 dependencies = []
 

@@ -22,7 +22,7 @@ This repository is for:
 - **inspectability** — inputs, profiles, warnings, and output schema are explicit
 - **testing** — golden cases, parity gates, and hostile inputs live next to the code
 - **reproducibility** — the same birth data and profile produce the same chart
-- **reuse where the license allows** — see [License](#license); this package is proprietary
+- **reuse under a clear copyleft license** — see [License](#license)
 
 ---
 
@@ -97,7 +97,7 @@ Placidus and Koch are **refused beyond the polar circles** (`HouseCalculationUna
 
 ### Ephemeris
 
-**Swiss Ephemeris** via `pyswisseph`. There is no fallback planetary formula when that dependency is missing: the engine raises `ProviderDependencyError`.
+**[Swiss Ephemeris](https://www.astro.com/swisseph/swephinfo_e.htm)** via `pyswisseph`. There is no fallback planetary formula when that dependency is missing: the engine raises `ProviderDependencyError`.
 
 ### Time handling
 
@@ -138,8 +138,8 @@ This project does not own the underlying astronomical data.
 
 | Source | Role |
 |---|---|
-| [Swiss Ephemeris](https://www.astro.com/swisseph/) (`pyswisseph`) | Planetary, lunar, node, and house/angle calculations |
-| IANA timezone database (`zoneinfo`) | Local time → UTC |
+| [Swiss Ephemeris licensing and terms](https://www.astro.com/swisseph/swephinfo_e.htm) (`pyswisseph`) | Planetary, lunar, node, and house/angle calculations |
+| [IANA time zone database](https://www.iana.org/time-zones) (`zoneinfo`) | Local time → UTC |
 | JPL DE440S / Skyfield (optional `validation` extra) | Independent astronomy-parity tests, not the production natal path |
 | Frozen JPL Horizons capture | Offline Chiron parity fixture |
 
@@ -372,7 +372,7 @@ The public Python API and HTTP surface may still change. Pin a git revision for 
 
 ## Limitations
 
-- **License** is proprietary; publishing the source is not a grant to copy or ship it.
+- **License** is GNU Affero General Public License v3.0-only; see [`LICENSE`](LICENSE).
 - **Swiss Ephemeris** is required; there is no internal ephemeris.
 - **Default zodiac** is tropical; sidereal is profile-based, not a silent mix-in.
 - **Default houses** are Placidus; Placidus/Koch have no solution beyond the polar circles.
@@ -390,7 +390,7 @@ The public Python API and HTTP surface may still change. Pin a git revision for 
 
 ## Contributing and bug reports
 
-There is no `CONTRIBUTING.md`. The license is proprietary; do not assume patches will be accepted or that the code may be reused.
+There is no `CONTRIBUTING.md`. Contributions and reuse are governed by the GNU Affero General Public License v3.0-only in [`LICENSE`](LICENSE).
 
 Calculation bugs (wrong omission, silent fallback, timezone error, schema drift) can be reported via GitHub issues on this repository. Include engine version, profile id, inputs, and the output field that looks wrong.
 
@@ -398,9 +398,9 @@ Calculation bugs (wrong omission, silent fallback, timezone error, schema drift)
 
 ## License
 
-`pyproject.toml` declares **Proprietary**. There is no `LICENSE` file granting OSI-open-source rights.
+This repository is licensed under the **GNU Affero General Public License v3.0-only**. See the root [`LICENSE`](LICENSE) file.
 
-Swiss Ephemeris is copyright Astrodienst AG and has its own terms. Ephemeris data files must be provisioned under those terms; this repository does not redistribute them.
+The engine uses **Swiss Ephemeris**, copyright Astrodienst AG, through `pyswisseph`. Swiss Ephemeris is available under a dual-licensing system; this project follows the GNU AGPL path for the engine. The separate Swiss Ephemeris Professional License remains an upstream option with its own terms. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and the [official Swiss Ephemeris licensing information](https://www.astro.com/swisseph/swephinfo_e.htm).
 
 ---
 
