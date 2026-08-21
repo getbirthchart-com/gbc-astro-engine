@@ -70,6 +70,54 @@ jobs:
             echo "Missing de440s.bsp: the node reference tests would skip."
             exit 1
           }
+          # `test -s` accepts an HTML error page. Reject downloads that are
+          # far smaller than the real Swiss files before pytest spends a minute
+          # turning that into 26 HTTP 503s.
+          python - <<'PY'
+          import os
+          from concurrent.futures import ThreadPoolExecutor
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          swiss = Path(os.environ["GBC_SWISS_EPHE_PATH"])
+          minimums = {
+              "sepl_18.se1": 400_000,
+              "semo_18.se1": 1_000_000,
+              "seas_18.se1": 200_000,
+          }
+          for name, minimum in minimums.items():
+              size = (swiss / name).stat().st_size
+              if size < minimum:
+                  raise SystemExit(
+                      f"{name} is {size} bytes; expected at least {minimum}. "
+                      "The download is truncated or not a Swiss Ephemeris file."
+                  )
+
+          from gbc_astro.providers.swiss import SwissEphemerisProvider
+
+          provider = SwissEphemerisProvider(ephemeris_path=str(swiss))
+          instant = datetime(1992, 11, 3, 7, 35, tzinfo=timezone.utc)
+          sun = ThreadPoolExecutor(max_workers=1).submit(
+              provider.position, "sun", instant
+          ).result()
+          print(f"swiss_ok sun={sun.longitude_deg:.6f} from worker thread")
+
+          from fastapi.testclient import TestClient
+          from gbc_astro.api.app import create_app
+
+          natal = {
+              "local_date": "1992-11-03",
+              "local_time": "14:35:00",
+              "timezone": "Asia/Ho_Chi_Minh",
+              "latitude": 21.0285,
+              "longitude": 105.8542,
+          }
+          with TestClient(create_app()) as client:
+              response = client.post("/v1/charts/natal", json=natal)
+          if response.status_code != 200:
+              raise SystemExit(f"natal HTTP {response.status_code}: {response.text}")
+          print("natal_http_ok")
+          PY
 
       - name: Ruff
         run: ruff check .

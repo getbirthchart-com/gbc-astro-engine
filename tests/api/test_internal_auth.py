@@ -58,23 +58,27 @@ class InternalSecretMiddlewareTests(unittest.TestCase):
         self.assertNotEqual(response.status_code, 401)
 
     def test_unset_secret_does_not_401(self) -> None:
-        env = {k: v for k, v in os.environ.items() if k not in {
-            "GBC_ASTRO_API_SECRET",
-            "ASTROLOGY_API_SECRET",
-            "GBC_ASTRO_REQUIRE_SECRET",
-        }}
-        with mock.patch.dict(os.environ, env, clear=True):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "GBC_ASTRO_API_SECRET": "",
+                "ASTROLOGY_API_SECRET": "",
+                "GBC_ASTRO_REQUIRE_SECRET": "",
+            },
+        ):
             client = TestClient(create_app(), raise_server_exceptions=False)
             response = client.post("/v1/charts/natal", json=NATAL)
         self.assertNotEqual(response.status_code, 401)
 
     def test_require_secret_without_secret_is_401(self) -> None:
-        env = {k: v for k, v in os.environ.items() if k not in {
-            "GBC_ASTRO_API_SECRET",
-            "ASTROLOGY_API_SECRET",
-        }}
-        env["GBC_ASTRO_REQUIRE_SECRET"] = "1"
-        with mock.patch.dict(os.environ, env, clear=True):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "GBC_ASTRO_API_SECRET": "",
+                "ASTROLOGY_API_SECRET": "",
+                "GBC_ASTRO_REQUIRE_SECRET": "1",
+            },
+        ):
             client = TestClient(create_app(), raise_server_exceptions=False)
             response = client.post("/v1/charts/natal", json=NATAL)
             health = client.get("/health")
