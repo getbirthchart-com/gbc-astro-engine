@@ -29,8 +29,8 @@ def _load_swisseph() -> ModuleType:
         return import_module("swisseph")
     except ImportError as exc:
         raise ProviderDependencyError(
-            "Swiss house calculation requires the optional 'pyswisseph' dependency.",
-            {"install": 'python -m pip install "gbc-astro[swiss]"'},
+            "Swiss house calculation requires the 'pyswisseph' dependency.",
+            {"install": "python -m pip install gbc-astro"},
         ) from exc
 
 

@@ -4,22 +4,36 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gbc-astro"
-version = "1.12.1"
-description = "Deterministic astrology calculation engine for GetBirthChart."
+dynamic = ["version"]
+description = "A Python astrology calculation engine powered by Swiss Ephemeris."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "AGPL-3.0-only"
-license-files = ["LICENSE"]
-authors = [{ name = "GetBirthChart" }]
-dependencies = []
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+authors = [{ name = "Luis Pham" }]
+maintainers = [{ name = "Luis Pham" }]
+keywords = [
+  "astrology",
+  "birth-chart",
+  "natal-chart",
+  "ephemeris",
+  "swiss-ephemeris",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Astronomy",
+  "Typing :: Typed",
+]
+dependencies = [
+  "pyswisseph>=2.10.3.2",
+]
 
 [project.optional-dependencies]
-swiss = ["pyswisseph>=2.10"]
 validation = ["skyfield>=1.54", "jplephem>=2.24", "numpy>=2.0"]
-api = [
-  "fastapi>=0.115",
-  "uvicorn[standard]>=0.30",
-]
 dev = [
   "hypothesis>=6.100",
   "mypy>=1.10",
@@ -30,11 +44,24 @@ dev = [
   "uvicorn[standard]>=0.30",
 ]
 
+[project.urls]
+Homepage = "https://getbirthchart.com/"
+Repository = "https://github.com/getbirthchart-com/gbc-astro-engine"
+Issues = "https://github.com/getbirthchart-com/gbc-astro-engine/issues"
+Documentation = "https://github.com/getbirthchart-com/gbc-astro-engine#readme"
+
 [project.scripts]
 gbc = "gbc_astro.cli:main"
 
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "gbc_astro.constants.ENGINE_VERSION"}
+
 [tool.setuptools.packages.find]
 where = ["src"]
+exclude = ["gbc_astro.api", "gbc_astro.api.*"]
 
 [tool.ruff]
 line-length = 100

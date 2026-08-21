@@ -26,8 +26,19 @@ class GbcAstroError(Exception):
         }
 
 
+class InvalidDateError(GbcAstroError):
+    code = "INVALID_DATE"
+
+
+class InvalidTimeError(GbcAstroError):
+    code = "INVALID_TIME"
+
+
 class InvalidCoordinateError(GbcAstroError):
     code = "INVALID_COORDINATE"
+
+
+InvalidCoordinatesError = InvalidCoordinateError
 
 
 class UnknownTimezoneError(GbcAstroError):
@@ -58,8 +69,16 @@ class UnknownBirthTimeError(GbcAstroError):
     code = "UNKNOWN_BIRTH_TIME"
 
 
+class MissingBirthTimeError(UnknownBirthTimeError):
+    code = "MISSING_BIRTH_TIME"
+
+
 class InvalidCalculationProfileError(GbcAstroError):
     code = "INVALID_CALCULATION_PROFILE"
+
+
+class UnsupportedHouseSystemError(InvalidCalculationProfileError):
+    code = "UNSUPPORTED_HOUSE_SYSTEM"
 
 
 class ProviderDependencyError(GbcAstroError):
