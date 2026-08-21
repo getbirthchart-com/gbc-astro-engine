@@ -32,19 +32,26 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ephemeris
-          key: ephe-swiss18-de440s-v1
+          key: ephe-swiss18-de440s-v2-${{ hashFiles('.github/workflows/v01-validation.yml') }}
+          restore-keys: |
+            ephe-swiss18-de440s-v2-
 
       # Neither data set is committed: both carry redistribution terms.
+      # Fetch any missing or empty files even on a cache hit.
       - name: Fetch ephemeris data
-        if: steps.ephe-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p .ephemeris/swiss .ephemeris/jpl
           base=https://raw.githubusercontent.com/aloistr/swisseph/master/ephe
           for file in sepl_18.se1 semo_18.se1 seas_18.se1; do
-            curl -fsSL -o ".ephemeris/swiss/$file" "$base/$file"
+            dest=".ephemeris/swiss/$file"
+            if [ ! -s "$dest" ]; then
+              curl -fsSL -o "$dest" "$base/$file"
+            fi
           done
-          curl -fsSL -o .ephemeris/jpl/de440s.bsp \
-            https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp
+          if [ ! -s .ephemeris/jpl/de440s.bsp ]; then
+            curl -fsSL -o .ephemeris/jpl/de440s.bsp \
+              https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp
+          fi
 
       # The JPL track needs skyfield/jplephem/numpy from the validation extra.
       # Installing only [dev] leaves the reference unavailable, which used
