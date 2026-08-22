@@ -1,5 +1,7 @@
 # gbc-astro
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22052875.svg)](https://doi.org/10.5281/zenodo.22052875)
+
 A Python astrology calculation engine powered by Swiss Ephemeris.
 
 gbc-astro is the installable Python package for the open-source GetBirthChart
@@ -241,6 +243,14 @@ See `THIRD_PARTY_NOTICES.md` and
 
 This is not an MIT-licensed project.
 
+## Citation
+
+If you use `gbc-astro` in software, analysis, or documentation, you can cite
+the archived release:
+
+Pham, Luis. `gbc-astro: GetBirthChart Astrology Calculation Engine`, version
+1.12.2. Zenodo. <https://doi.org/10.5281/zenodo.22052875>
+
 ## Development and testing
 
 Python 3.12+:
@@ -260,3 +270,5 @@ python -m pytest
 - Source code: <https://github.com/getbirthchart-com/gbc-astro-engine>
 - Issue tracker: <https://github.com/getbirthchart-com/gbc-astro-engine/issues>
 - Maintainer: <https://getbirthchart.com/author/luis-pham/>
+- Zenodo: <https://zenodo.org/records/22052875>
+- DOI: <https://doi.org/10.5281/zenodo.22052875>

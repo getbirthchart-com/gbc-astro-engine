@@ -53,6 +53,7 @@ Homepage = "https://getbirthchart.com/"
 Repository = "https://github.com/getbirthchart-com/gbc-astro-engine"
 Issues = "https://github.com/getbirthchart-com/gbc-astro-engine/issues"
 Documentation = "https://github.com/getbirthchart-com/gbc-astro-engine#readme"
+DOI = "https://doi.org/10.5281/zenodo.22052875"
 
 [project.scripts]
 gbc = "gbc_astro.cli:main"

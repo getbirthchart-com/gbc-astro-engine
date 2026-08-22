@@ -10,6 +10,8 @@ gbc-astro 1.12.2
 - Canonical package source is the GetBirthChart Core GitHub repository.
 - Astrology calculation behavior remains engine version 1.12.1.
 - No astrology calculation formulas changed in this release.
+- Archived the 1.12.2 source release on Zenodo.
+- DOI: 10.5281/zenodo.22052875
 
 ## 1.12.1 — 2026-08-22
 
