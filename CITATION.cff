@@ -9,7 +9,7 @@ authors:
 repository-code: "https://github.com/getbirthchart-com/gbc-astro-engine"
 url: "https://getbirthchart.com/"
 license: AGPL-3.0-only
-version: "1.12.1"
+version: "1.12.2"
 abstract: >-
   A Python astrology calculation engine powered by Swiss Ephemeris.
   gbc-astro is the installable Python package for the open-source

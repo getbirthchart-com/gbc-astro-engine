@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.12.2 — 2026-08-22
+
+gbc-astro 1.12.2
+
+- First production-PyPI-ready distribution from the canonical merged source.
+- Core installation via `pip install gbc-astro`.
+- Optional FastAPI adapter via `pip install "gbc-astro[api]"`.
+- Canonical package source is the GetBirthChart Core GitHub repository.
+- Astrology calculation behavior remains engine version 1.12.1.
+- No astrology calculation formulas changed in this release.
+
 ## 1.12.1 — 2026-08-22
 
 PyPI packaging of GetBirthChart Core `1.12.1`.

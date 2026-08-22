@@ -1,7 +1,5 @@
 """Public package API for GetBirthChart astrology calculations."""
 
-from importlib.metadata import PackageNotFoundError, version
-
 from gbc_astro.chart import (
     calculate_aspects,
     calculate_chart,
@@ -10,7 +8,7 @@ from gbc_astro.chart import (
     get_zodiac_sign,
     normalize_angle,
 )
-from gbc_astro.constants import ENGINE_VERSION, SCHEMA_VERSION
+from gbc_astro.constants import ENGINE_VERSION, PACKAGE_VERSION, SCHEMA_VERSION
 from gbc_astro.engine import AstrologyEngine
 from gbc_astro.exceptions import (
     InvalidCoordinatesError,
@@ -22,10 +20,7 @@ from gbc_astro.exceptions import (
 from gbc_astro.houses.systems import SUPPORTED_HOUSE_SYSTEMS
 from gbc_astro.profiles.defaults import WESTERN_MODERN_V1
 
-try:
-    __version__ = version("gbc-astro")
-except PackageNotFoundError:
-    __version__ = ENGINE_VERSION
+__version__ = PACKAGE_VERSION
 
 __all__ = [
     "AstrologyEngine",

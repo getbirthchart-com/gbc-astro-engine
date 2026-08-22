@@ -61,7 +61,7 @@ gbc = "gbc_astro.cli:main"
 include-package-data = true
 
 [tool.setuptools.dynamic]
-version = {attr = "gbc_astro.constants.ENGINE_VERSION"}
+version = {attr = "gbc_astro.constants.PACKAGE_VERSION"}
 
 [tool.setuptools.packages.find]
 where = ["src"]

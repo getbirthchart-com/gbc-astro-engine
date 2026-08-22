@@ -1,6 +1,9 @@
 """Stable package constants."""
 
 ENGINE_NAME = "gbc-astro"
+# Distribution/PyPI version. Independent of ENGINE_VERSION so a packaging
+# release can ship without claiming new calculation behavior.
+PACKAGE_VERSION = "1.12.2"
 ENGINE_VERSION = "1.12.1"
 SCHEMA_VERSION = "1.3.0"
 SYNASTRY_SCHEMA_VERSION = "1.4.0"

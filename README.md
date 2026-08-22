@@ -16,7 +16,7 @@ It computes natal chart facts: planetary positions, tropical zodiac signs,
 houses, Ascendant, Midheaven, aspects, lunar nodes, and Chiron. It does not
 include the website, accounts, payments, or interpretation text.
 
-Version `1.12.1`. Natal schema `1.3.0`.
+Package release `1.12.2` uses calculation engine `1.12.1`. Natal schema `1.3.0`.
 
 ## Installation
 
@@ -206,8 +206,8 @@ chart.meta.engine_version             # "1.12.1"
 chart.to_dict()
 ```
 
-`gbc_astro.__version__`, `ENGINE_VERSION`, and chart `meta.engine_version`
-are `1.12.1`. `SCHEMA_VERSION` is `1.3.0`.
+`gbc_astro.__version__` is the package release (`1.12.2`). `ENGINE_VERSION`
+and chart `meta.engine_version` remain `1.12.1`. `SCHEMA_VERSION` is `1.3.0`.
 
 ## Accuracy and testing
 
