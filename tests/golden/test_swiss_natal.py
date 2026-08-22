@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 
 from gbc_astro import AstrologyEngine
 from gbc_astro.errors import HouseCalculationUnavailableError
@@ -49,6 +51,22 @@ class SwissNatalGoldenTests(unittest.TestCase):
         # the true node already said, including a "true_node conjunct mean_node"
         # that appeared in every chart the engine had ever produced.
         self.assertEqual(len(chart.aspects), 14)
+
+    def test_position_from_a_worker_thread_uses_the_configured_path(self) -> None:
+        """FastAPI runs sync routes in a threadpool; the path must follow.
+
+        Constructing the provider on this thread and calculating on another is
+        the production HTTP shape. If the C library keeps the ephemeris
+        directory in thread-local storage, a constructor-only set_ephe_path
+        raises PROVIDER_DEPENDENCY_MISSING on the worker.
+        """
+        path = os.environ["GBC_SWISS_EPHE_PATH"]
+        provider = SwissEphemerisProvider(ephemeris_path=path)
+        instant = datetime(1992, 11, 3, 7, 35, tzinfo=timezone.utc)
+        expected = provider.position("sun", instant).longitude_deg
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            worker = pool.submit(provider.position, "sun", instant).result()
+        self.assertAlmostEqual(worker.longitude_deg, expected)
 
     def test_high_latitude_placidus_is_explicit_error(self) -> None:
         with self.assertRaises(HouseCalculationUnavailableError):

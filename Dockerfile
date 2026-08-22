@@ -10,7 +10,7 @@ FROM python:3.12-slim AS builder
 WORKDIR /build
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_CACHE_DIR=1
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md LICENSE THIRD_PARTY_NOTICES.md ./
 COPY src/ ./src/
 
 # Build a wheel so the runtime stage carries no build toolchain.
@@ -31,7 +31,7 @@ ENV PYTHONUNBUFFERED=1 \
 RUN --mount=type=bind,from=builder,source=/dist,target=/dist \
     apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
-    && python -m pip install "$(ls /dist/*.whl)[api,swiss]" \
+    && python -m pip install "$(ls /dist/*.whl)[api]" \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*

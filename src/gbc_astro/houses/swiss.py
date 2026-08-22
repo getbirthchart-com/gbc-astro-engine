@@ -29,8 +29,8 @@ def _load_swisseph() -> ModuleType:
         return import_module("swisseph")
     except ImportError as exc:
         raise ProviderDependencyError(
-            "Swiss house calculation requires the optional 'pyswisseph' dependency.",
-            {"install": 'python -m pip install "gbc-astro[swiss]"'},
+            "Swiss house calculation requires the 'pyswisseph' dependency.",
+            {"install": "python -m pip install gbc-astro"},
         ) from exc
 
 
@@ -40,6 +40,10 @@ class SwissHouseCalculator:
     def __init__(self, ephemeris_path: str | None = None) -> None:
         self._swe = _load_swisseph()
         self.ephemeris_path = ephemeris_path or os.environ.get("GBC_SWISS_EPHE_PATH")
+        self._bind_ephe_path()
+
+    def _bind_ephe_path(self) -> None:
+        """Re-apply the data path on the calling thread. See SwissEphemerisProvider."""
         if self.ephemeris_path:
             self._swe.set_ephe_path(self.ephemeris_path)
 
@@ -51,6 +55,7 @@ class SwissHouseCalculator:
         house_system: str,
     ) -> HouseCalculation:
         system, profile = _resolve_system(house_system)
+        self._bind_ephe_path()
         try:
             cusps_raw, ascmc = self._swe.houses_ex(
                 julian_day,
@@ -94,6 +99,7 @@ class SwissHouseCalculator:
 
     def obliquity(self, julian_day: float) -> float:
         """True obliquity of the ecliptic, in degrees, for a Julian Day (UT)."""
+        self._bind_ephe_path()
         try:
             values, _flags = self._swe.calc_ut(julian_day, self._swe.ECL_NUT)
         except Exception as exc:
@@ -119,6 +125,7 @@ class SwissHouseCalculator:
         than substituting another house system.
         """
         system, profile = _resolve_system(house_system)
+        self._bind_ephe_path()
         try:
             cusps_raw, ascmc = self._swe.houses_armc(
                 normalize_longitude(armc),

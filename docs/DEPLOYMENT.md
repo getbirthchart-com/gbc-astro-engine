@@ -73,7 +73,7 @@ the filesystem can be mounted read-only if your platform supports it.
 
 ```bash
 python3.12 -m venv .venv && . .venv/bin/activate
-pip install ".[api,swiss]"
+pip install ".[api]"
 export GBC_SWISS_EPHE_PATH=/opt/gbc/ephemeris/swiss
 uvicorn gbc_astro.api.app:app --host 0.0.0.0 --port 8000
 ```

@@ -30,8 +30,8 @@ def _load_swisseph() -> ModuleType:
         return import_module("swisseph")
     except ImportError as exc:
         raise ProviderDependencyError(
-            "Swiss Ephemeris provider requires the optional 'pyswisseph' dependency.",
-            {"install": 'python -m pip install "gbc-astro[swiss]"'},
+            "Swiss Ephemeris provider requires the 'pyswisseph' dependency.",
+            {"install": "python -m pip install gbc-astro"},
         ) from exc
 
 
@@ -43,9 +43,20 @@ class SwissEphemerisProvider:
     def __init__(self, ephemeris_path: str | None = None) -> None:
         self._swe = _load_swisseph()
         self.ephemeris_path = ephemeris_path or os.environ.get("GBC_SWISS_EPHE_PATH")
+        self._bind_ephe_path()
+        self._body_codes = self._build_body_codes(self._swe)
+
+    def _bind_ephe_path(self) -> None:
+        """Re-apply the data path on the calling thread.
+
+        pyswisseph keeps the ephemeris directory in C-level state that is
+        process-global on some builds and thread-local on others. FastAPI runs
+        sync handlers in a threadpool, so a path set in a constructor on thread
+        A is invisible to ``calc_ut`` on thread B. Bind immediately before every
+        C call rather than only at construction.
+        """
         if self.ephemeris_path:
             self._swe.set_ephe_path(self.ephemeris_path)
-        self._body_codes = self._build_body_codes(self._swe)
 
     @property
     def data_version(self) -> str:
@@ -105,6 +116,7 @@ class SwissEphemerisProvider:
         utc_dt = instant_utc.astimezone(timezone.utc)
         jd_ut = julian_day_ut(utc_dt)
         flags = self._swe.FLG_SWIEPH | self._swe.FLG_SPEED
+        self._bind_ephe_path()
         try:
             result, _retflag = self._swe.calc_ut(jd_ut, code, flags)
         except Exception as exc:

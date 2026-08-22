@@ -1,431 +1,262 @@
-# GetBirthChart Core
+# gbc-astro
 
-Python astrology calculation engine behind GetBirthChart.com.
+A Python astrology calculation engine powered by Swiss Ephemeris.
 
-Package: [`gbc-astro`](https://github.com/getbirthchart-com/gbc-astro-engine) `1.12.1` · Python `>=3.12` · chart schema `1.3.0`
+gbc-astro is the installable Python package for the open-source GetBirthChart
+astrology calculation engine.
 
-GetBirthChart Core is the published Python calculation engine behind GetBirthChart.com. It turns normalized birth data into deterministic chart data: planetary positions, zodiac placements, houses, angles, aspects, and the related chart facts this engine actually supports.
+The canonical source repository is maintained at
+[github.com/getbirthchart-com/gbc-astro-engine](https://github.com/getbirthchart-com/gbc-astro-engine).
 
-The hosted calculator and personalized chart experience are available at [GetBirthChart.com](https://getbirthchart.com/).
+- Project: [GetBirthChart](https://getbirthchart.com/)
+- Website: <https://getbirthchart.com/>
+- Maintainer: [Luis Pham](https://getbirthchart.com/author/luis-pham/)
 
-The calculation core is intentionally separated from interpretive content. The engine computes chart facts; interpretation is handled by higher application layers.
+It computes natal chart facts: planetary positions, tropical zodiac signs,
+houses, Ascendant, Midheaven, aspects, lunar nodes, and Chiron. It does not
+include the website, accounts, payments, or interpretation text.
 
----
-
-## Why this project exists
-
-Publishing the calculation layer makes it easier to inspect how chart facts are derived, test behavior, and distinguish deterministic calculations from interpretive astrology content.
-
-This repository is for:
-
-- **transparency** — the natal math is readable, not a black box behind the website
-- **inspectability** — inputs, profiles, warnings, and output schema are explicit
-- **testing** — golden cases, parity gates, and hostile inputs live next to the code
-- **reproducibility** — the same birth data and profile produce the same chart
-- **reuse under a clear copyleft license** — see [License](#license)
-
----
-
-## What it calculates
-
-Default natal profile: `western-modern-v1` (tropical, Placidus, true node, major aspects).
-
-For a known birth time, `AstrologyEngine.natal(...)` returns:
-
-- geocentric ecliptic **longitude**, **latitude**, **distance**, and **longitude speed**
-- **zodiac sign** and **degree within sign**
-- **house** assignment (1–12)
-- **retrograde** from signed longitude speed (`speed < 0`)
-- **Ascendant**, **Midheaven**, **Descendant**, and **IC**
-- **twelve house cusps**
-- **major aspects** with orb and applying/separating phase
-- derived points when geometry allows: **south node**, **vertex** / **antivertex**, **Part of Fortune**
-- derived natal facts: big three, moon phase, element/modality/polarity counts, chart ruler, dignities, dispositors
-
-Core bodies on every natal chart:
-
-`sun`, `moon`, `mercury`, `venus`, `mars`, `jupiter`, `saturn`, `uranus`, `neptune`, `pluto`, `true_node`, `mean_node`, `chiron`
-
-Aspects use `true_node` and `chiron`, not both lunar nodes. The mean node is still published in `bodies` so callers can read it without doubling every node contact.
-
-The same engine also exposes relationship charts (synastry, composite, Davison, compatibility scoring), transits, returns, event search, secondary progressions, solar arc, draconic and harmonic transforms, relocation, astrocartography, and named patterns (stellium, grand trine, T-square, grand cross, yod, kite). Those surfaces are documented under [`docs/`](docs/).
-
----
-
-## Unknown birth time
-
-Time-dependent chart features are not silently fabricated when birth time is unknown.
-
-Call `natal(..., unknown_time=True)` with a **local date only** (time must be `00:00:00`, or pass a date / `YYYY-MM-DD` string). A clock time with `unknown_time=True` raises `UnknownBirthTimeError`.
-
-Policy: `local_date_start_with_uncertainty_warning`.
-
-| Output | Unknown-time behavior |
-|---|---|
-| `subject.birthTimeKnown` | `false` |
-| Angles (ASC, MC, DSC, IC) | omitted (`{}`) |
-| House cusps | omitted (`()`) |
-| `bodies.*.house` | `null` |
-| Vertex, antivertex, Part of Fortune | omitted |
-| Chart ruler, house rulers, hemispheres, quadrants | empty / `null` (they need an Ascendant or houses) |
-| `meta.houseSystem` | `null` |
-| Warning | `UNKNOWN_BIRTH_TIME` with `fieldsAffected: ["angles", "houses", "houseAssignments"]` |
-
-Bodies are still calculated, at **local date start** (midnight in the given IANA timezone). That is an explicit approximation, not a guessed birth time.
-
-**Moon:** there is no separate Moon-uncertainty flag. The Moon is computed at the same local-date-start instant as every other body. It can move about 13° in a day, so sign and degree can differ from the unknown true time. Moon phase, when present, is taken from that same approximation. South node remains, because it is derived from the lunar node, not from the Ascendant.
-
-CLI equivalent: `gbc natal --date YYYY-MM-DD --unknown-time ...` (omit `--time`).
-
----
-
-## Calculation methodology
-
-For the broader product methodology and interpretation boundaries, see the [GetBirthChart Methodology](https://getbirthchart.com/methodology/).
-
-### Zodiac
-
-Default: **tropical**.
-
-Sidereal is supported via a calculation profile (`vedic-sidereal-v1` uses Lahiri and Whole Sign). Ayanamsas: `lahiri`, `true_citra`, `fagan_bradley`, `krishnamurti`, `raman`. See [`docs/SIDEREAL.md`](docs/SIDEREAL.md).
-
-### House system
-
-Default: **Placidus**. Also implemented: Koch, Porphyry, Campanus, Regiomontanus, Alcabitius, Topocentric, Morinus, Meridian, Whole Sign, Equal.
-
-Placidus and Koch are **refused beyond the polar circles** (`HouseCalculationUnavailableError`). There is no silent fallback to another system. See [`docs/HOUSE_SYSTEMS.md`](docs/HOUSE_SYSTEMS.md).
-
-### Ephemeris
-
-**[Swiss Ephemeris](https://www.astro.com/swisseph/swephinfo_e.htm)** via `pyswisseph`. There is no fallback planetary formula when that dependency is missing: the engine raises `ProviderDependencyError`.
-
-### Time handling
-
-Local datetime is naive. Timezone is a separate **IANA** identifier (`zoneinfo`). Conversion to UTC uses historical DST rules.
-
-- Ambiguous local times (DST overlap) require an explicit PEP 495 `fold` (`0` or `1`); they are not guessed.
-- Nonexistent local times (DST spring-forward) raise; they are not shifted.
-
-### Coordinates
-
-Latitude −90…90, longitude −180…180. Place search / geocoding is **not** in this repository; callers pass coordinates.
-
-`altitude_m` is accepted and stored on the subject. It is not currently applied to Swiss position or house calculations.
-
-### Aspects
-
-Default profile `modern-major-v1`:
-
-| Aspect | Exact | Orb |
-|---|---:|---:|
-| conjunction | 0° | 8° |
-| sextile | 60° | 5° |
-| square | 90° | 7° |
-| trine | 120° | 7° |
-| opposition | 180° | 8° |
-
-When several rules match, the tightest orb wins. Phase is applying / separating / exact from relative longitude speed on a single natal instant.
-
-### Retrograde
-
-`retrograde` is `true` when ecliptic longitude speed is negative, `false` when positive, and `null` when speed is unavailable (for example composite midpoints, which are not an instant).
-
----
-
-## Data sources and dependencies
-
-This project does not own the underlying astronomical data.
-
-| Source | Role |
-|---|---|
-| [Swiss Ephemeris licensing and terms](https://www.astro.com/swisseph/swephinfo_e.htm) (`pyswisseph`) | Planetary, lunar, node, and house/angle calculations |
-| [IANA time zone database](https://www.iana.org/time-zones) (`zoneinfo`) | Local time → UTC |
-| JPL DE440S / Skyfield (optional `validation` extra) | Independent astronomy-parity tests, not the production natal path |
-| Frozen JPL Horizons capture | Offline Chiron parity fixture |
-
-Swiss data files are **not** committed. They carry redistribution terms. Fetch them with `./scripts/fetch-ephemeris.sh` (files `sepl_18.se1`, `semo_18.se1`, `seas_18.se1`, covering roughly 1800–2399) and point the engine at the directory:
-
-```bash
-export GBC_SWISS_EPHE_PATH=/path/to/ephemeris/swiss
-```
-
-Without those files, Chiron and other asteroid-style bodies degrade or fail rather than being omitted silently. See [`docs/EPHEMERIS_DATA.md`](docs/EPHEMERIS_DATA.md) and [`docs/PRODUCTION_EPHEMERIS_SETUP.md`](docs/PRODUCTION_EPHEMERIS_SETUP.md).
-
-Product-level source notes: [GetBirthChart Data Sources](https://getbirthchart.com/data-sources/).
-
----
+Version `1.12.1`. Natal schema `1.3.0`.
 
 ## Installation
 
-There is no published PyPI release. Install from this repository. Python **3.12+**.
+Python 3.12 or newer.
 
 ```bash
-git clone https://github.com/getbirthchart-com/gbc-astro-engine.git
-cd gbc-astro-engine
-python3.12 -m venv .venv
-. .venv/bin/activate
-python -m pip install -e ".[dev,swiss]" --config-settings editable_mode=compat
+pip install gbc-astro
+```
+
+This installs the `pyswisseph` binding. Swiss Ephemeris `.se1` data files are
+**not** included. Provision them yourself and point the library at the
+directory:
+
+```bash
+export GBC_SWISS_EPHE_PATH=/path/to/swiss/ephemeris
+```
+
+Required files for the modern-era natal path: `sepl_18.se1`, `semo_18.se1`,
+and `seas_18.se1` (Chiron). A helper script in this workspace can fetch them:
+
+```bash
 ./scripts/fetch-ephemeris.sh
 export GBC_SWISS_EPHE_PATH="$(pwd)/ephemeris/swiss"
 ```
 
-| Extra | Provides |
-|---|---|
-| `swiss` | `pyswisseph` — required for real charts |
-| `dev` | pytest, ruff, mypy, hypothesis, HTTP test client |
-| `api` | FastAPI / uvicorn adapter |
-| `validation` | Skyfield / JPL DE440S parity tools |
+Those files have their own upstream redistribution terms.
 
-Without the `swiss` extra, natal calculation raises a structured provider error instead of inventing positions.
-
-Optional HTTP adapter:
-
-```bash
-python -m pip install -e ".[api,swiss]" --config-settings editable_mode=compat
-uvicorn gbc_astro.api.app:app --host 127.0.0.1 --port 8000
-```
-
-See [`docs/API.md`](docs/API.md).
-
----
+If `GBC_SWISS_EPHE_PATH` is unset or the files are missing, natal calculation
+raises `ProviderDependencyError`. The engine requests Swiss files
+(`FLG_SWIEPH`) and does **not** fall back to the Moshier ephemeris.
 
 ## Quick start
 
 ```python
-from gbc_astro import AstrologyEngine
+from gbc_astro import calculate_chart
 
-engine = AstrologyEngine()
-chart = engine.natal(
-    local_datetime="1992-11-03T14:35:00",
-    timezone="Asia/Ho_Chi_Minh",
-    latitude=21.0285,
-    longitude=105.8542,
+chart = calculate_chart(
+    date="1990-05-15",
+    time="09:30",
+    latitude=51.5074,
+    longitude=-0.1278,
+    timezone="Europe/London",
+    house_system="placidus",
 )
 
-sun = chart.bodies["sun"]
-print(sun.sign, sun.degree_in_sign, sun.house, sun.retrograde)
-print(chart.angles["ascendant"].sign)
-print(chart.derived.big_three)
-print(chart.to_json(indent=2))
+print(chart.bodies["sun"].sign)
+print(chart.angles["ascendant"].longitude)
 ```
 
-Unknown birth time:
+`timezone` is required. Coordinates are geographic degrees, not a place name.
+
+To run the HTTP adapter locally or on the VPS:
+
+```bash
+pip install "gbc-astro[api]"
+uvicorn gbc_astro.api.app:app --host 127.0.0.1 --port 8000
+```
+
+`pip install gbc-astro` does not install FastAPI or uvicorn.
+
+## Timed birth chart
+
+With a known local time, the result includes bodies, angles, twelve house
+cusps, and aspects:
 
 ```python
-chart = engine.natal(
-    local_datetime="1992-11-03",
-    timezone="Asia/Ho_Chi_Minh",
+chart = calculate_chart(
+    date="1992-11-03",
+    time="14:35",
     latitude=21.0285,
     longitude=105.8542,
-    unknown_time=True,
+    timezone="Asia/Ho_Chi_Minh",
+    house_system="placidus",
 )
-assert chart.subject.birth_time_known is False
-assert chart.angles == {}
-assert chart.houses == ()
+
+chart.subject.birth_time_known  # True
+chart.bodies["sun"].longitude
+chart.bodies["moon"].longitude
+chart.angles["ascendant"].longitude
+chart.angles["mc"].longitude
+chart.houses
+chart.aspects
 ```
 
-Requires `pyswisseph` and `GBC_SWISS_EPHE_PATH` as above.
+A checked sample from the test suite (Hanoi, `1992-11-03 14:35`,
+`Asia/Ho_Chi_Minh`, Placidus):
 
-### CLI
+- Sun longitude `221.14154838535987` (Scorpio)
+- Moon longitude `321.2929834918872` (Aquarius)
+- Ascendant longitude `350.1088136374758` (Pisces)
 
-```bash
-gbc natal \
-  --date 1992-11-03 \
-  --time 14:35:00 \
-  --timezone Asia/Ho_Chi_Minh \
-  --lat 21.0285 \
-  --lng 105.8542 \
-  --json
+## Unknown birth time
+
+If `time` is omitted or `None`, the library does **not** guess a birth time
+and does **not** substitute noon.
+
+```python
+chart = calculate_chart(
+    date="1990-05-15",
+    time=None,
+    latitude=51.5074,
+    longitude=-0.1278,
+    timezone="Europe/London",
+)
 ```
 
----
+| Output | Unknown-time behavior |
+|---|---|
+| `subject.birth_time_known` | `false` |
+| Ascendant, MC, DSC, IC | omitted (`{}`) |
+| House cusps | omitted (`()`) |
+| `bodies.*.house` | `null` |
+| Vertex, Part of Fortune, chart ruler | omitted / empty |
+| Warning | `UNKNOWN_BIRTH_TIME` |
 
-## Example output
+Bodies are still computed at **local date start** (midnight in the given IANA
+timezone). That is an explicit approximation, not a claimed birth time.
 
-Compact shape from the Hanoi sample used in `tests/golden/test_swiss_natal.py` (`1992-11-03T14:35:00`, `Asia/Ho_Chi_Minh`, 21.0285°N 105.8542°E, tropical Placidus). Values rounded for display; do not treat this block as a regression fixture.
+**Moon:** there is no separate Moon-uncertainty flag. The Moon can move about
+13° in a day, so sign and degree can differ from the unknown true time.
 
-```json
-{
-  "schemaVersion": "1.3.0",
-  "meta": {
-    "engine": "gbc-astro",
-    "engineVersion": "1.12.1",
-    "calculationProfile": "western-modern-v1",
-    "zodiac": "tropical",
-    "houseSystem": "placidus"
-  },
-  "subject": {
-    "localDateTime": "1992-11-03T14:35:00",
-    "timezone": "Asia/Ho_Chi_Minh",
-    "birthTimeKnown": true
-  },
-  "bodies": {
-    "sun": {
-      "sign": "scorpio",
-      "degreeInSign": 11.1415,
-      "house": 8,
-      "retrograde": false
-    },
-    "moon": {
-      "sign": "aquarius",
-      "degreeInSign": 21.293,
-      "house": 12,
-      "retrograde": false
-    }
-  },
-  "angles": {
-    "ascendant": { "sign": "pisces", "degreeInSign": 20.1088 },
-    "mc": { "sign": "sagittarius", "degreeInSign": 23.0388 }
-  },
-  "derived": {
-    "bigThree": { "sun": "scorpio", "moon": "aquarius", "rising": "pisces" }
-  }
-}
+`calculate_houses(...)` without a time raises `MissingBirthTimeError` instead of
+returning fabricated cusps.
+
+## Supported calculations
+
+- geocentric ecliptic longitude, latitude, distance, and longitude speed
+- tropical zodiac sign and degree in sign
+- house assignment when birth time is known
+- retrograde from signed longitude speed
+- Ascendant, Midheaven, Descendant, IC
+- twelve house cusps
+- major aspects with orb and applying/separating phase
+- true node, mean node, south node, Chiron
+- derived points when geometry allows (vertex, Part of Fortune)
+- derived natal facts (big three, moon phase, element/modality counts, dignities)
+
+`AstrologyEngine` also exposes relationship charts, transits, returns, and
+related surfaces. Those are not part of the small `calculate_chart` API.
+
+## Supported house systems
+
+Ids: `placidus`, `koch`, `porphyry`, `campanus`, `regiomontanus`,
+`alcabitius`, `topocentric`, `morinus`, `meridian`, `whole_sign`, `equal`.
+
+Default: `placidus`.
+
+Placidus and Koch have no solution beyond the polar circles. The engine raises
+`HouseCalculationUnavailableError` there. It does not silently switch systems.
+
+## Timezone handling
+
+- `date` must be a real Gregorian calendar date `YYYY-MM-DD`
+- `time` is `HH:MM` or `HH:MM:SS` when known
+- `timezone` is an IANA identifier (`Europe/London`, `Asia/Ho_Chi_Minh`)
+- latitude must be in `[-90, 90]`, longitude in `[-180, 180]`
+- DST spring-forward gaps raise `NonexistentLocalTimeError`
+- DST overlaps raise `AmbiguousLocalTimeError` unless `fold=0` or `fold=1` is set
+- there is no geocoder in this package
+
+Local datetimes are timezone-naive. UTC conversion uses `zoneinfo` and the
+IANA database.
+
+## Ephemeris setup
+
+Planetary, lunar, node, Chiron, house, and angle calculations use
+[Swiss Ephemeris](https://www.astro.com/swisseph/swephinfo_e.htm) through
+`pyswisseph`. There is no internal planetary formula.
+
+Default natal profile: tropical zodiac, Placidus houses, true node, major
+aspects (`western-modern-v1`).
+
+## Output model
+
+`calculate_chart` returns a frozen `NatalChart` dataclass:
+
+```python
+chart.subject.birth_time_known
+chart.subject.utc_datetime
+chart.bodies["sun"].longitude
+chart.bodies["sun"].sign
+chart.angles["ascendant"].longitude   # present only when time is known
+chart.houses                          # empty when time is unknown
+chart.aspects
+chart.warnings
+chart.meta.engine_version             # "1.12.1"
+chart.to_dict()
 ```
 
-Full payload also includes `latitude` / `distance` / `speedLongitude` on bodies, twelve cusps, aspects (`type`, `orb`, `phase`), derived points, rulership fields, and `warnings`.
+`gbc_astro.__version__`, `ENGINE_VERSION`, and chart `meta.engine_version`
+are `1.12.1`. `SCHEMA_VERSION` is `1.3.0`.
 
----
+## Accuracy and testing
 
-## Architecture
+Automated tests include golden Swiss natal values, hostile inputs, DST
+boundaries, and unknown-time contracts. Independent geometry-parity
+tolerances used in this engine are on the order of `1e-5` degrees for
+angles/cusps against an in-repo reference implementation.
 
-```text
-birth input (local datetime, IANA timezone, lat/lng)
-        ↓
-timezone normalization → UTC / Julian day
-        ↓
-Swiss Ephemeris positions (no formula fallback)
-        ↓
-tropical mapping  →  optional sidereal rotation
-        ↓
-houses / angles   (skipped when birth time is unknown)
-        ↓
-derived points → aspects → derived natal model
-        ↓
-canonical NatalChart  (to_dict / to_json)
-```
-
-The optional FastAPI layer is a thin transport over `AstrologyEngine`. It does not reimplement astronomy, geocoding, persistence, or interpretation.
-
----
-
-## Repository structure
-
-```text
-src/gbc_astro/     calculation package (engine, providers, houses, aspects, …)
-tests/             unit, integration, golden, API, fixtures
-docs/              methodology and API notes
-evidence/          recorded parity and audit reports
-scripts/           ephemeris fetch
-openapi/           exported OpenAPI snapshot
-```
-
-Public Python imports: `AstrologyEngine`, `ENGINE_VERSION`, `SCHEMA_VERSION`, `WESTERN_MODERN_V1`.
-
----
-
-## Testing
-
-```bash
-pytest
-ruff check .
-mypy src
-```
-
-Swiss golden tests skip unless `GBC_SWISS_EPHE_PATH` contains `sepl_18.se1`, `semo_18.se1`, and `seas_18.se1`. CI provisions those files and fails if tests skip.
-
-Independent parity tracks (JPL DE440S via Skyfield, house geometry, Chiron Horizons fixture) are recorded under [`evidence/v0.1-validation/`](evidence/v0.1-validation/). Methodology: [`docs/JPL_REFERENCE_METHODOLOGY.md`](docs/JPL_REFERENCE_METHODOLOGY.md), [`docs/HOUSE_REFERENCE_METHODOLOGY.md`](docs/HOUSE_REFERENCE_METHODOLOGY.md).
-
-```bash
-gbc validate astronomy-parity --reference jpl-de440 --cases 10000 --seed 42
-gbc validate geometry-parity --cases 500 --seed 42
-gbc validate chiron-parity
-```
-
-These commands exist; they need the `validation` extra and JPL kernel (`./scripts/fetch-ephemeris.sh --with-jpl`). This README does not restate historical pass/fail tables.
-
----
-
-## Deterministic calculations vs interpretation
-
-This repository computes chart data. It does not attempt to determine whether astrology is scientifically valid, and it does not make real-world predictions. Interpretive astrology is a separate layer used by GetBirthChart as a reflective framework.
-
-Compatibility scoring is an exception inside the engine: totals use published editorial weights, not an independent astronomical reference. The result says so in its own notes.
-
----
-
-## Used by GetBirthChart
-
-GetBirthChart Core is the calculation layer used by GetBirthChart.com, including the chart data consumed by the site's calculators and personalized chart experience (natal positions, houses, angles, aspects, and unknown-time omissions).
-
-Interpretation, AI-assisted readings, place search, accounts, and billing live in the web application, not in this package.
-
----
-
-## API stability
-
-Engine version `1.12.1`, natal schema `1.3.0`. Every chart records `schemaVersion`, `engine`, `engineVersion`, ephemeris provider, and timezone data version.
-
-The public Python API and HTTP surface may still change. Pin a git revision for production. There is no published semantic-versioning guarantee.
-
----
+This package does not claim identity with Astro.com, Astro-Seek, or other
+commercial chart services. Those are not committed oracles here. Astrology
+is not treated as a scientifically validated predictive system.
 
 ## Limitations
 
-- **License** is GNU Affero General Public License v3.0-only; see [`LICENSE`](LICENSE).
-- **Swiss Ephemeris** is required; there is no internal ephemeris.
-- **Default zodiac** is tropical; sidereal is profile-based, not a silent mix-in.
-- **Default houses** are Placidus; Placidus/Koch have no solution beyond the polar circles.
-- **Unknown birth time** omits angles, houses, and house assignments; bodies use local-date-start.
-- **Moon** at unknown time is that midnight approximation, with no extra Moon warning.
-- **Minor aspects** (quincunx, semi-sextile, …) are not in the default profile.
-- **Optional bodies** (Ceres, Pallas, Juno, Vesta, Lilith) are not on the default natal body list; probe `engine.optional_bodies()`.
-- **`altitude_m`** is stored, not applied to Swiss calculations.
-- **Fetched `*_18.se1` files** cover roughly 1800–2399, not the full Swiss library range.
-- **Geocoding, persistence, and interpretation** are out of scope.
-- **JPL provider** in `providers/jpl.py` is a scaffold, not a production natal backend.
-- **Compatibility scores** are editorial, not measurements.
-
----
-
-## Contributing and bug reports
-
-There is no `CONTRIBUTING.md`. Contributions and reuse are governed by the GNU Affero General Public License v3.0-only in [`LICENSE`](LICENSE).
-
-Calculation bugs (wrong omission, silent fallback, timezone error, schema drift) can be reported via GitHub issues on this repository. Include engine version, profile id, inputs, and the output field that looks wrong.
-
----
+- Swiss Ephemeris `.se1` files are not on PyPI and must be provisioned
+- unknown birth time omits angles and houses; body positions use local midnight
+- altitude is stored but not applied to positions or houses
+- FastAPI adapter source is in the wheel; install `gbc-astro[api]` for the HTTP server
+- closed-source distribution of this package is incompatible with AGPL-3.0
+- Swiss Ephemeris itself is dual-licensed; this project uses the AGPL path
 
 ## License
 
-This repository is licensed under the **GNU Affero General Public License v3.0-only**. See the root [`LICENSE`](LICENSE) file.
+GNU Affero General Public License v3.0 only (`AGPL-3.0-only`). See `LICENSE`.
 
-The engine uses **Swiss Ephemeris**, copyright Astrodienst AG, through `pyswisseph`. Swiss Ephemeris is available under a dual-licensing system; this project follows the GNU AGPL path for the engine. The separate Swiss Ephemeris Professional License remains an upstream option with its own terms. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and the [official Swiss Ephemeris licensing information](https://www.astro.com/swisseph/swephinfo_e.htm).
+Swiss Ephemeris is copyright Astrodienst AG and is dual-licensed (AGPL or the
+Swiss Ephemeris Professional License). `pyswisseph` is distributed on PyPI
+under AGPL v3. Ephemeris `.se1` files are not redistributed by this package.
+See `THIRD_PARTY_NOTICES.md` and
+<https://www.astro.com/swisseph/swephinfo_e.htm>.
 
----
+This is not an MIT-licensed project.
 
-## Citation / attribution
+## Development and testing
 
-If this project is useful in a tutorial, research note, demo, or another project, attribution to **GetBirthChart Core** is appreciated. It is not a license condition.
+Python 3.12+:
 
-**GetBirthChart Core**  
-https://github.com/getbirthchart-com/gbc-astro-engine
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+./scripts/fetch-ephemeris.sh
+export GBC_SWISS_EPHE_PATH="$(pwd)/ephemeris/swiss"
+python -m pytest
+```
 
----
+## Project links
 
-## Documentation
-
-| Topic | Document |
-|---|---|
-| HTTP API | [`docs/API.md`](docs/API.md) |
-| Frontend contract | [`docs/FRONTEND_API_HANDOFF.md`](docs/FRONTEND_API_HANDOFF.md) |
-| Deployment | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) |
-| Profiles | [`docs/CALCULATION_PROFILES.md`](docs/CALCULATION_PROFILES.md) |
-| Houses | [`docs/HOUSE_SYSTEMS.md`](docs/HOUSE_SYSTEMS.md) |
-| Sidereal | [`docs/SIDEREAL.md`](docs/SIDEREAL.md) |
-| Transits | [`docs/TRANSITS.md`](docs/TRANSITS.md) |
-| Progressions | [`docs/PROGRESSIONS.md`](docs/PROGRESSIONS.md) |
-| Transforms | [`docs/TRANSFORMS.md`](docs/TRANSFORMS.md) |
-| Patterns | [`docs/PATTERNS.md`](docs/PATTERNS.md) |
-| Relocation / ACG | [`docs/RELOCATION_AND_ACG.md`](docs/RELOCATION_AND_ACG.md) |
-| Ephemeris | [`docs/EPHEMERIS_DATA.md`](docs/EPHEMERIS_DATA.md) |
+- GetBirthChart: <https://getbirthchart.com/>
+- Source code: <https://github.com/getbirthchart-com/gbc-astro-engine>
+- Issue tracker: <https://github.com/getbirthchart-com/gbc-astro-engine/issues>
+- Maintainer: <https://getbirthchart.com/author/luis-pham/>

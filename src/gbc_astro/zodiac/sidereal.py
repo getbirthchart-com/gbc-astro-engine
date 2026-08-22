@@ -55,9 +55,13 @@ class AyanamsaCalculator:
 
     def __init__(self, ephemeris_path: str | None = None) -> None:
         self._swe = _load_swisseph()
-        path = ephemeris_path or os.environ.get("GBC_SWISS_EPHE_PATH")
-        if path:
-            self._swe.set_ephe_path(path)
+        self.ephemeris_path = ephemeris_path or os.environ.get("GBC_SWISS_EPHE_PATH")
+        self._bind_ephe_path()
+
+    def _bind_ephe_path(self) -> None:
+        """Re-apply the data path on the calling thread. See SwissEphemerisProvider."""
+        if self.ephemeris_path:
+            self._swe.set_ephe_path(self.ephemeris_path)
 
     def value(self, julian_day: float, profile: AyanamsaProfile) -> float:
         mode = getattr(self._swe, profile.swisseph_mode, None)
@@ -69,6 +73,7 @@ class AyanamsaCalculator:
         # Select-then-read must be atomic against every other thread in the
         # process, including ones using a different calculator instance.
         with _SID_MODE_LOCK:
+            self._bind_ephe_path()
             self._swe.set_sid_mode(mode, 0, 0)
             return float(self._swe.get_ayanamsa_ut(julian_day))
 
@@ -83,6 +88,6 @@ def _load_swisseph() -> ModuleType:
         return import_module("swisseph")
     except ImportError as exc:
         raise ProviderDependencyError(
-            "Sidereal charts require the optional 'pyswisseph' dependency.",
-            {"install": 'python -m pip install "gbc-astro[swiss]"'},
+            "Sidereal charts require the 'pyswisseph' dependency.",
+            {"install": "python -m pip install gbc-astro"},
         ) from exc

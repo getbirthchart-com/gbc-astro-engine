@@ -29,7 +29,14 @@ def _swiss_available() -> bool:
     path = os.environ.get("GBC_SWISS_EPHE_PATH")
     return bool(
         path
-        and all(os.path.exists(os.path.join(path, name)) for name in ("sepl_18.se1", "semo_18.se1", "seas_18.se1"))
+        and all(
+            os.path.exists(os.path.join(path, name))
+            for name in (
+                "sepl_18.se1",
+                "semo_18.se1",
+                "seas_18.se1",
+            )
+        )
     )
 
 
@@ -45,7 +52,9 @@ class PublicGoldenManifestTests(unittest.TestCase):
             self.assertTrue((CASES.parents[2] / source).exists(), source)
 
         corpus = json.loads(HOSTILE.read_text(encoding="utf-8"))
-        coverage = next(case for case in cases if case["id"] == "hostile-corpus-required-boundaries")
+        coverage = next(
+            case for case in cases if case["id"] == "hostile-corpus-required-boundaries"
+        )
         self.assertGreaterEqual(len(corpus), coverage["expected"]["minimum_cases"])
         self.assertTrue(
             set(coverage["expected"]["required_categories"]).issubset(
@@ -55,9 +64,15 @@ class PublicGoldenManifestTests(unittest.TestCase):
 
     def test_timezone_boundary_contract(self) -> None:
         with self.assertRaises(NonexistentLocalTimeError):
-            normalize_local_datetime(datetime.fromisoformat("2024-03-10T02:30:00"), "America/New_York")
+            normalize_local_datetime(
+                datetime.fromisoformat("2024-03-10T02:30:00"),
+                "America/New_York",
+            )
         with self.assertRaises(AmbiguousLocalTimeError):
-            normalize_local_datetime(datetime.fromisoformat("2024-11-03T01:30:00"), "America/New_York")
+            normalize_local_datetime(
+                datetime.fromisoformat("2024-11-03T01:30:00"),
+                "America/New_York",
+            )
         first = normalize_local_datetime(
             datetime.fromisoformat("2024-11-03T01:30:00"), "America/New_York", fold=0
         )

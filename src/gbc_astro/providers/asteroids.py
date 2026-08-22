@@ -148,6 +148,6 @@ def _load_swisseph() -> ModuleType:
         return import_module("swisseph")
     except ImportError as exc:
         raise ProviderDependencyError(
-            "Optional bodies require the optional 'pyswisseph' dependency.",
-            {"install": 'python -m pip install "gbc-astro[swiss]"'},
+            "Optional bodies require the 'pyswisseph' dependency.",
+            {"install": "python -m pip install gbc-astro"},
         ) from exc

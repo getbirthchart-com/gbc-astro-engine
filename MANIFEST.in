@@ -1,0 +1,38 @@
+include LICENSE
+include THIRD_PARTY_NOTICES.md
+include README.md
+include CHANGELOG.md
+include CITATION.cff
+include pyproject.toml
+recursive-include src/gbc_astro *.py
+recursive-include tests *.py *.json
+recursive-include scripts *.sh
+include docs/CALCULATION_PROFILES.md
+include docs/EPHEMERIS_AND_ASTEROIDS.md
+include docs/EPHEMERIS_DATA.md
+include docs/HOUSE_REFERENCE_METHODOLOGY.md
+include docs/HOUSE_SYSTEMS.md
+include docs/JPL_DATA.md
+include docs/JPL_REFERENCE_METHODOLOGY.md
+include docs/PATTERNS.md
+include docs/PROGRESSIONS.md
+include docs/PUBLIC_GOLDEN_TESTS.md
+include docs/RELOCATION_AND_ACG.md
+include docs/SIDEREAL.md
+include docs/TRANSFORMS.md
+include docs/TRANSITS.md
+prune evidence
+prune GetBirthChart_Astrology_Engine_Spec
+prune gbc_synastry_core_docs
+prune openapi
+prune .github
+prune .hypothesis
+prune tests/api
+exclude Dockerfile
+exclude docker-compose.yml
+exclude .dockerignore
+exclude docs/API.md
+exclude docs/DEPLOYMENT.md
+exclude docs/FRONTEND_API_HANDOFF.md
+exclude docs/FRONTEND_TRANSIT_HANDOFF.md
+exclude docs/PRODUCTION_EPHEMERIS_SETUP.md
