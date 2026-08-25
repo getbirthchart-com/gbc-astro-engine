@@ -78,6 +78,41 @@ class SwissNatalGoldenTests(unittest.TestCase):
                 house_system="placidus",
             )
 
+    def test_comparison_fixture_preserves_pluto_motion_without_birth_time(self) -> None:
+        """The unknown-time policy must not rewrite ephemeris motion flags."""
+        exact = self.engine.natal(
+            local_datetime="1990-01-15T12:00:00",
+            timezone="America/New_York",
+            latitude=40.71427,
+            longitude=-74.00597,
+            house_system="placidus",
+        )
+        unknown = self.engine.natal(
+            local_datetime="1990-01-15",
+            timezone="America/New_York",
+            latitude=40.71427,
+            longitude=-74.00597,
+            unknown_time=True,
+        )
+
+        self.assertFalse(exact.bodies["pluto"].retrograde)
+        self.assertAlmostEqual(exact.bodies["true_node"].longitude, 316.5849615540073)
+        self.assertAlmostEqual(exact.bodies["chiron"].longitude, 102.84585764248902)
+        self.assertEqual(exact.bodies["true_node"].sign, "aquarius")
+        self.assertEqual(exact.bodies["chiron"].sign, "cancer")
+        self.assertFalse(exact.bodies["true_node"].retrograde)
+        self.assertTrue(exact.bodies["chiron"].retrograde)
+        self.assertEqual(exact.bodies["true_node"].house, 10)
+        self.assertEqual(exact.bodies["chiron"].house, 3)
+        self.assertFalse(unknown.bodies["pluto"].retrograde)
+        self.assertTrue(unknown.bodies["mean_node"].retrograde)
+        self.assertFalse(unknown.bodies["true_node"].retrograde)
+        self.assertTrue(unknown.bodies["chiron"].retrograde)
+        self.assertAlmostEqual(unknown.bodies["true_node"].longitude, 316.570987074845)
+        self.assertAlmostEqual(unknown.bodies["chiron"].longitude, 102.879192383220)
+        self.assertIsNone(unknown.bodies["true_node"].house)
+        self.assertIsNone(unknown.bodies["chiron"].house)
+
 
 if __name__ == "__main__":
     unittest.main()

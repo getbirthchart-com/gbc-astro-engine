@@ -76,7 +76,10 @@ class ResponseSchemaParityTests(unittest.TestCase):
     def test_a_real_natal_payload_satisfies_the_published_schema(self) -> None:
         response = self.client.post("/v1/charts/natal", json=NATAL)
         self.assertEqual(response.status_code, 200)
-        NatalChartResponse.model_validate(response.json())
+        payload = response.json()
+        NatalChartResponse.model_validate(payload)
+        self.assertIn("true_node", payload["bodies"])
+        self.assertIn("chiron", payload["bodies"])
 
     def test_an_unknown_time_natal_payload_also_satisfies_it(self) -> None:
         """The shape has to hold for the degraded chart too, not only the full one.
@@ -99,6 +102,10 @@ class ResponseSchemaParityTests(unittest.TestCase):
         NatalChartResponse.model_validate(payload)
         self.assertEqual(payload["angles"], {})
         self.assertIsNone(payload["derived"]["chartRuler"])
+        self.assertIn("true_node", payload["bodies"])
+        self.assertIn("chiron", payload["bodies"])
+        self.assertIsNone(payload["bodies"]["true_node"]["house"])
+        self.assertIsNone(payload["bodies"]["chiron"]["house"])
 
     def test_a_sidereal_natal_payload_satisfies_it(self) -> None:
         """Sidereal adds three meta fields that the tropical payload never carries."""
