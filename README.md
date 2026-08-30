@@ -231,7 +231,8 @@ chart.to_dict()
 and chart `meta.engine_version` are `1.13.0`. `SCHEMA_VERSION` is `1.9.0`.
 Natal `calculation_hash` values are `v2` identity digests (`v2:` + SHA-256);
 legacy unprefixed 64-character hex hashes are `v1` and must not be compared
-with `v2`.
+with `v2`. The helper lives on the Python validation API. HTTP natal JSON
+does not include `calculationHash`.
 
 ## Accuracy and testing
 

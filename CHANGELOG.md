@@ -1,9 +1,10 @@
 # Changelog
 
-## 1.13.0 — unreleased
+## 1.13.0 — 2026-08-30
 
 Package and engine version are both `1.13.0`. Natal schema remains `1.9.0`.
-This is not published, tagged, or uploaded until explicit approval.
+Local source tag is `v1.13.0`. PyPI, GitHub Release, and Zenodo remain
+unpublished until explicit approval.
 
 - House systems: public Placidus / Whole Sign / Equal through one settings
   resolver. Omitted, `None`, and `"placidus"` stay the western-modern default.
@@ -28,6 +29,9 @@ This is not published, tagged, or uploaded until explicit approval.
 - Calculation identity hash is versioned `v2` (`v2:` + SHA-256 of a canonical
   identity payload). It includes every astronomy-affecting natal setting,
   including custom rules in full. Unprefixed 64-hex hashes remain legacy `v1`.
+  The Python helper is `calculation_hash` (`gbc_astro.validation.reproducibility`).
+  HTTP `NatalChartResponse` / `NatalChart.to_dict()` do **not** emit
+  `calculationHash`; that is intentional, not a missing serializer field.
 - Natal schema `1.9.0` (additive fields from house request, node/aspect
   metadata, additional points, unknown-time assessment, sidereal frame).
 - Synastry node convention: relationship-level `node_type=true|mean`. Omitted
@@ -43,8 +47,9 @@ This is not published, tagged, or uploaded until explicit approval.
 
 Downstream migration:
 
-- Cache keys that used natal `to_dict()` SHA-256 must switch to `v2` identity
-  (`calculation_hash`). Do not compare v1 and v2.
+- Cache keys that used natal `to_dict()` SHA-256 must switch to the Python
+  `v2` helper (`calculation_hash`). Do not compare v1 and v2. Do not require
+  `calculationHash` on HTTP natal JSON.
 - Custom aspect profile ids longer than `custom-v1:` + 12 hex are now
   authoritative. Do not truncate the serialized id.
 - Synastry consumers should read `meta.nodeType`. Omitted requests stay True.

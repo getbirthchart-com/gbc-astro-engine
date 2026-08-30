@@ -113,6 +113,15 @@ schema `1.5.0` records `meta.nodeType`.
 `POST /v1/charts/natal` returns the **canonical** `NatalChart.to_dict()` object
 directly (not wrapped in `{ "chart": ... }`).
 
+The HTTP natal object does **not** include `calculationHash`. The versioned
+`v2:` identity digest is the Python helper
+`gbc_astro.validation.reproducibility.calculation_hash`. OpenAPI
+`NatalChartResponse` matches that serializer: required fields are
+`schemaVersion`, `meta`, `subject`, `angles`, `bodies`, `houses`, `aspects`,
+and `derived`. `points` and `warnings` default to empty. `unknownTimeAssessment`
+is null/absent on known-time charts. Do not treat the Python helper as a
+required HTTP field.
+
 Unknown-time responses keep the midnight natal snapshot as a labeled
 calculation anchor (`schemaVersion` `1.9.0`) and add:
 
