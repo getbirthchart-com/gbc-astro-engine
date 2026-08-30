@@ -110,6 +110,108 @@ class WarningPayload(_Schema):
     fieldsAffected: list[str]
 
 
+class UnknownTimeIntervalPayload(_Schema):
+    startLocal: str
+    endLocal: str
+    startUtc: str
+    endUtc: str
+
+
+class UnknownTimeMotionPayload(_Schema):
+    start: str
+    end: str
+    states: list[str]
+    stationInInterval: bool
+
+
+class UnknownTimeBodyPayload(_Schema):
+    anchorLongitude: float = Field(
+        description=(
+            "Midnight calculation-anchor longitude. Not a resolved birth-time "
+            "position. Exact longitude is always time-dependent when birth time "
+            "is unknown."
+        ),
+    )
+    startLongitude: float
+    endLongitude: float
+    longitudeRange: float
+    longitudeStatus: str = Field(
+        description="Always uncertain: exact degree is an interval range.",
+    )
+    possibleSigns: list[str]
+    signChanged: bool
+    signStatus: str
+    motionStatus: str
+    motion: UnknownTimeMotionPayload
+    stableProperties: list[str] = Field(
+        description="Interval-stable properties, never including longitude.",
+    )
+    uncertainProperties: list[str]
+    classification: str = Field(
+        description=(
+            "Roll-up of sign and motionDirection only. stable does not mean "
+            "the ecliptic degree is known."
+        ),
+    )
+    reasons: list[str]
+
+
+class UnknownTimeAspectPayload(_Schema):
+    a: str
+    b: str
+    type: str
+    exactAngle: float
+    presence: str
+    minOrb: float
+    maxOrb: float
+    exactHit: bool
+    phaseStable: bool
+    phases: list[str]
+    classification: str
+    reasons: list[str]
+    enterAt: str | None = None
+    exactAt: str | None = None
+    leaveAt: str | None = None
+
+
+class UnknownTimeProvenancePayload(_Schema):
+    ephemerisEvaluations: int
+    coarseSamples: int
+    maxEvaluations: int
+    evaluationBudgetExhausted: bool
+    assessmentComplete: bool
+    frame: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Zodiac frame used for every sample: zodiac, and when sidereal, "
+            "ayanamsa id/version/degrees."
+        ),
+    )
+
+
+class UnknownTimeAssessmentPayload(_Schema):
+    version: str
+    algorithmVersion: str
+    anchor: str
+    assessmentComplete: bool = Field(
+        description=(
+            "False when the evaluation cap was hit. Incomplete results are "
+            "fail-closed to uncertain."
+        ),
+    )
+    interval: UnknownTimeIntervalPayload
+    bodies: dict[str, UnknownTimeBodyPayload]
+    aspects: dict[str, UnknownTimeAspectPayload]
+    unavailable: list[str]
+    provenance: UnknownTimeProvenancePayload
+
+
+class CustomAspectRulePayload(_Schema):
+    type: str
+    exactAngle: float
+    orb: float
+
+
 class ChartMetaPayload(_Schema):
     """Provenance. Every input that shaped the numbers, so a result is reproducible."""
 
@@ -120,8 +222,24 @@ class ChartMetaPayload(_Schema):
     timezoneDataVersion: str
     calculationProfile: str
     houseSystem: str | None = None
+    requestedHouseSystem: str = Field(
+        description=(
+            "House system the caller asked for. For a known-time chart this "
+            "matches houseSystem. For unknown time houseSystem is null while "
+            "this still records the request."
+        ),
+    )
     aspectProfile: str
+    aspectProfileVersion: str | None = None
+    aspectPreset: str = Field(
+        description=(
+            "Natal aspect selector: standard (modern-major-v1), extended, or custom."
+        ),
+    )
     zodiac: str
+    nodeType: str = Field(
+        description="Which lunar node the profile selected: true or mean.",
+    )
     houseAlgorithmVersion: str | None = None
     pointProfile: str | None = None
     pointProfileVersion: str | None = None
@@ -134,6 +252,27 @@ class ChartMetaPayload(_Schema):
     )
     ayanamsaVersion: str | None = None
     ayanamsaDegrees: float | None = None
+    ayanamsha: str | None = Field(
+        default=None,
+        description=(
+            "Product-facing alias of ayanamsa. Same value; omitted from v2 identity."
+        ),
+    )
+    customAspectRules: list[CustomAspectRulePayload] | None = Field(
+        default=None,
+        description=(
+            "Normalized custom natal aspect rules. Present only when aspectPreset is custom."
+        ),
+    )
+    additionalPoints: list[str] = Field(
+        description=(
+            "Normalized requested opt-in additional natal points, in product "
+            "order. Empty when omitted. This is not an inventory of default "
+            "bodies or derived points: Chiron remains a default body, and "
+            "Vertex/Part of Fortune remain default derived points when birth "
+            "time is known. Mean/True Lilith appear in bodies only when listed."
+        ),
+    )
 
 
 class ChartSubjectPayload(_Schema):
@@ -267,6 +406,14 @@ class NatalChartResponse(_Schema):
     aspects: list[AspectPayload]
     derived: DerivedPayload
     warnings: list[WarningPayload] = Field(default_factory=list)
+    unknownTimeAssessment: UnknownTimeAssessmentPayload | None = Field(
+        default=None,
+        description=(
+            "Present only for unknown birth time. Classifies bodies and aspects "
+            "over the local civil day. Midnight natal values remain a labeled "
+            "calculation anchor, not a known birth time."
+        ),
+    )
 
 
 class ChartPatternPayload(_Schema):
@@ -915,3 +1062,10 @@ class CapabilitiesResponse(_Schema):
     houseSystems: list[dict[str, Any]]
     ayanamsas: list[dict[str, Any]]
     numberedAsteroidFormat: str
+    siderealReadiness: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Core vs product-exposure gate. Sidereal Lahiri may be core-ready "
+            "while GetBirthChart product exposure remains blocked."
+        ),
+    )

@@ -22,24 +22,17 @@ from gbc_astro.models.chart import NatalChart, WarningMessage
 from gbc_astro.models.position import AnglePosition, BodyPosition
 from gbc_astro.models.transform import TransformedChart
 from gbc_astro.profiles.model import CalculationProfile
+from gbc_astro.profiles.nodes import selected_node_body_id
 from gbc_astro.zodiac.tropical import longitude_to_tropical
 
 DRACONIC_VERSION = "1.0.0"
-
-# Which node the profile's `node_type` selects.
-NODE_BY_TYPE = {"true": "true_node", "mean": "mean_node"}
 
 
 def calculate_draconic(
     chart: NatalChart,
     profile: CalculationProfile,
 ) -> TransformedChart:
-    node_id = NODE_BY_TYPE.get(profile.node_type)
-    if node_id is None:
-        raise UnsupportedBodyError(
-            "The calculation profile does not name a supported node type.",
-            {"nodeType": profile.node_type, "supported": sorted(NODE_BY_TYPE)},
-        )
+    node_id = selected_node_body_id(profile.node_type)
     node = chart.bodies.get(node_id)
     if node is None:
         raise UnsupportedBodyError(

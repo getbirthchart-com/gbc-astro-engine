@@ -50,6 +50,16 @@ FIELD_HINTS: dict[str, str] = {
 }
 
 
+def _field_hint(exc: GbcAstroError) -> str | None:
+    details_field = exc.details.get("field")
+    if isinstance(details_field, str) and details_field:
+        return details_field
+    unsupported = exc.details.get("unsupportedOverrides")
+    if isinstance(unsupported, list) and unsupported:
+        return str(unsupported[0])
+    return FIELD_HINTS.get(exc.code)
+
+
 def error_envelope(
     *,
     code: str,
@@ -90,7 +100,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(GbcAstroError)
     async def handle_gbc_error(_request: Request, exc: GbcAstroError) -> JSONResponse:
         status = STATUS_BY_ERROR.get(type(exc), 400)
-        field = FIELD_HINTS.get(exc.code)
+        field = _field_hint(exc)
         payload = error_envelope(
             code=exc.code,
             message=exc.message,

@@ -216,3 +216,4 @@ class SynastryAspectProfileTests(unittest.TestCase):
         chart_b = self.engine.natal(*CHART_B)
         meta = self.engine.synastry(chart_a, chart_b).meta.to_dict()
         self.assertEqual(meta["aspectProfile"], "synastry-major-v1")
+        self.assertEqual(meta["nodeType"], "true")

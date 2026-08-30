@@ -124,9 +124,13 @@ class SiderealChartTests(unittest.TestCase):
 
         payload = self.sidereal.to_dict()["meta"]
         self.assertIn("ayanamsaDegrees", payload)
+        self.assertEqual(payload["ayanamsha"], "lahiri")
+        self.assertNotIn("productExposureApproved", payload)
 
     def test_a_tropical_chart_carries_no_ayanamsa_fields(self) -> None:
         self.assertNotIn("ayanamsa", self.tropical.to_dict()["meta"])
+        self.assertNotIn("ayanamsha", self.tropical.to_dict()["meta"])
+        self.assertNotIn("productExposureApproved", self.tropical.to_dict()["meta"])
         self.assertIsNone(self.tropical.meta.ayanamsa)
 
     def test_every_body_rotates_by_exactly_the_same_ayanamsa(self) -> None:

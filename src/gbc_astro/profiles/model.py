@@ -48,6 +48,10 @@ class RelationshipProfile:
     composite_obliquity_epoch: str
     davison_location_method: str
     cross_aspect_phase_policy: str
+    # Which lunar node synastry/composite node contacts use: "true" or "mean".
+    # Independent of each natal chart's node_type. Omitted public requests
+    # resolve to "true". A profile cannot list both nodes in synastry_bodies.
+    node_type: str = "true"
 
 
 @dataclass(frozen=True)
@@ -56,6 +60,9 @@ class CalculationProfile:
     version: str
     zodiac: str
     house_system: str
+    # Which lunar node the chart treats as the North Node: "true" or "mean".
+    # Natal aspects, the South Node, draconic calculations and metadata all
+    # follow this field. A profile that aspects the other node is refused.
     node_type: str
     aspect_profile: AspectProfile
     unknown_time_policy: str
@@ -82,4 +89,11 @@ class CalculationProfile:
     # applied for a sidereal profile: the schools disagree by whole degrees, so
     # picking one silently would be picking an answer.
     ayanamsa: str | None = None
+    # Public natal aspect selector. "standard" is the existing modern-major-v1
+    # table; "extended" and "custom" are Task 03 additions. Pattern, synastry,
+    # and transit profiles do not read this field.
+    aspect_preset: str = "standard"
+    # Opt-in extras on top of default bodies/points. Empty means the legacy
+    # natal set: Chiron on, Lilith off, Vertex/PoF when birth time is known.
+    additional_points: tuple[str, ...] = ()
 

@@ -303,8 +303,9 @@ class RelationshipTests(unittest.TestCase):
                 "warnings",
             },
         )
-        self.assertEqual(payload["schemaVersion"], "1.4.0")
+        self.assertEqual(payload["schemaVersion"], "1.5.0")
         self.assertEqual(payload["meta"]["relationshipProfile"], "relationship-western-v1")
+        self.assertEqual(payload["meta"]["nodeType"], "true")
 
     def test_relationship_json_is_deterministic(self) -> None:
         for build in (self.engine.synastry, self.engine.composite):

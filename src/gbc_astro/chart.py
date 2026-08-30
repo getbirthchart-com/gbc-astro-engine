@@ -7,12 +7,15 @@ public inputs and delegates to `AstrologyEngine.natal`.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping, Sequence
 from datetime import date as date_cls
 from datetime import time as time_cls
+from typing import Any
 
 from gbc_astro.astronomy.circular import normalize_longitude
 from gbc_astro.engine import AstrologyEngine
 from gbc_astro.errors import (
+    InvalidCalculationProfileError,
     InvalidDateError,
     InvalidTimeError,
     MissingBirthTimeError,
@@ -47,7 +50,14 @@ def calculate_chart(
     latitude: float,
     longitude: float,
     timezone: str,
-    house_system: str = "placidus",
+    house_system: str | None = None,
+    node_type: str | None = None,
+    aspect_preset: str | None = None,
+    custom_aspect_rules: Sequence[Mapping[str, Any]] | None = None,
+    additional_points: Sequence[str] | None = None,
+    zodiac: str | None = None,
+    ayanamsa: str | None = None,
+    ayanamsha: str | None = None,
     fold: int | None = None,
     engine: AstrologyEngine | None = None,
 ) -> NatalChart:
@@ -56,6 +66,23 @@ def calculate_chart(
     If `time` is omitted, the chart is an unknown-birth-time calculation:
     bodies are computed at local date start, and Ascendant, Midheaven, and
     houses are omitted. Unknown time is never replaced with noon.
+
+    `house_system=None` (omitted) and `house_system="placidus"` both select
+    the western-modern default. The product-facing systems are placidus,
+    whole_sign, and equal; the engine still accepts its other registered
+    systems.
+
+    `node_type=None` and `node_type="true"` both select True Node.
+    `aspect_preset=None`, `"standard"`, and `"modern-major-v1"` all select
+    the existing major-aspect table.
+
+    `additional_points=None` and `[]` keep the legacy natal set. Lilith is
+    opt-in and is not added to Standard natal aspects.
+
+    `zodiac=None` and `zodiac="tropical"` both select Tropical. Sidereal
+    requires an explicit ayanamsa. Every engine ayanamsa is accepted;
+    GetBirthChart product UI should send Lahiri (`ayanamsa="lahiri"`).
+    `ayanamsha` is accepted as a spelling alias.
     """
 
     civil_date = _parse_date(date)
@@ -69,8 +96,16 @@ def calculate_chart(
             f"{parsed_time.second:02d}"
         )
 
-    system = _require_house_system(house_system)
-    calc = engine or AstrologyEngine()
+    system = None if house_system is None else _require_house_system(house_system)
+    calc = (engine or AstrologyEngine()).with_settings(
+        house_system=system,
+        node_type=node_type,
+        aspect_preset=aspect_preset,
+        custom_aspect_rules=custom_aspect_rules,
+        additional_points=additional_points,
+        zodiac=zodiac,
+        ayanamsa=_coalesce_ayanamsa(ayanamsa, ayanamsha),
+    )
     return calc.natal(
         local_datetime=local_datetime,
         timezone=timezone,
@@ -89,7 +124,14 @@ def calculate_planet_positions(
     latitude: float,
     longitude: float,
     timezone: str,
-    house_system: str = "placidus",
+    house_system: str | None = None,
+    node_type: str | None = None,
+    aspect_preset: str | None = None,
+    custom_aspect_rules: Sequence[Mapping[str, Any]] | None = None,
+    additional_points: Sequence[str] | None = None,
+    zodiac: str | None = None,
+    ayanamsa: str | None = None,
+    ayanamsha: str | None = None,
     fold: int | None = None,
     engine: AstrologyEngine | None = None,
 ) -> dict[str, BodyPosition]:
@@ -102,6 +144,13 @@ def calculate_planet_positions(
         longitude=longitude,
         timezone=timezone,
         house_system=house_system,
+        node_type=node_type,
+        aspect_preset=aspect_preset,
+        custom_aspect_rules=custom_aspect_rules,
+        additional_points=additional_points,
+        zodiac=zodiac,
+        ayanamsa=ayanamsa,
+        ayanamsha=ayanamsha,
         fold=fold,
         engine=engine,
     ).bodies
@@ -114,7 +163,14 @@ def calculate_houses(
     latitude: float,
     longitude: float,
     timezone: str,
-    house_system: str = "placidus",
+    house_system: str | None = None,
+    node_type: str | None = None,
+    aspect_preset: str | None = None,
+    custom_aspect_rules: Sequence[Mapping[str, Any]] | None = None,
+    additional_points: Sequence[str] | None = None,
+    zodiac: str | None = None,
+    ayanamsa: str | None = None,
+    ayanamsha: str | None = None,
     fold: int | None = None,
     engine: AstrologyEngine | None = None,
 ) -> tuple[HouseCusp, ...]:
@@ -135,6 +191,13 @@ def calculate_houses(
         longitude=longitude,
         timezone=timezone,
         house_system=house_system,
+        node_type=node_type,
+        aspect_preset=aspect_preset,
+        custom_aspect_rules=custom_aspect_rules,
+        additional_points=additional_points,
+        zodiac=zodiac,
+        ayanamsa=ayanamsa,
+        ayanamsha=ayanamsha,
         fold=fold,
         engine=engine,
     ).houses
@@ -147,7 +210,14 @@ def calculate_aspects(
     latitude: float,
     longitude: float,
     timezone: str,
-    house_system: str = "placidus",
+    house_system: str | None = None,
+    node_type: str | None = None,
+    aspect_preset: str | None = None,
+    custom_aspect_rules: Sequence[Mapping[str, Any]] | None = None,
+    additional_points: Sequence[str] | None = None,
+    zodiac: str | None = None,
+    ayanamsa: str | None = None,
+    ayanamsha: str | None = None,
     fold: int | None = None,
     engine: AstrologyEngine | None = None,
 ) -> tuple[Aspect, ...]:
@@ -160,9 +230,25 @@ def calculate_aspects(
         longitude=longitude,
         timezone=timezone,
         house_system=house_system,
+        node_type=node_type,
+        aspect_preset=aspect_preset,
+        custom_aspect_rules=custom_aspect_rules,
+        additional_points=additional_points,
+        zodiac=zodiac,
+        ayanamsa=ayanamsa,
+        ayanamsha=ayanamsha,
         fold=fold,
         engine=engine,
     ).aspects
+
+
+def _coalesce_ayanamsa(ayanamsa: str | None, ayanamsha: str | None) -> str | None:
+    if ayanamsa is not None and ayanamsha is not None and ayanamsa != ayanamsha:
+        raise InvalidCalculationProfileError(
+            "ayanamsa and ayanamsha must not disagree.",
+            {"ayanamsa": ayanamsa, "ayanamsha": ayanamsha, "field": "ayanamsa"},
+        )
+    return ayanamsa if ayanamsa is not None else ayanamsha
 
 
 def _parse_date(value: str) -> date_cls:

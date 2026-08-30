@@ -22,7 +22,7 @@ from gbc_astro.models.relationship import (
     RelationshipScore,
     SynastryChart,
 )
-from gbc_astro.profiles.defaults import WESTERN_MODERN_V1
+from gbc_astro.profiles.ayanamsa import AYANAMSA_PROFILES, RECOMMENDED_PRODUCT_AYANAMSHA
 from gbc_astro.providers.swiss import SwissEphemerisProvider
 from gbc_astro.validation import (
     DEFAULT_V0_1_TOLERANCE,
@@ -57,6 +57,8 @@ from gbc_astro.validation.houses_parity import (
     run_house_system_parity,
 )
 
+_AYANAMSA_CHOICES = tuple(AYANAMSA_PROFILES)
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="gbc")
@@ -70,7 +72,38 @@ def _build_parser() -> argparse.ArgumentParser:
     natal.add_argument("--lat", type=float, required=True)
     natal.add_argument("--lng", type=float, required=True)
     natal.add_argument("--altitude-m", type=float)
-    natal.add_argument("--house-system", default=WESTERN_MODERN_V1.house_system)
+    natal.add_argument("--house-system", default=None)
+    natal.add_argument("--node-type", choices=("true", "mean"), default=None)
+    natal.add_argument(
+        "--aspect-preset",
+        choices=("standard", "extended", "custom", "modern-major-v1"),
+        default=None,
+    )
+    natal.add_argument(
+        "--custom-aspect-rules",
+        default=None,
+        help="JSON array of custom natal aspect rules. Requires --aspect-preset custom.",
+    )
+    natal.add_argument(
+        "--additional-points",
+        default=None,
+        help="Comma-separated or JSON list: mean_lilith, true_lilith, part_of_fortune, vertex.",
+    )
+    natal.add_argument(
+        "--zodiac",
+        choices=("tropical", "sidereal"),
+        default=None,
+        help="Zodiac frame. Omitted and tropical are the legacy default.",
+    )
+    natal.add_argument(
+        "--ayanamsa",
+        choices=_AYANAMSA_CHOICES,
+        default=None,
+        help=(
+            "Required when --zodiac sidereal. Every engine ayanamsa is accepted. "
+            f"GetBirthChart recommended product value is {RECOMMENDED_PRODUCT_AYANAMSHA}."
+        ),
+    )
     natal.add_argument("--swiss-ephe-path", help="Directory containing Swiss Ephemeris data files.")
     natal.add_argument("--fold", type=int, choices=(0, 1), help="PEP 495 DST fold resolution.")
     natal.add_argument("--json", action="store_true", help="Emit canonical JSON.")
@@ -90,7 +123,32 @@ def _build_parser() -> argparse.ArgumentParser:
             pair.add_argument(f"--{side}-lat", type=float, required=True)
             pair.add_argument(f"--{side}-lng", type=float, required=True)
             pair.add_argument(f"--{side}-fold", type=int, choices=(0, 1))
-        pair.add_argument("--house-system", default=WESTERN_MODERN_V1.house_system)
+        pair.add_argument("--house-system", default=None)
+        pair.add_argument("--node-type", choices=("true", "mean"), default=None)
+        pair.add_argument(
+            "--relationship-node-type",
+            choices=("true", "mean"),
+            default=None,
+            dest="relationship_node_type",
+            help=(
+                "Synastry/composite node convention for both charts. Omitted and "
+                "true select the legacy True Node default. Independent of each "
+                "natal --node-type."
+            ),
+        )
+        pair.add_argument(
+            "--aspect-preset",
+            choices=("standard", "extended", "custom", "modern-major-v1"),
+            default=None,
+        )
+        pair.add_argument("--custom-aspect-rules", default=None)
+        pair.add_argument("--additional-points", default=None)
+        pair.add_argument(
+            "--zodiac",
+            choices=("tropical", "sidereal"),
+            default=None,
+        )
+        pair.add_argument("--ayanamsa", choices=_AYANAMSA_CHOICES, default=None)
         if name == "compatibility":
             pair.add_argument(
                 "--relationship-type",
@@ -221,13 +279,7 @@ def _natal(args: argparse.Namespace) -> int:
             {"date": args.date},
         )
 
-    if args.swiss_ephe_path:
-        engine = AstrologyEngine(
-            provider=SwissEphemerisProvider(ephemeris_path=args.swiss_ephe_path),
-            house_calculator=SwissHouseCalculator(ephemeris_path=args.swiss_ephe_path),
-        )
-    else:
-        engine = AstrologyEngine()
+    engine = _engine_for(args).with_settings(**_calculation_overrides(args))
     chart = engine.natal(
         local_datetime=local_datetime,
         timezone=args.timezone,
@@ -253,8 +305,83 @@ def _add_natal_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--lat", type=float, required=True)
     parser.add_argument("--lng", type=float, required=True)
     parser.add_argument("--fold", type=int, choices=(0, 1))
-    parser.add_argument("--house-system", default=WESTERN_MODERN_V1.house_system)
+    parser.add_argument("--house-system", default=None)
+    parser.add_argument("--node-type", choices=("true", "mean"), default=None)
+    parser.add_argument(
+        "--aspect-preset",
+        choices=("standard", "extended", "custom", "modern-major-v1"),
+        default=None,
+    )
+    parser.add_argument(
+        "--custom-aspect-rules",
+        default=None,
+        help="JSON array of custom natal aspect rules. Requires --aspect-preset custom.",
+    )
+    parser.add_argument(
+        "--additional-points",
+        default=None,
+        help="Comma-separated or JSON list: mean_lilith, true_lilith, part_of_fortune, vertex.",
+    )
+    parser.add_argument(
+        "--zodiac",
+        choices=("tropical", "sidereal"),
+        default=None,
+        help="Zodiac frame. Omitted and tropical are the legacy default.",
+    )
+    parser.add_argument(
+        "--ayanamsa",
+        choices=_AYANAMSA_CHOICES,
+        default=None,
+        help=(
+            "Required when --zodiac sidereal. Every engine ayanamsa is accepted. "
+            f"GetBirthChart recommended product value is {RECOMMENDED_PRODUCT_AYANAMSHA}."
+        ),
+    )
     parser.add_argument("--swiss-ephe-path")
+
+
+def _calculation_overrides(args: argparse.Namespace) -> dict[str, Any]:
+    overrides: dict[str, Any] = {
+        "house_system": getattr(args, "house_system", None),
+        "node_type": getattr(args, "node_type", None),
+        "aspect_preset": getattr(args, "aspect_preset", None),
+        "zodiac": getattr(args, "zodiac", None),
+        "ayanamsa": getattr(args, "ayanamsa", None),
+    }
+    raw_rules = getattr(args, "custom_aspect_rules", None)
+    if raw_rules is not None:
+        try:
+            overrides["custom_aspect_rules"] = json.loads(raw_rules)
+        except json.JSONDecodeError as exc:
+            raise errors.InvalidCalculationProfileError(
+                "custom_aspect_rules must be a JSON array of aspect rules.",
+                {"field": "custom_aspect_rules"},
+            ) from exc
+    raw_points = getattr(args, "additional_points", None)
+    if raw_points is not None:
+        overrides["additional_points"] = _parse_additional_points_arg(raw_points)
+    return overrides
+
+
+def _parse_additional_points_arg(raw: str) -> list[str]:
+    text = raw.strip()
+    if text.startswith("["):
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise errors.InvalidCalculationProfileError(
+                "additional_points must be a JSON array or a comma-separated list.",
+                {"field": "additional_points"},
+            ) from exc
+        if not isinstance(parsed, list):
+            raise errors.InvalidCalculationProfileError(
+                "additional_points must be a JSON array or a comma-separated list.",
+                {"field": "additional_points"},
+            )
+        return parsed
+    if not text:
+        return []
+    return [part.strip() for part in text.split(",") if part.strip()]
 
 
 def _engine_for(args: argparse.Namespace) -> AstrologyEngine:
@@ -272,7 +399,7 @@ def _utc(value: str) -> datetime:
 
 
 def _forecast(args: argparse.Namespace) -> int:
-    engine = _engine_for(args)
+    engine = _engine_for(args).with_settings(**_calculation_overrides(args))
 
     if args.command == "events":
         result: Any = engine.search_events(
@@ -314,7 +441,7 @@ def _forecast(args: argparse.Namespace) -> int:
 
 
 def _transform(args: argparse.Namespace) -> int:
-    engine = _engine_for(args)
+    engine = _engine_for(args).with_settings(**_calculation_overrides(args))
     chart = engine.natal(
         local_datetime=(args.date if args.unknown_time else f"{args.date}T{args.time}"),
         timezone=args.timezone,
@@ -347,6 +474,7 @@ def _relationship(args: argparse.Namespace) -> int:
         )
     else:
         engine = AstrologyEngine()
+    engine = engine.with_settings(**_calculation_overrides(args))
 
     charts = [
         engine.natal(
@@ -361,16 +489,20 @@ def _relationship(args: argparse.Namespace) -> int:
         for side in ("a", "b")
     ]
 
+    rel_node = getattr(args, "relationship_node_type", None)
     result: SynastryChart | CompositeChart | DavisonChart | RelationshipScore
     if args.command == "synastry":
-        result = engine.synastry(*charts)
+        result = engine.synastry(charts[0], charts[1], node_type=rel_node)
     elif args.command == "composite":
-        result = engine.composite(*charts)
+        result = engine.composite(charts[0], charts[1], node_type=rel_node)
     elif args.command == "davison":
-        result = engine.davison(*charts)
+        result = engine.davison(charts[0], charts[1], node_type=rel_node)
     else:
         result = engine.compatibility(
-            charts[0], charts[1], getattr(args, "relationship_type", None)
+            charts[0],
+            charts[1],
+            getattr(args, "relationship_type", None),
+            node_type=rel_node,
         )
     if args.json:
         print(result.to_json(indent=2))

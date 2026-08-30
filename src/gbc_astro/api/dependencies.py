@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from dataclasses import replace
 from typing import Annotated
 
 from fastapi import Depends, Request
 
+from gbc_astro.api.models import NatalChartRequest
 from gbc_astro.engine import AstrologyEngine
 from gbc_astro.houses.swiss import SwissHouseCalculator
+from gbc_astro.models.chart import NatalChart
 from gbc_astro.providers.swiss import SwissEphemerisProvider
 
 API_VERSION = "v1"
@@ -43,6 +44,30 @@ def get_engine(request: Request) -> Iterator[AstrologyEngine]:
 EngineDep = Annotated[AstrologyEngine, Depends(get_engine)]
 
 
+def engine_for_settings(
+    engine: AstrologyEngine,
+    *,
+    zodiac: str | None = None,
+    ayanamsa: str | None = None,
+    house_system: str | None = None,
+    node_type: str | None = None,
+    aspect_preset: str | None = None,
+    custom_aspect_rules: list[dict[str, object]] | None = None,
+    additional_points: list[str] | None = None,
+) -> AstrologyEngine:
+    """Return an engine configured for the requested public settings."""
+
+    return engine.with_settings(
+        zodiac=zodiac,
+        ayanamsa=ayanamsa,
+        house_system=house_system,
+        node_type=node_type,
+        aspect_preset=aspect_preset,
+        custom_aspect_rules=custom_aspect_rules,
+        additional_points=additional_points,
+    )
+
+
 def engine_for_zodiac(
     engine: AstrologyEngine,
     zodiac: str | None,
@@ -50,28 +75,40 @@ def engine_for_zodiac(
 ) -> AstrologyEngine:
     """Return an engine configured for the requested zodiac.
 
-    The zodiac is a property of the calculation profile, and a profile is
-    immutable, so a sidereal request needs its own engine. The provider and
-    house calculator are shared with the process engine, so this costs a
-    dataclass copy rather than reopening the ephemeris.
+    Thin wrapper over `engine_for_settings`. Kept so existing call sites and
+    the sidereal HTTP path do not fork a second construction helper.
     """
-    if zodiac is None or zodiac == "tropical":
-        return engine
 
-    profile = replace(
-        engine.profile,
-        id=f"{engine.profile.id}+sidereal-{ayanamsa}",
-        zodiac="sidereal",
-        ayanamsa=ayanamsa,
+    return engine_for_settings(engine, zodiac=zodiac, ayanamsa=ayanamsa)
+
+
+def natal_from_request(
+    engine: AstrologyEngine, request: NatalChartRequest
+) -> tuple[AstrologyEngine, NatalChart]:
+    """Resolve public natal settings, then cast the chart."""
+
+    house_system = request.house_system.value if request.house_system else None
+    custom_aspect_rules = None
+    if request.custom_aspect_rules is not None:
+        custom_aspect_rules = [item.model_dump() for item in request.custom_aspect_rules]
+    configured = engine_for_settings(
+        engine,
+        zodiac=request.zodiac.value if request.zodiac else None,
+        ayanamsa=request.ayanamsa.value if request.ayanamsa else None,
+        house_system=house_system,
+        node_type=request.node_type,
+        aspect_preset=request.aspect_preset,
+        custom_aspect_rules=custom_aspect_rules,
+        additional_points=request.additional_points,
     )
-    return AstrologyEngine(
-        provider=engine._get_provider(),
-        profile=profile,
-        house_calculator=engine._get_house_calculator(),
-        relationship_profile=engine.relationship_profile,
-        scoring_profile=engine.scoring_profile,
-        transit_profile=engine.transit_profile,
-        progression_profile=engine.progression_profile,
-        solar_arc_profile=engine.solar_arc_profile,
-        pattern_profile=engine.pattern_profile,
+    chart = configured.natal(
+        local_datetime=request.to_engine_local_datetime(),
+        timezone=request.timezone,
+        latitude=request.latitude,
+        longitude=request.longitude,
+        altitude_m=request.altitude_m,
+        house_system=house_system,
+        unknown_time=request.unknown_time,
+        fold=request.fold,
     )
+    return configured, chart

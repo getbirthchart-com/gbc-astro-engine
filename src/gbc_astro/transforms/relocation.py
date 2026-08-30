@@ -41,6 +41,7 @@ from gbc_astro.models.chart import (
 )
 from gbc_astro.models.input import ChartInput
 from gbc_astro.models.position import AnglePosition, BodyPosition, DerivedPoint
+from gbc_astro.profiles.aspects import serialized_custom_aspect_rules
 from gbc_astro.profiles.model import CalculationProfile
 from gbc_astro.zodiac.sidereal import longitude_to_sidereal
 
@@ -156,12 +157,18 @@ def calculate_relocation(
         timezone_data_version=chart.meta.timezone_data_version,
         calculation_profile=calculation_profile.id,
         house_system=system,
+        requested_house_system=system,
         aspect_profile=calculation_profile.aspect_profile.id,
+        aspect_profile_version=calculation_profile.aspect_profile.version,
+        aspect_preset=calculation_profile.aspect_preset,
         zodiac=chart.meta.zodiac,
+        node_type=calculation_profile.node_type,
         house_algorithm_version=geometry.algorithm_version,
         ayanamsa=chart.meta.ayanamsa,
         ayanamsa_version=chart.meta.ayanamsa_version,
         ayanamsa_degrees=chart.meta.ayanamsa_degrees,
+        custom_aspect_rules=serialized_custom_aspect_rules(calculation_profile),
+        additional_points=calculation_profile.additional_points,
     )
     # Recalculated, not carried over. Most of the derived block is a function
     # of the angles and cusps this relocation has just changed: the rising sign,

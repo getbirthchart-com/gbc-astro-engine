@@ -21,8 +21,11 @@ class EngineNatalTests(unittest.TestCase):
             house_system="equal",
         )
         payload = chart.to_dict()
-        self.assertEqual(payload["schemaVersion"], "1.3.0")
+        self.assertEqual(payload["schemaVersion"], "1.9.0")
         self.assertEqual(payload["meta"]["ephemerisProvider"], "fixture")
+        self.assertEqual(payload["meta"]["nodeType"], "true")
+        self.assertEqual(payload["meta"]["requestedHouseSystem"], "equal")
+        self.assertEqual(chart.meta.node_type, "true")
         self.assertEqual(payload["subject"]["utcDateTime"], "1992-11-03T07:35:00Z")
         self.assertEqual(payload["angles"]["ascendant"]["sign"], "aries")
         self.assertEqual(len(payload["houses"]), 12)

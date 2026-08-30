@@ -74,6 +74,7 @@ from gbc_astro.houses.base import (
 from gbc_astro.houses.swiss import SwissHouseCalculator
 from gbc_astro.houses.systems import (
     HOUSE_SYSTEMS,
+    PRODUCT_HOUSE_SYSTEMS,
     SIGN_ANCHORED,
     SUPPORTED_HOUSE_SYSTEMS,
 )
@@ -101,12 +102,20 @@ from gbc_astro.models.relationship import (
     SynastryChart,
 )
 from gbc_astro.models.transform import TransformedChart
+from gbc_astro.profiles.additional import additional_body_ids
+from gbc_astro.profiles.aspects import serialized_custom_aspect_rules
 from gbc_astro.profiles.defaults import RELATIONSHIP_WESTERN_V1, WESTERN_MODERN_V1
 from gbc_astro.profiles.dimensions import (
     SYNASTRY_DIMENSION_PROFILE_V1,
     DimensionProfile,
 )
 from gbc_astro.profiles.model import CalculationProfile, RelationshipProfile
+from gbc_astro.profiles.nodes import (
+    relationship_profile_with_node_type,
+    resolve_relationship_node_type,
+    selected_node_body_id,
+    validate_node_settings,
+)
 from gbc_astro.profiles.pattern import PATTERN_PROFILE_V1, PatternProfile
 from gbc_astro.profiles.points import (
     VERTEX_SENSITIVE_LATITUDE,
@@ -123,6 +132,7 @@ from gbc_astro.profiles.relationship_timing import (
 )
 from gbc_astro.profiles.relationship_types import resolve_relationship_type
 from gbc_astro.profiles.report import COUPLE_REPORT_V1, ReportProfile
+from gbc_astro.profiles.resolve import resolve_calculation_profile
 from gbc_astro.profiles.rulership import (
     DOMINANT_WESTERN_V1,
     DominantProfile,
@@ -158,6 +168,7 @@ from gbc_astro.transforms.progressions import (
     calculate_solar_arc,
 )
 from gbc_astro.transforms.relocation import calculate_relocation
+from gbc_astro.uncertainty import assess_unknown_time, resolve_civil_day_interval
 from gbc_astro.zodiac.sidereal import (
     AyanamsaCalculator,
     longitude_to_sidereal,
@@ -200,10 +211,58 @@ class AstrologyEngine:
         self._house_calculator = house_calculator
         self._ayanamsa_calculator: AyanamsaCalculator | None = None
         self._validate_profile(profile)
+        self._validate_relationship_profile(relationship_profile)
 
     @property
     def provider_id(self) -> str:
         return self._get_provider().id
+
+    def with_profile(self, profile: CalculationProfile) -> AstrologyEngine:
+        """Return an engine that shares this provider and uses `profile`."""
+
+        if profile == self.profile:
+            return self
+        return AstrologyEngine(
+            provider=self._get_provider(),
+            profile=profile,
+            house_calculator=self._get_house_calculator(),
+            relationship_profile=self.relationship_profile,
+            scoring_profile=self.scoring_profile,
+            transit_profile=self.transit_profile,
+            progression_profile=self.progression_profile,
+            solar_arc_profile=self.solar_arc_profile,
+            pattern_profile=self.pattern_profile,
+            dominant_profile=self.dominant_profile,
+            dimension_profile=self.dimension_profile,
+            report_profile=self.report_profile,
+            timing_profile=self.timing_profile,
+        )
+
+    def with_settings(self, **overrides: Any) -> AstrologyEngine:
+        """Apply validated profile overrides without duplicating construction."""
+
+        return self.with_profile(resolve_calculation_profile(self.profile, **overrides))
+
+    def with_relationship_profile(self, profile: RelationshipProfile) -> AstrologyEngine:
+        """Return an engine that shares this natal profile and uses `profile`."""
+
+        if profile == self.relationship_profile:
+            return self
+        return AstrologyEngine(
+            provider=self._get_provider(),
+            profile=self.profile,
+            house_calculator=self._get_house_calculator(),
+            relationship_profile=profile,
+            scoring_profile=self.scoring_profile,
+            transit_profile=self.transit_profile,
+            progression_profile=self.progression_profile,
+            solar_arc_profile=self.solar_arc_profile,
+            pattern_profile=self.pattern_profile,
+            dominant_profile=self.dominant_profile,
+            dimension_profile=self.dimension_profile,
+            report_profile=self.report_profile,
+            timing_profile=self.timing_profile,
+        )
 
     def natal(
         self,
@@ -237,6 +296,7 @@ class AstrologyEngine:
                 {
                     "houseSystem": current_house_system,
                     "supported": list(SUPPORTED_HOUSE_SYSTEMS),
+                    "productHouseSystems": list(PRODUCT_HOUSE_SYSTEMS),
                 },
             )
 
@@ -253,6 +313,24 @@ class AstrologyEngine:
                     fields_affected=("angles", "houses", "houseAssignments"),
                 )
             )
+            missing = {VERTEX, PART_OF_FORTUNE}.intersection(
+                self.profile.additional_points
+            )
+            if missing:
+                warnings.append(
+                    WarningMessage(
+                        code="ADDITIONAL_POINT_UNAVAILABLE",
+                        severity="warning",
+                        message=(
+                            "Requested time-sensitive additional points were omitted. "
+                            "Vertex and Part of Fortune need a known birth time; "
+                            "local-date-start was not used as a substitute."
+                        ),
+                        fields_affected=tuple(
+                            f"points.{point_id}" for point_id in sorted(missing)
+                        ),
+                    )
+                )
 
         provider = self._get_provider()
         bodies = self._calculate_bodies(provider, time_norm.utc_datetime)
@@ -344,14 +422,20 @@ class AstrologyEngine:
             dominant_profile=self.dominant_profile.id,
             dominant_profile_version=self.dominant_profile.version,
             house_system=current_house_system if chart_input.birth_time_known else None,
+            requested_house_system=current_house_system,
             aspect_profile=self.profile.aspect_profile.id,
+            aspect_profile_version=self.profile.aspect_profile.version,
+            aspect_preset=self.profile.aspect_preset,
             zodiac=self.profile.zodiac,
+            node_type=self.profile.node_type,
             house_algorithm_version=(
                 house_calculation.algorithm_version if house_calculation else None
             ),
             ayanamsa=ayanamsa_profile.id if ayanamsa_profile else None,
             ayanamsa_version=ayanamsa_profile.version if ayanamsa_profile else None,
             ayanamsa_degrees=ayanamsa_degrees,
+            custom_aspect_rules=serialized_custom_aspect_rules(self.profile),
+            additional_points=self.profile.additional_points,
         )
         subject = ChartSubject(
             local_datetime=chart_input.local_datetime.isoformat(),
@@ -363,6 +447,23 @@ class AstrologyEngine:
             altitude_m=chart_input.altitude_m,
             birth_time_known=chart_input.birth_time_known,
         )
+        assessment = None
+        if not chart_input.birth_time_known:
+            assessment = assess_unknown_time(
+                provider=provider,
+                profile=self.profile,
+                interval=resolve_civil_day_interval(
+                    chart_input.local_datetime.date(),
+                    chart_input.timezone,
+                    fold=chart_input.fold,
+                ),
+                seed_bodies=bodies,
+                seed_julian_day=time_norm.julian_day,
+                ayanamsa_degrees=ayanamsa_degrees,
+                ayanamsa_version=(
+                    ayanamsa_profile.version if ayanamsa_profile else None
+                ),
+            )
         return NatalChart(
             schema_version=SCHEMA_VERSION,
             meta=meta,
@@ -374,41 +475,68 @@ class AstrologyEngine:
             aspects=aspects,
             derived=derived,
             warnings=tuple(warnings),
+            unknown_time_assessment=assessment,
         )
 
-    def synastry(self, chart_a: NatalChart, chart_b: NatalChart) -> SynastryChart:
+    def synastry(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        node_type: str | None = None,
+    ) -> SynastryChart:
         """Cross aspects, two-way house overlays and angle interactions.
 
         Takes charts rather than birth data so both sides are known to have been
         built under the same semantics; mixing zodiacs or schema versions is
-        refused rather than silently averaged.
+        refused rather than silently averaged. `node_type` is the relationship
+        node convention; omitted defaults to True Node when the natal charts
+        agree, and is required when they do not.
         """
         return calculate_synastry(
-            chart_a, chart_b, self.relationship_profile, self.dimension_profile
+            chart_a,
+            chart_b,
+            self._relationship_profile_for(chart_a, chart_b, node_type),
+            self.dimension_profile,
         )
 
-    def composite(self, chart_a: NatalChart, chart_b: NatalChart) -> CompositeChart:
+    def composite(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        node_type: str | None = None,
+    ) -> CompositeChart:
         """Shortest-arc midpoint composite, with angles and houses derived from the MC."""
         return calculate_composite(
             chart_a,
             chart_b,
-            self.relationship_profile,
+            self._relationship_profile_for(chart_a, chart_b, node_type),
             self._get_armc_house_calculator(),
         )
 
-    def davison(self, chart_a: NatalChart, chart_b: NatalChart) -> DavisonChart:
+    def davison(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        node_type: str | None = None,
+    ) -> DavisonChart:
         """A real chart for the midpoint moment and midpoint place of two births.
 
         Unlike a composite this is an actual instant, so its speeds, houses and
         applying/separating phases are genuine rather than constructed.
         """
-        return calculate_davison(chart_a, chart_b, self.relationship_profile, self.natal)
+        return calculate_davison(
+            chart_a,
+            chart_b,
+            self._relationship_profile_for(chart_a, chart_b, node_type),
+            self.natal,
+        )
 
     def compatibility(
         self,
         chart_a: NatalChart,
         chart_b: NatalChart,
         relationship_type: str | None = None,
+        node_type: str | None = None,
     ) -> RelationshipScore:
         """Score a pair under the configured scoring profile.
 
@@ -424,8 +552,8 @@ class AstrologyEngine:
         never asked.
         """
         return calculate_relationship_score(
-            self.synastry(chart_a, chart_b),
-            self.relationship_profile,
+            self.synastry(chart_a, chart_b, node_type=node_type),
+            self._relationship_profile_for(chart_a, chart_b, node_type),
             self.scoring_profile,
             self.dimension_profile,
             resolve_relationship_type(relationship_type),
@@ -437,6 +565,7 @@ class AstrologyEngine:
         chart_b: NatalChart,
         topic: str = "overall",
         relationship_type: str | None = None,
+        node_type: str | None = None,
     ) -> EvidenceContext:
         """A bounded, deterministic slice of a pair's geometry for one topic.
 
@@ -446,8 +575,8 @@ class AstrologyEngine:
         left behind.
         """
         return build_evidence_context(
-            self.synastry(chart_a, chart_b),
-            self.compatibility(chart_a, chart_b, relationship_type),
+            self.synastry(chart_a, chart_b, node_type=node_type),
+            self.compatibility(chart_a, chart_b, relationship_type, node_type=node_type),
             topic,
             self.report_profile,
         )
@@ -457,6 +586,7 @@ class AstrologyEngine:
         chart_a: NatalChart,
         chart_b: NatalChart,
         relationship_type: str | None = None,
+        node_type: str | None = None,
     ) -> ReportOutline:
         """Section identifiers in order, with the evidence each rests on.
 
@@ -464,8 +594,8 @@ class AstrologyEngine:
         identifiers; the words belong to whatever renders them.
         """
         return build_report_outline(
-            self.synastry(chart_a, chart_b),
-            self.compatibility(chart_a, chart_b, relationship_type),
+            self.synastry(chart_a, chart_b, node_type=node_type),
+            self.compatibility(chart_a, chart_b, relationship_type, node_type=node_type),
             self.report_profile,
         )
 
@@ -474,6 +604,7 @@ class AstrologyEngine:
         chart_a: NatalChart,
         chart_b: NatalChart,
         target_instant: datetime,
+        node_type: str | None = None,
     ) -> RelationshipTransitResult:
         """What is active between two people at one instant.
 
@@ -483,7 +614,7 @@ class AstrologyEngine:
         a relationship transit rather than an ordinary one.
         """
         return calculate_relationship_transits(
-            self.synastry(chart_a, chart_b),
+            self.synastry(chart_a, chart_b, node_type=node_type),
             self.transits(chart_a, target_instant),
             self.transits(chart_b, target_instant),
             target_instant,
@@ -495,6 +626,7 @@ class AstrologyEngine:
         chart_a: NatalChart,
         chart_b: NatalChart,
         target_instant: datetime,
+        node_type: str | None = None,
     ) -> CompositeTransitResult:
         """Transiting bodies against the composite chart's own positions.
 
@@ -516,7 +648,7 @@ class AstrologyEngine:
             )
 
         return calculate_composite_transits(
-            self.composite(chart_a, chart_b),
+            self.composite(chart_a, chart_b, node_type=node_type),
             transiting,
             instant,
             self.transit_profile.aspect_profile,
@@ -528,16 +660,18 @@ class AstrologyEngine:
         chart_a: NatalChart,
         chart_b: NatalChart,
         target_instant: datetime,
+        node_type: str | None = None,
     ) -> ProgressedSynastryResult:
         """The three progressed comparisons, each labelled and never pooled."""
+        profile = self._relationship_profile_for(chart_a, chart_b, node_type)
         return calculate_progressed_synastry(
             chart_a.bodies,
             chart_b.bodies,
             self.progressions(chart_a, target_instant),
             self.progressions(chart_b, target_instant),
             target_instant,
-            self.relationship_profile.synastry_bodies,
-            self.relationship_profile.synastry_aspect_profile,
+            profile.synastry_bodies,
+            profile.synastry_aspect_profile,
             self.timing_profile,
         )
 
@@ -546,6 +680,7 @@ class AstrologyEngine:
         chart_a: NatalChart,
         chart_b: NatalChart,
         target_instant: datetime,
+        node_type: str | None = None,
     ) -> CompositeChart:
         """Progress each chart, then compose -- not the other way round.
 
@@ -557,7 +692,7 @@ class AstrologyEngine:
         """
         relocated_a = self._chart_from_progression(chart_a, target_instant)
         relocated_b = self._chart_from_progression(chart_b, target_instant)
-        return self.composite(relocated_a, relocated_b)
+        return self.composite(relocated_a, relocated_b, node_type=node_type)
 
     def _chart_from_progression(
         self, chart: NatalChart, target_instant: datetime
@@ -919,7 +1054,8 @@ class AstrologyEngine:
         utc_datetime: datetime,
     ) -> dict[str, BodyPosition]:
         bodies: dict[str, BodyPosition] = {}
-        for body_id in BODY_IDS:
+        body_ids = BODY_IDS + additional_body_ids(self.profile.additional_points)
+        for body_id in body_ids:
             if not provider.supports_body(body_id):
                 raise UnsupportedBodyError(
                     "The configured provider does not support a required v0.1 body.",
@@ -944,7 +1080,7 @@ class AstrologyEngine:
         profile = resolve_point_profile(self.profile.points)
         points: dict[str, DerivedPoint] = {}
 
-        node_id = "true_node" if self.profile.node_type == "true" else "mean_node"
+        node_id = selected_node_body_id(self.profile.node_type)
         node = bodies.get(node_id)
         if profile.include_south_node and node is not None:
             point = south_node(node)
@@ -1023,20 +1159,7 @@ class AstrologyEngine:
 
     @staticmethod
     def _validate_profile(profile: CalculationProfile) -> None:
-        # The true and the mean lunar node are one point computed two ways,
-        # about a degree apart. A profile that lets both aspect doubles every
-        # node contact and adds a "node conjunct node" that is true of every
-        # chart ever cast. Refused here rather than left to the defaults being
-        # written correctly, because the defaults are not the only profiles.
-        nodes = {"true_node", "mean_node"} & set(profile.aspect_bodies)
-        if len(nodes) > 1:
-            raise InvalidCalculationProfileError(
-                "A profile may make at most one lunar node eligible to aspect. "
-                "The true and mean nodes are the same point computed two ways, "
-                "so admitting both counts every node contact twice and makes "
-                "the two of them permanently conjunct.",
-                {"aspectBodies": list(profile.aspect_bodies), "nodes": sorted(nodes)},
-            )
+        validate_node_settings(profile.node_type, profile.aspect_bodies)
 
         if profile.zodiac not in {"tropical", "sidereal"}:
             raise InvalidCalculationProfileError(
@@ -1047,6 +1170,24 @@ class AstrologyEngine:
             # Resolving here means an unusable profile fails at construction
             # rather than on the first chart.
             resolve_ayanamsa_profile(profile.ayanamsa or "")
+
+    def _relationship_profile_for(
+        self,
+        chart_a: NatalChart,
+        chart_b: NatalChart,
+        node_type: str | None,
+    ) -> RelationshipProfile:
+        convention = resolve_relationship_node_type(
+            chart_a,
+            chart_b,
+            node_type,
+            default=self.relationship_profile.node_type,
+        )
+        return relationship_profile_with_node_type(self.relationship_profile, convention)
+
+    @staticmethod
+    def _validate_relationship_profile(profile: RelationshipProfile) -> None:
+        validate_node_settings(profile.node_type, profile.synastry_bodies)
 
 
 def _shift_body(body: BodyPosition, offset: float) -> BodyPosition:

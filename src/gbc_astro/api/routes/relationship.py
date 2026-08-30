@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from gbc_astro.api.dependencies import EngineDep, engine_for_zodiac
+from gbc_astro.api.dependencies import EngineDep, natal_from_request
 from gbc_astro.api.models import ApiErrorEnvelope, NatalChartRequest, RelationshipRequest
 from gbc_astro.api.responses import (
     CompatibilityResponse,
@@ -45,21 +45,12 @@ _ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
 
 
 def _natal(engine: AstrologyEngine, request: NatalChartRequest) -> NatalChart:
-    engine = engine_for_zodiac(
-        engine,
-        request.zodiac.value if request.zodiac else None,
-        request.ayanamsa.value if request.ayanamsa else None,
-    )
-    return engine.natal(
-        local_datetime=request.to_engine_local_datetime(),
-        timezone=request.timezone,
-        latitude=request.latitude,
-        longitude=request.longitude,
-        altitude_m=request.altitude_m,
-        house_system=request.house_system.value if request.house_system else None,
-        unknown_time=request.unknown_time,
-        fold=request.fold,
-    )
+    _configured, chart = natal_from_request(engine, request)
+    return chart
+
+
+def _pair(engine: AstrologyEngine, body: RelationshipRequest) -> tuple[NatalChart, NatalChart]:
+    return _natal(engine, body.chart_a), _natal(engine, body.chart_b)
 
 
 @router.post(
@@ -73,7 +64,8 @@ def _natal(engine: AstrologyEngine, request: NatalChartRequest) -> NatalChart:
 )
 def calculate_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
-    result = engine.synastry(_natal(engine, body.chart_a), _natal(engine, body.chart_b))
+    chart_a, chart_b = _pair(engine, body)
+    result = engine.synastry(chart_a, chart_b, node_type=body.node_type)
     logger.info("synastry_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
     payload: dict[str, Any] = result.to_dict()
     return JSONResponse(content=payload)
@@ -111,7 +103,7 @@ def _target(body: RelationshipRequest) -> datetime:
 def relationship_transits(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
     result = engine.relationship_transits(
-        _natal(engine, body.chart_a), _natal(engine, body.chart_b), _target(body)
+        *_pair(engine, body), _target(body), node_type=body.node_type
     )
     logger.info(
         "relationship_transits_ok duration_ms=%.1f",
@@ -133,7 +125,7 @@ def relationship_transits(body: RelationshipRequest, engine: EngineDep) -> JSONR
 def composite_transits(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
     result = engine.composite_transits(
-        _natal(engine, body.chart_a), _natal(engine, body.chart_b), _target(body)
+        *_pair(engine, body), _target(body), node_type=body.node_type
     )
     logger.info(
         "composite_transits_ok duration_ms=%.1f",
@@ -155,7 +147,7 @@ def composite_transits(body: RelationshipRequest, engine: EngineDep) -> JSONResp
 def progressed_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
     result = engine.progressed_synastry(
-        _natal(engine, body.chart_a), _natal(engine, body.chart_b), _target(body)
+        *_pair(engine, body), _target(body), node_type=body.node_type
     )
     logger.info(
         "progressed_synastry_ok duration_ms=%.1f",
@@ -177,7 +169,7 @@ def progressed_synastry(body: RelationshipRequest, engine: EngineDep) -> JSONRes
 def progressed_composite(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
     result = engine.progressed_composite(
-        _natal(engine, body.chart_a), _natal(engine, body.chart_b), _target(body)
+        *_pair(engine, body), _target(body), node_type=body.node_type
     )
     logger.info(
         "progressed_composite_ok duration_ms=%.1f",
@@ -200,10 +192,10 @@ def progressed_composite(body: RelationshipRequest, engine: EngineDep) -> JSONRe
 def build_evidence(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
     result = engine.evidence_context(
-        _natal(engine, body.chart_a),
-        _natal(engine, body.chart_b),
+        *_pair(engine, body),
         body.topic.value if body.topic else "overall",
         body.relationship_type.value if body.relationship_type else None,
+        node_type=body.node_type,
     )
     logger.info("evidence_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
     payload: dict[str, Any] = result.to_dict()
@@ -222,9 +214,9 @@ def build_evidence(body: RelationshipRequest, engine: EngineDep) -> JSONResponse
 def build_outline(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
     result = engine.report_outline(
-        _natal(engine, body.chart_a),
-        _natal(engine, body.chart_b),
+        *_pair(engine, body),
         body.relationship_type.value if body.relationship_type else None,
+        node_type=body.node_type,
     )
     logger.info("outline_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
     payload: dict[str, Any] = result.to_dict()
@@ -243,9 +235,9 @@ def build_outline(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
 def calculate_compatibility(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
     result = engine.compatibility(
-        _natal(engine, body.chart_a),
-        _natal(engine, body.chart_b),
+        *_pair(engine, body),
         body.relationship_type.value if body.relationship_type else None,
+        node_type=body.node_type,
     )
     logger.info("compatibility_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
     payload: dict[str, Any] = result.to_dict()
@@ -264,7 +256,7 @@ def calculate_compatibility(body: RelationshipRequest, engine: EngineDep) -> JSO
 )
 def calculate_davison(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
-    result = engine.davison(_natal(engine, body.chart_a), _natal(engine, body.chart_b))
+    result = engine.davison(*_pair(engine, body), node_type=body.node_type)
     logger.info("davison_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
     payload: dict[str, Any] = result.to_dict()
     return JSONResponse(content=payload)
@@ -281,7 +273,7 @@ def calculate_davison(body: RelationshipRequest, engine: EngineDep) -> JSONRespo
 )
 def calculate_composite(body: RelationshipRequest, engine: EngineDep) -> JSONResponse:
     started = time.perf_counter()
-    result = engine.composite(_natal(engine, body.chart_a), _natal(engine, body.chart_b))
+    result = engine.composite(*_pair(engine, body), node_type=body.node_type)
     logger.info("composite_ok duration_ms=%.1f", (time.perf_counter() - started) * 1000.0)
     payload: dict[str, Any] = result.to_dict()
     return JSONResponse(content=payload)

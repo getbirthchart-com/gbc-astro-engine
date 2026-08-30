@@ -173,6 +173,7 @@ def calculate_composite(
             relationship_profile=profile.id,
             aspect_profile=profile.aspect_profile.id,
             zodiac=chart_a.meta.zodiac,
+            node_type=profile.node_type,
             chart_a_schema_version=chart_a.schema_version,
             chart_b_schema_version=chart_b.schema_version,
             composite_position_method=profile.composite_position_method,

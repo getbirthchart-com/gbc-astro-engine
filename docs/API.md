@@ -96,12 +96,49 @@ Rules:
 |---|---|
 | `altitude_m` | Optional meters |
 | `house_system` | `placidus` \| `whole_sign` \| `equal` (default: profile placidus) |
+| `node_type` | Natal lunar node. Omitted and `true` select True Node. |
+| `aspect_preset` | `standard` (alias `modern-major-v1`), `extended`, or `custom`. Custom ids are `custom-v1:` plus the full 64-hex SHA-256 of normalized rules. |
+| `additional_points` | Opt-in Lilith / Vertex / Part of Fortune request list |
 | `fold` | `0` \| `1` for PEP 495 ambiguous local times only |
+| `zodiac` | `tropical` (default when omitted) \| `sidereal` |
+| `ayanamsa` | Required with `zodiac=sidereal`. All five engine ids accepted. GetBirthChart recommended: `lahiri` |
+
+Relationship routes (`POST /v1/charts/synastry` and related) accept the same
+natal fields on `chart_a` / `chart_b`, plus optional relationship `node_type`
+(`true` \| `mean`). Omitted relationship `node_type` is True Node. Synastry
+schema `1.5.0` records `meta.nodeType`.
 
 ## Response
 
 `POST /v1/charts/natal` returns the **canonical** `NatalChart.to_dict()` object
 directly (not wrapped in `{ "chart": ... }`).
+
+Unknown-time responses keep the midnight natal snapshot as a labeled
+calculation anchor (`schemaVersion` `1.9.0`) and add:
+
+```json
+{
+  "unknownTimeAssessment": {
+    "version": "v1",
+    "algorithmVersion": "uniform-jd-v1.1",
+    "anchor": "start_of_local_day",
+    "assessmentComplete": true,
+    "interval": {
+      "startLocal": "1992-11-03T00:00:00",
+      "endLocal": "1992-11-03T23:59:59.999999",
+      "startUtc": "...",
+      "endUtc": "..."
+    },
+    "bodies": {},
+    "aspects": {},
+    "unavailable": ["angles", "houses", "vertex", "partOfFortune"],
+    "provenance": {}
+  }
+}
+```
+
+Known-time responses omit `unknownTimeAssessment`. Methodology:
+`docs/UNKNOWN_TIME_UNCERTAINTY.md`.
 
 ## Error envelope
 

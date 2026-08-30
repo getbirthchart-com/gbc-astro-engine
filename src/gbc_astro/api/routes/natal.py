@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from gbc_astro.api.dependencies import EngineDep, engine_for_zodiac
+from gbc_astro.api.dependencies import EngineDep, natal_from_request
 from gbc_astro.api.models import ApiErrorEnvelope, NatalChartRequest
 from gbc_astro.api.responses import NatalChartResponse
 
@@ -35,7 +35,7 @@ router = APIRouter(prefix="/v1/charts", tags=["charts"])
                         "schemaVersion": "1.0.0",
                         "meta": {
                             "engine": "gbc-astro",
-                            "engineVersion": "1.12.1",
+                            "engineVersion": "1.13.0",
                             "calculationProfile": "western-modern-v1",
                             "houseSystem": "placidus",
                             "zodiac": "tropical",
@@ -66,21 +66,7 @@ def calculate_natal(body: NatalChartRequest, engine: EngineDep) -> JSONResponse:
     """Call the existing AstrologyEngine.natal(...) and return canonical JSON."""
 
     started = time.perf_counter()
-    engine = engine_for_zodiac(
-        engine,
-        body.zodiac.value if body.zodiac else None,
-        body.ayanamsa.value if body.ayanamsa else None,
-    )
-    chart = engine.natal(
-        local_datetime=body.to_engine_local_datetime(),
-        timezone=body.timezone,
-        latitude=body.latitude,
-        longitude=body.longitude,
-        altitude_m=body.altitude_m,
-        house_system=body.house_system.value if body.house_system else None,
-        unknown_time=body.unknown_time,
-        fold=body.fold,
-    )
+    _configured, chart = natal_from_request(engine, body)
     duration_ms = (time.perf_counter() - started) * 1000.0
     logger.info(
         "natal_ok duration_ms=%.1f unknown_time=%s house_system=%s",

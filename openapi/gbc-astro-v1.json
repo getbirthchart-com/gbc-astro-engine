@@ -548,6 +548,19 @@
             },
             "title": "Optionalbodynames",
             "type": "array"
+          },
+          "siderealReadiness": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Core vs product-exposure gate. Sidereal Lahiri may be core-ready while GetBirthChart product exposure remains blocked.",
+            "title": "Siderealreadiness"
           }
         },
         "required": [
@@ -565,9 +578,33 @@
         "additionalProperties": true,
         "description": "Provenance. Every input that shaped the numbers, so a result is reproducible.",
         "properties": {
+          "additionalPoints": {
+            "description": "Normalized requested opt-in additional natal points, in product order. Empty when omitted. This is not an inventory of default bodies or derived points: Chiron remains a default body, and Vertex/Part of Fortune remain default derived points when birth time is known. Mean/True Lilith appear in bodies only when listed.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Additionalpoints",
+            "type": "array"
+          },
+          "aspectPreset": {
+            "description": "Natal aspect selector: standard (modern-major-v1), extended, or custom.",
+            "title": "Aspectpreset",
+            "type": "string"
+          },
           "aspectProfile": {
             "title": "Aspectprofile",
             "type": "string"
+          },
+          "aspectProfileVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aspectprofileversion"
           },
           "ayanamsa": {
             "anyOf": [
@@ -603,9 +640,36 @@
             ],
             "title": "Ayanamsaversion"
           },
+          "ayanamsha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Product-facing alias of ayanamsa. Same value; omitted from v2 identity.",
+            "title": "Ayanamsha"
+          },
           "calculationProfile": {
             "title": "Calculationprofile",
             "type": "string"
+          },
+          "customAspectRules": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CustomAspectRulePayload"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Normalized custom natal aspect rules. Present only when aspectPreset is custom.",
+            "title": "Customaspectrules"
           },
           "dominantProfile": {
             "anyOf": [
@@ -667,6 +731,11 @@
             ],
             "title": "Housesystem"
           },
+          "nodeType": {
+            "description": "Which lunar node the profile selected: true or mean.",
+            "title": "Nodetype",
+            "type": "string"
+          },
           "pointProfile": {
             "anyOf": [
               {
@@ -688,6 +757,11 @@
               }
             ],
             "title": "Pointprofileversion"
+          },
+          "requestedHouseSystem": {
+            "description": "House system the caller asked for. For a known-time chart this matches houseSystem. For unknown time houseSystem is null while this still records the request.",
+            "title": "Requestedhousesystem",
+            "type": "string"
           },
           "rulershipProfile": {
             "anyOf": [
@@ -727,8 +801,12 @@
           "ephemerisDataVersion",
           "timezoneDataVersion",
           "calculationProfile",
+          "requestedHouseSystem",
           "aspectProfile",
-          "zodiac"
+          "aspectPreset",
+          "zodiac",
+          "nodeType",
+          "additionalPoints"
         ],
         "title": "ChartMetaPayload",
         "type": "object"
@@ -1129,6 +1207,58 @@
           "id"
         ],
         "title": "CrossAspectPayload",
+        "type": "object"
+      },
+      "CustomAspectRulePayload": {
+        "additionalProperties": true,
+        "properties": {
+          "exactAngle": {
+            "title": "Exactangle",
+            "type": "number"
+          },
+          "orb": {
+            "title": "Orb",
+            "type": "number"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "exactAngle",
+          "orb"
+        ],
+        "title": "CustomAspectRulePayload",
+        "type": "object"
+      },
+      "CustomAspectRuleRequest": {
+        "additionalProperties": false,
+        "description": "One custom natal aspect rule. Orbs are shared; per-body orbs are not in this task.",
+        "properties": {
+          "exact_angle": {
+            "description": "Target separation in degrees, 0 through 180.",
+            "title": "Exact Angle",
+            "type": "number"
+          },
+          "orb": {
+            "description": "Allowed orb in degrees, 0 through 15.",
+            "title": "Orb",
+            "type": "number"
+          },
+          "type": {
+            "description": "Canonical aspect type, e.g. conjunction.",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "exact_angle",
+          "orb"
+        ],
+        "title": "CustomAspectRuleRequest",
         "type": "object"
       },
       "DavisonChartResponse": {
@@ -2227,6 +2357,21 @@
           }
         ],
         "properties": {
+          "additional_points": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Requested opt-in additional natal points: mean_lilith, true_lilith (osculating_lilith alias), part_of_fortune, vertex. Normalized into meta.additionalPoints; that list is the request, not an inventory of every default body or derived point. Omitted and empty keep the legacy default: Chiron on, Lilith off, Vertex and Part of Fortune when birth time is known. Lilith is not added to Standard natal aspects.",
+            "title": "Additional Points"
+          },
           "altitude_m": {
             "anyOf": [
               {
@@ -2239,6 +2384,24 @@
             "description": "Optional altitude in meters.",
             "title": "Altitude M"
           },
+          "aspect_preset": {
+            "anyOf": [
+              {
+                "enum": [
+                  "standard",
+                  "extended",
+                  "custom",
+                  "modern-major-v1"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Natal aspect preset. Omitted, 'standard', and 'modern-major-v1' are the existing major-aspect table. 'extended' adds minor aspects. 'custom' requires custom_aspect_rules.",
+            "title": "Aspect Preset"
+          },
           "ayanamsa": {
             "anyOf": [
               {
@@ -2248,7 +2411,22 @@
                 "type": "null"
               }
             ],
-            "description": "Required when zodiac is sidereal, rejected otherwise. No default is applied: the schools disagree by over two degrees, which is enough to move a planet into the neighbouring sign, so choosing one is the caller's decision."
+            "description": "Required when zodiac is sidereal, rejected otherwise. Every named engine ayanamsa is accepted. GetBirthChart product UI should send lahiri (`recommendedProductAyanamsha`). No default is applied: the schools disagree by over two degrees."
+          },
+          "custom_aspect_rules": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CustomAspectRuleRequest"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Validated natal aspect rules. Required when aspect_preset is custom; rejected with any other preset.",
+            "title": "Custom Aspect Rules"
           },
           "fold": {
             "anyOf": [
@@ -2275,7 +2453,7 @@
                 "type": "null"
               }
             ],
-            "description": "House system. Defaults to the engine calculation profile (western-modern-v1 \u2192 placidus). No silent fallback between systems."
+            "description": "House system. Omitted and 'placidus' both select the western-modern default. Product-facing values: placidus, whole_sign, equal. Other registered engine systems remain accepted. No silent fallback."
           },
           "latitude": {
             "description": "WGS84 latitude in degrees (-90 to 90).",
@@ -2310,6 +2488,22 @@
             "description": "WGS84 longitude in degrees (-180 to 180).",
             "title": "Longitude",
             "type": "number"
+          },
+          "node_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "true",
+                  "mean"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lunar node convention. Omitted and 'true' both select True Node, the western-modern default. 'mean' switches North Node, South Node, natal node aspects, draconic reference, metadata, and hash together.",
+            "title": "Node Type"
           },
           "timezone": {
             "description": "IANA timezone identifier (not a fixed UTC offset).",
@@ -2402,6 +2596,17 @@
           },
           "subject": {
             "$ref": "#/components/schemas/ChartSubjectPayload"
+          },
+          "unknownTimeAssessment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UnknownTimeAssessmentPayload"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only for unknown birth time. Classifies bodies and aspects over the local civil day. Midnight natal values remain a labeled calculation anchor, not a known birth time."
           },
           "warnings": {
             "items": {
@@ -2895,6 +3100,22 @@
           "chart_b": {
             "$ref": "#/components/schemas/NatalChartRequest",
             "description": "Second subject."
+          },
+          "node_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "true",
+                  "mean"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Relationship lunar-node convention for synastry node contacts. Omitted and 'true' select True Node, the legacy default. 'mean' uses Mean Node for both charts. One calculation uses one convention; mixed True/Mean natal conventions without this field are refused.",
+            "title": "Node Type"
           },
           "relationship_type": {
             "anyOf": [
@@ -3997,6 +4218,378 @@
         "title": "TransitRequest",
         "type": "object"
       },
+      "UnknownTimeAspectPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "classification": {
+            "title": "Classification",
+            "type": "string"
+          },
+          "enterAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enterat"
+          },
+          "exactAngle": {
+            "title": "Exactangle",
+            "type": "number"
+          },
+          "exactAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exactat"
+          },
+          "exactHit": {
+            "title": "Exacthit",
+            "type": "boolean"
+          },
+          "leaveAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leaveat"
+          },
+          "maxOrb": {
+            "title": "Maxorb",
+            "type": "number"
+          },
+          "minOrb": {
+            "title": "Minorb",
+            "type": "number"
+          },
+          "phaseStable": {
+            "title": "Phasestable",
+            "type": "boolean"
+          },
+          "phases": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Phases",
+            "type": "array"
+          },
+          "presence": {
+            "title": "Presence",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "type",
+          "exactAngle",
+          "presence",
+          "minOrb",
+          "maxOrb",
+          "exactHit",
+          "phaseStable",
+          "phases",
+          "classification",
+          "reasons"
+        ],
+        "title": "UnknownTimeAspectPayload",
+        "type": "object"
+      },
+      "UnknownTimeAssessmentPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "algorithmVersion": {
+            "title": "Algorithmversion",
+            "type": "string"
+          },
+          "anchor": {
+            "title": "Anchor",
+            "type": "string"
+          },
+          "aspects": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UnknownTimeAspectPayload"
+            },
+            "title": "Aspects",
+            "type": "object"
+          },
+          "assessmentComplete": {
+            "description": "False when the evaluation cap was hit. Incomplete results are fail-closed to uncertain.",
+            "title": "Assessmentcomplete",
+            "type": "boolean"
+          },
+          "bodies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UnknownTimeBodyPayload"
+            },
+            "title": "Bodies",
+            "type": "object"
+          },
+          "interval": {
+            "$ref": "#/components/schemas/UnknownTimeIntervalPayload"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/UnknownTimeProvenancePayload"
+          },
+          "unavailable": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unavailable",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "algorithmVersion",
+          "anchor",
+          "assessmentComplete",
+          "interval",
+          "bodies",
+          "aspects",
+          "unavailable",
+          "provenance"
+        ],
+        "title": "UnknownTimeAssessmentPayload",
+        "type": "object"
+      },
+      "UnknownTimeBodyPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "anchorLongitude": {
+            "description": "Midnight calculation-anchor longitude. Not a resolved birth-time position. Exact longitude is always time-dependent when birth time is unknown.",
+            "title": "Anchorlongitude",
+            "type": "number"
+          },
+          "classification": {
+            "description": "Roll-up of sign and motionDirection only. stable does not mean the ecliptic degree is known.",
+            "title": "Classification",
+            "type": "string"
+          },
+          "endLongitude": {
+            "title": "Endlongitude",
+            "type": "number"
+          },
+          "longitudeRange": {
+            "title": "Longituderange",
+            "type": "number"
+          },
+          "longitudeStatus": {
+            "description": "Always uncertain: exact degree is an interval range.",
+            "title": "Longitudestatus",
+            "type": "string"
+          },
+          "motion": {
+            "$ref": "#/components/schemas/UnknownTimeMotionPayload"
+          },
+          "motionStatus": {
+            "title": "Motionstatus",
+            "type": "string"
+          },
+          "possibleSigns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Possiblesigns",
+            "type": "array"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "signChanged": {
+            "title": "Signchanged",
+            "type": "boolean"
+          },
+          "signStatus": {
+            "title": "Signstatus",
+            "type": "string"
+          },
+          "stableProperties": {
+            "description": "Interval-stable properties, never including longitude.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Stableproperties",
+            "type": "array"
+          },
+          "startLongitude": {
+            "title": "Startlongitude",
+            "type": "number"
+          },
+          "uncertainProperties": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Uncertainproperties",
+            "type": "array"
+          }
+        },
+        "required": [
+          "anchorLongitude",
+          "startLongitude",
+          "endLongitude",
+          "longitudeRange",
+          "longitudeStatus",
+          "possibleSigns",
+          "signChanged",
+          "signStatus",
+          "motionStatus",
+          "motion",
+          "stableProperties",
+          "uncertainProperties",
+          "classification",
+          "reasons"
+        ],
+        "title": "UnknownTimeBodyPayload",
+        "type": "object"
+      },
+      "UnknownTimeIntervalPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "endLocal": {
+            "title": "Endlocal",
+            "type": "string"
+          },
+          "endUtc": {
+            "title": "Endutc",
+            "type": "string"
+          },
+          "startLocal": {
+            "title": "Startlocal",
+            "type": "string"
+          },
+          "startUtc": {
+            "title": "Startutc",
+            "type": "string"
+          }
+        },
+        "required": [
+          "startLocal",
+          "endLocal",
+          "startUtc",
+          "endUtc"
+        ],
+        "title": "UnknownTimeIntervalPayload",
+        "type": "object"
+      },
+      "UnknownTimeMotionPayload": {
+        "additionalProperties": true,
+        "properties": {
+          "end": {
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "title": "Start",
+            "type": "string"
+          },
+          "states": {
+            "items": {
+              "type": "string"
+            },
+            "title": "States",
+            "type": "array"
+          },
+          "stationInInterval": {
+            "title": "Stationininterval",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "states",
+          "stationInInterval"
+        ],
+        "title": "UnknownTimeMotionPayload",
+        "type": "object"
+      },
+      "UnknownTimeProvenancePayload": {
+        "additionalProperties": true,
+        "properties": {
+          "assessmentComplete": {
+            "title": "Assessmentcomplete",
+            "type": "boolean"
+          },
+          "coarseSamples": {
+            "title": "Coarsesamples",
+            "type": "integer"
+          },
+          "ephemerisEvaluations": {
+            "title": "Ephemerisevaluations",
+            "type": "integer"
+          },
+          "evaluationBudgetExhausted": {
+            "title": "Evaluationbudgetexhausted",
+            "type": "boolean"
+          },
+          "frame": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Zodiac frame used for every sample: zodiac, and when sidereal, ayanamsa id/version/degrees.",
+            "title": "Frame"
+          },
+          "maxEvaluations": {
+            "title": "Maxevaluations",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ephemerisEvaluations",
+          "coarseSamples",
+          "maxEvaluations",
+          "evaluationBudgetExhausted",
+          "assessmentComplete"
+        ],
+        "title": "UnknownTimeProvenancePayload",
+        "type": "object"
+      },
       "WarningPayload": {
         "additionalProperties": true,
         "properties": {
@@ -4063,7 +4656,7 @@
     "title": "GetBirthChart Astrology API",
     "version": "v1",
     "x-gbc-api-version": "v1",
-    "x-gbc-engine-version": "1.12.1"
+    "x-gbc-engine-version": "1.13.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -4735,7 +5328,7 @@
                   "meta": {
                     "calculationProfile": "western-modern-v1",
                     "engine": "gbc-astro",
-                    "engineVersion": "1.12.1",
+                    "engineVersion": "1.13.0",
                     "houseSystem": "placidus",
                     "zodiac": "tropical"
                   },

@@ -18,7 +18,7 @@ It computes natal chart facts: planetary positions, tropical zodiac signs,
 houses, Ascendant, Midheaven, aspects, lunar nodes, and Chiron. It does not
 include the website, accounts, payments, or interpretation text.
 
-Package release `1.12.2` uses calculation engine `1.12.1`. Natal schema `1.3.0`.
+Package release `1.13.0` uses calculation engine `1.13.0`. Natal schema `1.9.0`.
 
 ## Installation
 
@@ -66,6 +66,22 @@ chart = calculate_chart(
 
 print(chart.bodies["sun"].sign)
 print(chart.angles["ascendant"].longitude)
+```
+
+Sidereal is available on the same facade (every engine ayanamsa; Lahiri is
+the GetBirthChart recommended product value). Tropical remains the omitted
+default. This is core-ready, not GetBirthChart product exposure:
+
+```python
+chart = calculate_chart(
+    date="1990-05-15",
+    time="09:30",
+    latitude=51.5074,
+    longitude=-0.1278,
+    timezone="Europe/London",
+    zodiac="sidereal",
+    ayanamsa="lahiri",
+)
 ```
 
 `timezone` is required. Coordinates are geographic degrees, not a place name.
@@ -133,12 +149,15 @@ chart = calculate_chart(
 | `bodies.*.house` | `null` |
 | Vertex, Part of Fortune, chart ruler | omitted / empty |
 | Warning | `UNKNOWN_BIRTH_TIME` |
+| `unknownTimeAssessment` | additive civil-day classification; body `stable` is sign/motion only; exact longitude is always a range |
 
 Bodies are still computed at **local date start** (midnight in the given IANA
-timezone). That is an explicit approximation, not a claimed birth time.
+timezone). That snapshot is a labeled **calculation anchor**, not a claimed
+birth time. See `docs/UNKNOWN_TIME_UNCERTAINTY.md`.
 
-**Moon:** there is no separate Moon-uncertainty flag. The Moon can move about
-13° in a day, so sign and degree can differ from the unknown true time.
+Bodies and planet-to-planet aspects are classified over the full local civil
+day. Houses, angles, Vertex, Part of Fortune, and other angle-derived facts
+are listed under `unavailable` and are not inferred from midnight.
 
 `calculate_houses(...)` without a time raises `MissingBirthTimeError` instead of
 returning fabricated cusps.
@@ -204,12 +223,15 @@ chart.angles["ascendant"].longitude   # present only when time is known
 chart.houses                          # empty when time is unknown
 chart.aspects
 chart.warnings
-chart.meta.engine_version             # "1.12.1"
+chart.meta.engine_version             # "1.13.0"
 chart.to_dict()
 ```
 
-`gbc_astro.__version__` is the package release (`1.12.2`). `ENGINE_VERSION`
-and chart `meta.engine_version` remain `1.12.1`. `SCHEMA_VERSION` is `1.3.0`.
+`gbc_astro.__version__` is the package release (`1.13.0`). `ENGINE_VERSION`
+and chart `meta.engine_version` are `1.13.0`. `SCHEMA_VERSION` is `1.9.0`.
+Natal `calculation_hash` values are `v2` identity digests (`v2:` + SHA-256);
+legacy unprefixed 64-character hex hashes are `v1` and must not be compared
+with `v2`.
 
 ## Accuracy and testing
 

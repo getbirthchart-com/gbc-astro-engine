@@ -48,6 +48,16 @@ class Ayanamsa(str, Enum):
     raman = "raman"
 
 
+class CustomAspectRuleRequest(BaseModel):
+    """One custom natal aspect rule. Orbs are shared; per-body orbs are not in this task."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: str = Field(..., description="Canonical aspect type, e.g. conjunction.")
+    exact_angle: float = Field(..., description="Target separation in degrees, 0 through 180.")
+    orb: float = Field(..., description="Allowed orb in degrees, 0 through 15.")
+
+
 class NatalChartRequest(BaseModel):
     """Natal chart calculation request.
 
@@ -115,8 +125,46 @@ class NatalChartRequest(BaseModel):
     house_system: HouseSystem | None = Field(
         default=None,
         description=(
-            "House system. Defaults to the engine calculation profile "
-            "(western-modern-v1 → placidus). No silent fallback between systems."
+            "House system. Omitted and 'placidus' both select the western-modern "
+            "default. Product-facing values: placidus, whole_sign, equal. Other "
+            "registered engine systems remain accepted. No silent fallback."
+        ),
+    )
+    node_type: Literal["true", "mean"] | None = Field(
+        default=None,
+        description=(
+            "Lunar node convention. Omitted and 'true' both select True Node, "
+            "the western-modern default. 'mean' switches North Node, South Node, "
+            "natal node aspects, draconic reference, metadata, and hash together."
+        ),
+    )
+    aspect_preset: (
+        Literal["standard", "extended", "custom", "modern-major-v1"] | None
+    ) = Field(
+        default=None,
+        description=(
+            "Natal aspect preset. Omitted, 'standard', and 'modern-major-v1' "
+            "are the existing major-aspect table. 'extended' adds minor aspects. "
+            "'custom' requires custom_aspect_rules."
+        ),
+    )
+    custom_aspect_rules: list[CustomAspectRuleRequest] | None = Field(
+        default=None,
+        description=(
+            "Validated natal aspect rules. Required when aspect_preset is custom; "
+            "rejected with any other preset."
+        ),
+    )
+    additional_points: list[str] | None = Field(
+        default=None,
+        description=(
+            "Requested opt-in additional natal points: mean_lilith, true_lilith "
+            "(osculating_lilith alias), part_of_fortune, vertex. Normalized into "
+            "meta.additionalPoints; that list is the request, not an inventory of "
+            "every default body or derived point. Omitted and empty keep the "
+            "legacy default: Chiron on, Lilith off, Vertex and Part of Fortune "
+            "when birth time is known. Lilith is not added to Standard natal "
+            "aspects."
         ),
     )
     fold: Literal[0, 1] | None = Field(
@@ -133,10 +181,10 @@ class NatalChartRequest(BaseModel):
     ayanamsa: Ayanamsa | None = Field(
         default=None,
         description=(
-            "Required when zodiac is sidereal, rejected otherwise. No default is "
-            "applied: the schools disagree by over two degrees, which is enough to "
-            "move a planet into the neighbouring sign, so choosing one is the "
-            "caller's decision."
+            "Required when zodiac is sidereal, rejected otherwise. Every named "
+            "engine ayanamsa is accepted. GetBirthChart product UI should send "
+            "lahiri (`recommendedProductAyanamsha`). No default is applied: the "
+            "schools disagree by over two degrees."
         ),
     )
 
@@ -334,6 +382,16 @@ class RelationshipRequest(BaseModel):
     topic: EvidenceTopic | None = Field(
         default=None,
         description="Evidence context only. Defaults to `overall`.",
+    )
+    node_type: Literal["true", "mean"] | None = Field(
+        default=None,
+        description=(
+            "Relationship lunar-node convention for synastry node contacts. "
+            "Omitted and 'true' select True Node, the legacy default. 'mean' "
+            "uses Mean Node for both charts. One calculation uses one "
+            "convention; mixed True/Mean natal conventions without this field "
+            "are refused."
+        ),
     )
     target_instant: str | None = Field(
         default=None,

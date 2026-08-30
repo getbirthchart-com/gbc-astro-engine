@@ -116,6 +116,8 @@ def _check_invariants(
         if shortest_angular_distance(cusps[0], ascendant) > CUSP_TOLERANCE_DEG:
             failures.append("cusp1_is_ascendant")
         # Equal houses start at the Ascendant but do not put the MC on cusp 10.
+        # `quadrant_based` is True for Equal because cusp 1 is the Ascendant;
+        # this branch still skips the MC identity check.
         if system != "equal" and (
             shortest_angular_distance(cusps[9], midheaven) > CUSP_TOLERANCE_DEG
         ):

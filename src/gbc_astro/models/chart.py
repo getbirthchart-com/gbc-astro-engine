@@ -20,6 +20,7 @@ from gbc_astro.models.rulership import (
     HouseRuler,
     RulerPlacement,
 )
+from gbc_astro.models.uncertainty import UnknownTimeAssessment
 
 
 @dataclass(frozen=True)
@@ -48,8 +49,14 @@ class ChartMeta:
     timezone_data_version: str
     calculation_profile: str
     house_system: str | None
+    requested_house_system: str
     aspect_profile: str
+    aspect_profile_version: str | None
+    aspect_preset: str
     zodiac: str
+    # Selected lunar-node convention. Authoritative for natal aspects, south
+    # node, draconic, and public meta.nodeType (schema 1.4.0).
+    node_type: str
     house_algorithm_version: str | None
     ayanamsa: str | None = None
     ayanamsa_version: str | None = None
@@ -60,9 +67,14 @@ class ChartMeta:
     rulership_profile_version: str | None = None
     dominant_profile: str | None = None
     dominant_profile_version: str | None = None
+    custom_aspect_rules: tuple[dict[str, str | float], ...] | None = None
+    # Normalized requested opt-ins only. Empty means none were requested; it is
+    # not an inventory of default bodies (Chiron) or default derived points
+    # (Vertex, Part of Fortune).
+    additional_points: tuple[str, ...] = ()
 
-    def to_dict(self) -> dict[str, str | float | None]:
-        return {
+    def to_dict(self) -> dict[str, Any]:
+        payload: dict[str, Any] = {
             "engine": self.engine,
             "engineVersion": self.engine_version,
             "ephemerisProvider": self.ephemeris_provider,
@@ -70,8 +82,12 @@ class ChartMeta:
             "timezoneDataVersion": self.timezone_data_version,
             "calculationProfile": self.calculation_profile,
             "houseSystem": self.house_system,
+            "requestedHouseSystem": self.requested_house_system,
             "aspectProfile": self.aspect_profile,
+            "aspectProfileVersion": self.aspect_profile_version,
+            "aspectPreset": self.aspect_preset,
             "zodiac": self.zodiac,
+            "nodeType": self.node_type,
             "houseAlgorithmVersion": self.house_algorithm_version,
             "pointProfile": self.point_profile,
             "pointProfileVersion": self.point_profile_version,
@@ -79,16 +95,18 @@ class ChartMeta:
             "rulershipProfileVersion": self.rulership_profile_version,
             "dominantProfile": self.dominant_profile,
             "dominantProfileVersion": self.dominant_profile_version,
-            **(
-                {
-                    "ayanamsa": self.ayanamsa,
-                    "ayanamsaVersion": self.ayanamsa_version,
-                    "ayanamsaDegrees": self.ayanamsa_degrees,
-                }
-                if self.ayanamsa is not None
-                else {}
-            ),
+            "additionalPoints": list(self.additional_points),
         }
+        if self.custom_aspect_rules is not None:
+            payload["customAspectRules"] = [dict(rule) for rule in self.custom_aspect_rules]
+        if self.ayanamsa is not None:
+            payload["ayanamsa"] = self.ayanamsa
+            payload["ayanamsaVersion"] = self.ayanamsa_version
+            payload["ayanamsaDegrees"] = self.ayanamsa_degrees
+            # Product-facing spelling. Canonical hashed/request field remains
+            # `ayanamsa` (existing HTTP contract).
+            payload["ayanamsha"] = self.ayanamsa
+        return payload
 
 
 @dataclass(frozen=True)
@@ -181,9 +199,10 @@ class NatalChart:
     aspects: tuple[Aspect, ...]
     derived: DerivedNatal
     warnings: tuple[WarningMessage, ...] = ()
+    unknown_time_assessment: UnknownTimeAssessment | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "schemaVersion": self.schema_version,
             "meta": self.meta.to_dict(),
             "subject": self.subject.to_dict(),
@@ -195,6 +214,9 @@ class NatalChart:
             "derived": self.derived.to_dict(),
             "warnings": [warning.to_dict() for warning in self.warnings],
         }
+        if self.unknown_time_assessment is not None:
+            payload["unknownTimeAssessment"] = self.unknown_time_assessment.to_dict()
+        return payload
 
     def to_json(self, indent: int | None = None) -> str:
         return json.dumps(self.to_dict(), indent=indent, sort_keys=True)

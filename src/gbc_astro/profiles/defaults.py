@@ -68,6 +68,7 @@ RELATIONSHIP_WESTERN_V1 = RelationshipProfile(
     synastry_aspect_profile=SYNASTRY_ASPECT_PROFILE_V1,
     synastry_bodies=ASPECT_BODIES,
     synastry_angles=("ascendant", "mc", "descendant", "ic"),
+    node_type="true",
     # Shortest-arc midpoint of each corresponding pair of body longitudes.
     composite_position_method="shortest_arc_midpoint",
     # Composite Midheaven is the shortest-arc midpoint of the two Midheavens;

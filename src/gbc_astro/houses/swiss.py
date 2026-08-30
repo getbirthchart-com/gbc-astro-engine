@@ -15,7 +15,7 @@ from gbc_astro.houses.base import (
     is_sequence_degenerate,
 )
 from gbc_astro.houses.equal import equal_cusp_longitudes
-from gbc_astro.houses.systems import HOUSE_SYSTEMS, LOCALLY_DERIVED
+from gbc_astro.houses.systems import HOUSE_SYSTEMS, LOCALLY_DERIVED, PRODUCT_HOUSE_SYSTEMS
 from gbc_astro.houses.whole_sign import whole_sign_cusp_longitudes
 from gbc_astro.models.position import AnglePosition
 from gbc_astro.zodiac.tropical import longitude_to_tropical
@@ -66,13 +66,13 @@ class SwissHouseCalculator:
         except Exception as exc:
             raise HouseCalculationUnavailableError(
                 _diagnose(system, profile, latitude),
-                {
-                    "houseSystem": system,
-                    "latitude": latitude,
-                    "longitude": longitude,
-                    "definedAtAllLatitudes": profile.defined_at_all_latitudes,
-                    "provider": self.id,
-                },
+                _unavailable_details(
+                    system,
+                    profile,
+                    latitude=latitude,
+                    longitude=longitude,
+                    provider=self.id,
+                ),
             ) from exc
 
         asc = normalize_longitude(float(ascmc[0]))
@@ -136,13 +136,13 @@ class SwissHouseCalculator:
         except Exception as exc:
             raise HouseCalculationUnavailableError(
                 _diagnose(system, profile, latitude),
-                {
-                    "houseSystem": system,
-                    "armc": armc,
-                    "latitude": latitude,
-                    "definedAtAllLatitudes": profile.defined_at_all_latitudes,
-                    "provider": self.id,
-                },
+                _unavailable_details(
+                    system,
+                    profile,
+                    armc=armc,
+                    latitude=latitude,
+                    provider=self.id,
+                ),
             ) from exc
 
         asc = normalize_longitude(float(ascmc[0]))
@@ -181,6 +181,25 @@ class SwissHouseCalculator:
 # explain a failure that has already happened, never to predict one, so the
 # current mean value is precise enough.
 POLAR_CIRCLE_LATITUDE = 66.56
+
+
+def _unavailable_details(
+    system: str,
+    profile: HouseSystemProfile,
+    **extra: object,
+) -> dict[str, object]:
+    details: dict[str, object] = {
+        "houseSystem": system,
+        "definedAtAllLatitudes": profile.defined_at_all_latitudes,
+        **extra,
+    }
+    if not profile.defined_at_all_latitudes:
+        details["suggestedHouseSystems"] = [
+            candidate
+            for candidate in PRODUCT_HOUSE_SYSTEMS
+            if HOUSE_SYSTEMS[candidate].defined_at_all_latitudes
+        ]
+    return details
 
 
 def _diagnose(system: str, profile: HouseSystemProfile, latitude: float) -> str:

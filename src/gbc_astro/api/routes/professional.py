@@ -20,7 +20,7 @@ from typing import Any
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from gbc_astro.api.dependencies import EngineDep, engine_for_zodiac
+from gbc_astro.api.dependencies import EngineDep, natal_from_request
 from gbc_astro.api.models import (
     ApiErrorEnvelope,
     AstrocartographyRequest,
@@ -44,7 +44,7 @@ from gbc_astro.engine import AstrologyEngine
 from gbc_astro.errors import InvalidCalculationProfileError
 from gbc_astro.houses.systems import HOUSE_SYSTEMS
 from gbc_astro.models.chart import NatalChart
-from gbc_astro.profiles.ayanamsa import AYANAMSA_PROFILES
+from gbc_astro.profiles.ayanamsa import AYANAMSA_PROFILES, RECOMMENDED_PRODUCT_AYANAMSHA
 from gbc_astro.providers.asteroids import OPTIONAL_BODIES
 
 logger = logging.getLogger("gbc_astro.api")
@@ -68,21 +68,7 @@ def _build(
     engine: AstrologyEngine, request: NatalChartRequest
 ) -> tuple[AstrologyEngine, NatalChart]:
     """Resolve the zodiac, then cast the chart. Returns both, since transforms need the engine."""
-    configured = engine_for_zodiac(
-        engine,
-        request.zodiac.value if request.zodiac else None,
-        request.ayanamsa.value if request.ayanamsa else None,
-    )
-    chart = configured.natal(
-        local_datetime=request.to_engine_local_datetime(),
-        timezone=request.timezone,
-        latitude=request.latitude,
-        longitude=request.longitude,
-        altitude_m=request.altitude_m,
-        house_system=request.house_system.value if request.house_system else None,
-        unknown_time=request.unknown_time,
-        fold=request.fold,
-    )
+    configured, chart = natal_from_request(engine, request)
     return configured, chart
 
 
@@ -276,5 +262,11 @@ def capabilities(engine: EngineDep) -> JSONResponse:
         "houseSystems": [profile.to_dict() for profile in HOUSE_SYSTEMS.values()],
         "ayanamsas": [profile.to_dict() for profile in AYANAMSA_PROFILES.values()],
         "optionalBodyNames": sorted(OPTIONAL_BODIES),
+        "siderealReadiness": {
+            "coreReady": True,
+            "productExposureApproved": False,
+            "recommendedProductAyanamsha": RECOMMENDED_PRODUCT_AYANAMSHA,
+            "engineAyanamsas": sorted(AYANAMSA_PROFILES),
+        },
     }
     return JSONResponse(content=payload)

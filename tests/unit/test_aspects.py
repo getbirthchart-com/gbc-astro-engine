@@ -59,6 +59,70 @@ class AspectTests(unittest.TestCase):
         assert aspect is not None
         self.assertEqual(aspect.phase, "indeterminate")
 
+    def test_conjunction_wraps_around_zero_longitude(self) -> None:
+        aspect = classify_aspect(
+            body("sun", 359.5, 1.0), body("moon", 0.5, 13.0), MODERN_MAJOR_V1
+        )
+        self.assertIsNotNone(aspect)
+        assert aspect is not None
+        self.assertEqual(aspect.aspect_type, "conjunction")
+        self.assertEqual(aspect.actual_angle, 1.0)
+        self.assertEqual(aspect.exact_angle, 0.0)
+        self.assertEqual(aspect.orb, 1.0)
+
+    def test_separating_phase_when_orb_widens(self) -> None:
+        aspect = classify_aspect(
+            body("sun", 10.0, 1.0), body("moon", 72.0, 13.0), MODERN_MAJOR_V1
+        )
+        self.assertIsNotNone(aspect)
+        assert aspect is not None
+        self.assertEqual(aspect.aspect_type, "sextile")
+        self.assertEqual(aspect.phase, "separating")
+
+    def test_extended_classifies_minor_geometry(self) -> None:
+        from gbc_astro.profiles.aspects import MODERN_EXTENDED_V1
+
+        cases = (
+            (30.0, "semisextile"),
+            (45.0, "semisquare"),
+            (135.0, "sesquiquadrate"),
+            (150.0, "quincunx"),
+        )
+        for angle, name in cases:
+            with self.subTest(aspect=name):
+                aspect = classify_aspect(
+                    body("sun", 0.0, 1.0), body("moon", angle, 13.0), MODERN_EXTENDED_V1
+                )
+                self.assertIsNotNone(aspect)
+                assert aspect is not None
+                self.assertEqual(aspect.aspect_type, name)
+                self.assertEqual(aspect.exact_angle, angle)
+                self.assertEqual(aspect.actual_angle, angle)
+                self.assertIsNone(
+                    classify_aspect(
+                        body("sun", 0.0, 1.0), body("moon", angle, 13.0), MODERN_MAJOR_V1
+                    )
+                )
+
+    def test_custom_orb_includes_the_boundary_and_excludes_just_outside(self) -> None:
+        from gbc_astro.profiles.aspects import custom_aspect_profile, normalize_custom_aspect_rules
+
+        profile = custom_aspect_profile(
+            normalize_custom_aspect_rules(
+                [{"type": "conjunction", "exact_angle": 0, "orb": 6}]
+            )
+        )
+        included = classify_aspect(
+            body("sun", 0.0, 1.0), body("moon", 6.0, 13.0), profile
+        )
+        excluded = classify_aspect(
+            body("sun", 0.0, 1.0), body("moon", 6.01, 13.0), profile
+        )
+        self.assertIsNotNone(included)
+        assert included is not None
+        self.assertEqual(included.orb, 6.0)
+        self.assertIsNone(excluded)
+
 
 if __name__ == "__main__":
     unittest.main()

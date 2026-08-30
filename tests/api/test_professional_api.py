@@ -83,7 +83,13 @@ class SurfaceCoverageTests(unittest.TestCase):
         capabilities = {
             name
             for name in dir(AstrologyEngine)
-            if not name.startswith("_") and name != "provider_id"
+            if not name.startswith("_")
+            and name not in {
+                "provider_id",
+                "with_profile",
+                "with_settings",
+                "with_relationship_profile",
+            }
         }
         self.assertEqual(capabilities, set(routed), "an engine capability lost its route")
 
@@ -131,6 +137,8 @@ class ProfessionalRouteTests(unittest.TestCase):
         meta = response.json()["meta"]
         self.assertEqual(meta["zodiac"], "sidereal")
         self.assertEqual(meta["ayanamsa"], "lahiri")
+        self.assertEqual(meta["ayanamsha"], "lahiri")
+        self.assertNotIn("productExposureApproved", meta)
         self.assertIn("ayanamsaDegrees", meta)
 
     def test_every_house_system_works_over_http(self) -> None:
@@ -238,6 +246,17 @@ class ProfessionalRouteTests(unittest.TestCase):
         payload = self.client.get("/v1/capabilities").json()
         self.assertEqual(len(payload["houseSystems"]), 11)
         self.assertEqual(len(payload["ayanamsas"]), 5)
+        self.assertEqual(
+            payload["siderealReadiness"],
+            {
+                "coreReady": True,
+                "productExposureApproved": False,
+                "recommendedProductAyanamsha": "lahiri",
+                "engineAyanamsas": sorted(
+                    ["lahiri", "true_citra", "fagan_bradley", "krishnamurti", "raman"]
+                ),
+            },
+        )
         self.assertTrue(all(item["available"] for item in payload["optionalBodies"]))
 
     def test_library_and_http_agree_on_a_transform(self) -> None:

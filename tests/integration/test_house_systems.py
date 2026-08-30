@@ -117,6 +117,41 @@ class HouseSystemChartTests(unittest.TestCase):
                     places=6,
                 )
 
+    def test_equal_and_whole_sign_keep_mc_independent_of_cusp_ten(self) -> None:
+        chart = self.engine.natal(*BIRTH, house_system="placidus")
+        mc = chart.angles["mc"].longitude
+        for system in ("equal", "whole_sign"):
+            with self.subTest(system=system):
+                result = self.engine.natal(*BIRTH, house_system=system)
+                self.assertAlmostEqual(
+                    shortest_angular_distance(
+                        result.angles["mc"].longitude, mc
+                    ),
+                    0.0,
+                    places=9,
+                )
+                self.assertGreater(
+                    shortest_angular_distance(
+                        result.houses[9].cusp_longitude, result.angles["mc"].longitude
+                    ),
+                    0.1,
+                )
+                if system == "equal":
+                    self.assertAlmostEqual(
+                        shortest_angular_distance(
+                            result.houses[0].cusp_longitude,
+                            result.angles["ascendant"].longitude,
+                        ),
+                        0.0,
+                        places=9,
+                    )
+                else:
+                    self.assertAlmostEqual(
+                        result.houses[0].cusp_longitude,
+                        int(result.angles["ascendant"].longitude // 30.0) * 30.0,
+                        places=9,
+                    )
+
     def test_meridian_does_not_put_the_ascendant_on_cusp_one(self) -> None:
         """Confirms the registry's claim rather than assuming it."""
         chart = self.engine.natal(*BIRTH, house_system="meridian")
@@ -187,6 +222,10 @@ class PolarBehaviourTests(unittest.TestCase):
         self.assertIn("whole_sign", message)
         # Naming alternatives must not shade into choosing one.
         self.assertIn("No other system was substituted", message)
+        self.assertEqual(
+            raised.exception.details["suggestedHouseSystems"],
+            ["whole_sign", "equal"],
+        )
 
     def test_inverting_systems_are_flagged_not_returned_silently(self) -> None:
         for system in ("campanus", "regiomontanus", "topocentric"):

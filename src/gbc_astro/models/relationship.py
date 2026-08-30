@@ -532,6 +532,7 @@ class RelationshipMeta:
     relationship_profile: str
     aspect_profile: str
     zodiac: str
+    node_type: str
     chart_a_schema_version: str
     chart_b_schema_version: str
     composite_position_method: str | None = None
@@ -551,6 +552,7 @@ class RelationshipMeta:
             "relationshipProfile": self.relationship_profile,
             "aspectProfile": self.aspect_profile,
             "zodiac": self.zodiac,
+            "nodeType": self.node_type,
             "chartASchemaVersion": self.chart_a_schema_version,
             "chartBSchemaVersion": self.chart_b_schema_version,
         }

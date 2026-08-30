@@ -10,6 +10,11 @@ from gbc_astro.models.position import AnglePosition, RawBodyPosition
 from gbc_astro.providers.base import ProviderCapabilities
 from gbc_astro.zodiac.tropical import longitude_to_tropical
 
+_LILITH_LONGITUDES = {
+    "mean_lilith": 310.0,
+    "true_lilith": 312.5,
+}
+
 
 class FixtureProvider:
     id = "fixture"
@@ -26,9 +31,16 @@ class FixtureProvider:
         )
 
     def supports_body(self, body: str) -> bool:
-        return body in BODY_IDS
+        return body in BODY_IDS or body in _LILITH_LONGITUDES
 
     def position(self, body: str, instant_utc: datetime) -> RawBodyPosition:
+        if body in _LILITH_LONGITUDES:
+            return RawBodyPosition(
+                longitude_deg=_LILITH_LONGITUDES[body],
+                latitude_deg=0.0,
+                distance=None,
+                longitude_speed_deg_per_day=0.1,
+            )
         index = BODY_IDS.index(body)
         longitude = normalize_longitude(10.0 + index * 27.5)
         if body == "moon":

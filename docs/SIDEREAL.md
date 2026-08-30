@@ -6,19 +6,60 @@ drift apart at the rate of precession, about 50.3 arcseconds a year.
 
 ## What changes and what does not
 
-Only labels change. Every relationship between points survives the rotation
-exactly, because every longitude shifts by the same amount:
+A sidereal chart is a tropical chart rotated by the ayanamsa. Planet-to-planet
+angular separations and aspects are invariant under that shared rotation. Sign
+labels always change. House assignments:
 
 | | Sidereal |
 |---|---|
 | Longitude, sign, degree in sign | **change** |
-| House assignments | unchanged |
+| Placidus / Equal house assignments | unchanged (the whole figure rotates together) |
+| Whole Sign house assignments | **change** (cusps rebuilt from the sidereal Ascendant sign) |
 | Aspects and orbs | unchanged |
 | Latitude, distance, speed, retrograde | unchanged |
 
 This is why it is applied as a single rotation over a finished tropical chart
 rather than threaded through the calculation. The validated tropical math runs
-untouched.
+untouched, then longitudes, angles, and (for Whole Sign) cusps are mapped into
+the selected sidereal frame.
+
+## Product-facing vs engine HTTP
+
+GetBirthChart product exposure is **not** approved. The Python core and HTTP
+natal adapter are Sidereal **core-ready** for every named engine ayanamsa.
+GetBirthChart UI/product should send Lahiri only (`recommendedProductAyanamsha`).
+
+| Path | Zodiac | Ayanamsa |
+|---|---|---|
+| Omitted / `tropical` | Tropical | none |
+| HTTP / `calculate_chart()` / CLI | `sidereal` | any id in `AYANAMSA_PROFILES` |
+| GetBirthChart product checklist | `sidereal` | **`lahiri` only** |
+
+```python
+from gbc_astro import calculate_chart
+
+chart = calculate_chart(
+    "1992-11-03",
+    "14:35:00",
+    latitude=21.0285,
+    longitude=105.8542,
+    timezone="Asia/Ho_Chi_Minh",
+    zodiac="sidereal",
+    ayanamsa="lahiri",
+)
+```
+
+Product readiness is not a natal calculation field. `GET /v1/capabilities`
+`siderealReadiness` records:
+
+```text
+Core-ready: yes
+Product exposure: no
+recommendedProductAyanamsha: lahiri
+```
+
+Do not ship a Sidereal selector, header, interpretation, or cache key on
+GetBirthChart until the downstream checklist in the Task 06 handoff is done.
 
 ## Supported ayanamsas
 
@@ -53,20 +94,23 @@ practice, and unlike Placidus it is defined at every latitude.
 
 ## Provenance
 
-A sidereal chart's `meta` carries three extra fields, absent from tropical
-charts:
+A sidereal chart's `meta` carries extra fields, absent from tropical charts:
 
 ```json
 {
   "zodiac": "sidereal",
   "ayanamsa": "lahiri",
+  "ayanamsha": "lahiri",
   "ayanamsaVersion": "1.0.0",
   "ayanamsaDegrees": 23.75707697798441
 }
 ```
 
-`ayanamsaDegrees` is the value actually used at that instant, so a stored chart
-can be reproduced or audited without recomputing anything.
+`ayanamsha` is a product-facing alias of `ayanamsa` (same value). Request
+fields, v2 identity, and CLI still use `ayanamsa`. `ayanamsaDegrees` is the
+value actually used at that instant, so a stored chart can be reproduced
+without recomputing anything. Product exposure is recorded on
+`/v1/capabilities.siderealReadiness`, not on the natal chart.
 
 ## Validation
 

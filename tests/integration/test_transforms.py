@@ -13,9 +13,10 @@ from dataclasses import replace
 
 from gbc_astro import AstrologyEngine
 from gbc_astro.astronomy.circular import normalize_longitude, shortest_angular_distance
-from gbc_astro.errors import InvalidCalculationProfileError, UnsupportedBodyError
+from gbc_astro.errors import InvalidCalculationProfileError
 from gbc_astro.houses.swiss import SwissHouseCalculator
 from gbc_astro.profiles.defaults import VEDIC_SIDEREAL_V1, WESTERN_MODERN_V1
+from gbc_astro.profiles.nodes import profile_with_node_type
 from gbc_astro.providers.swiss import SwissEphemerisProvider
 from gbc_astro.transforms.harmonic import MAX_HARMONIC
 
@@ -109,23 +110,28 @@ class DraconicTests(TransformTestCase):
             house_calculator=SwissHouseCalculator(
                 ephemeris_path=os.environ["GBC_SWISS_EPHE_PATH"]
             ),
-            profile=replace(WESTERN_MODERN_V1, id="mean-node", node_type="mean"),
+            profile=profile_with_node_type(
+                WESTERN_MODERN_V1, "mean", profile_id="mean-node"
+            ),
         )
         draconic = mean_engine.draconic(self.natal)
         self.assertEqual(draconic.bodies["mean_node"].longitude, 0.0)
         self.assertNotEqual(draconic.bodies["true_node"].longitude, 0.0)
 
     def test_an_unsupported_node_type_is_refused(self) -> None:
+        # Intentional raw replace: this is a construct-time failure fixture,
+        # not a supported way to switch node convention.
         broken = replace(WESTERN_MODERN_V1, id="bad-node", node_type="osculating")
-        engine = AstrologyEngine(
-            provider=SwissEphemerisProvider(ephemeris_path=os.environ["GBC_SWISS_EPHE_PATH"]),
-            house_calculator=SwissHouseCalculator(
-                ephemeris_path=os.environ["GBC_SWISS_EPHE_PATH"]
-            ),
-            profile=broken,
-        )
-        with self.assertRaises(UnsupportedBodyError):
-            engine.draconic(self.natal)
+        with self.assertRaises(InvalidCalculationProfileError):
+            AstrologyEngine(
+                provider=SwissEphemerisProvider(
+                    ephemeris_path=os.environ["GBC_SWISS_EPHE_PATH"]
+                ),
+                house_calculator=SwissHouseCalculator(
+                    ephemeris_path=os.environ["GBC_SWISS_EPHE_PATH"]
+                ),
+                profile=broken,
+            )
 
     def test_draconic_works_on_a_sidereal_chart(self) -> None:
         engine = AstrologyEngine(

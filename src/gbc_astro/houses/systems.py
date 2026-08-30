@@ -22,8 +22,10 @@ class HouseSystemProfile:
     swisseph_code: str
     name: str
     description: str
-    # True when cusp 1 is the Ascendant and cusp 10 the Midheaven. Equal-type
-    # and axial systems do not hold this.
+    # True when cusp 1 is the Ascendant. For most of those systems cusp 10 is
+    # also the Midheaven. Equal is the documented exception: cusp 1 is the
+    # Ascendant, but cusp 10 is Ascendant + 270° and is not the MC. Axial
+    # systems (Morinus, Meridian) and Whole Sign set this False.
     quadrant_based: bool
     # True when cusp k + 180 is cusp k + 6 for every k.
     axially_symmetric: bool
@@ -173,7 +175,12 @@ HOUSE_SYSTEMS: dict[str, HouseSystemProfile] = {
         version="1.0.0",
         swisseph_code="E",
         name="Equal",
-        description="Twelve thirty-degree houses measured from the Ascendant.",
+        description=(
+            "Twelve thirty-degree houses measured from the Ascendant. Cusp 1 is "
+            "the Ascendant; cusp 10 is not the Midheaven."
+        ),
+        # Cusp 1 is the Ascendant, so this stays True. Cusp 10 is ASC+270°, not
+        # the MC. Consumers must not treat houses[9] as the Midheaven.
         quadrant_based=True,
         axially_symmetric=True,
         defined_at_all_latitudes=True,
@@ -181,6 +188,10 @@ HOUSE_SYSTEMS: dict[str, HouseSystemProfile] = {
 }
 
 SUPPORTED_HOUSE_SYSTEMS: tuple[str, ...] = tuple(sorted(HOUSE_SYSTEMS))
+
+# Product-facing natal path for GetBirthChart. The engine still calculates the
+# other registered systems; this tuple is the public three-system contract.
+PRODUCT_HOUSE_SYSTEMS: tuple[str, ...] = ("placidus", "whole_sign", "equal")
 
 # Systems whose cusps this engine derives itself rather than taking from the
 # provider, so their behaviour is identical at every latitude.

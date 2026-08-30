@@ -2,9 +2,11 @@
 
 A sidereal chart is a tropical chart rotated backwards by the ayanamsa. Every
 longitude shifts by the same amount at a given instant, which has one consequence
-worth stating: relationships *between* points are untouched. Aspects, house
-assignments and the angular distance between any two bodies are identical in
-both zodiacs. Only the sign and degree labels change.
+worth stating: planet-to-planet angular separations and aspects are untouched
+when the same rotation is applied to every longitude. Sign labels change.
+House assignments are unchanged for quadrant and Equal systems (the whole
+figure rotates together) and *do* change for Whole Sign (cusps are rebuilt
+from the sidereal Ascendant sign).
 
 That is why this is applied as a transform over a completed tropical chart
 rather than threaded through the calculation. The validated tropical math runs

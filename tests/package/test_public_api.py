@@ -72,14 +72,14 @@ def _fixture_engine() -> AstrologyEngine:
 class ImportSmokeTests(unittest.TestCase):
     def test_import_gbc_astro(self) -> None:
         self.assertTrue(hasattr(gbc_astro, "calculate_chart"))
-        self.assertEqual(gbc_astro.__version__, "1.12.2")
+        self.assertEqual(gbc_astro.__version__, "1.13.0")
 
     def test_package_and_engine_versions(self) -> None:
         from gbc_astro import ENGINE_VERSION, SCHEMA_VERSION
 
-        self.assertEqual(gbc_astro.__version__, "1.12.2")
-        self.assertEqual(ENGINE_VERSION, "1.12.1")
-        self.assertEqual(SCHEMA_VERSION, "1.3.0")
+        self.assertEqual(gbc_astro.__version__, "1.13.0")
+        self.assertEqual(ENGINE_VERSION, "1.13.0")
+        self.assertEqual(SCHEMA_VERSION, "1.9.0")
 
     def test_calculate_chart_is_exported(self) -> None:
         from gbc_astro import calculate_chart as imported

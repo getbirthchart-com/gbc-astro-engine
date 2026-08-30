@@ -88,3 +88,7 @@ AYANAMSA_PROFILES: dict[str, AyanamsaProfile] = {
 }
 
 DEFAULT_AYANAMSA = "lahiri"
+
+# GetBirthChart UI/product checklist may expose only this value. The HTTP API,
+# Python facade, CLI, and engine still accept every profile in AYANAMSA_PROFILES.
+RECOMMENDED_PRODUCT_AYANAMSHA = "lahiri"
