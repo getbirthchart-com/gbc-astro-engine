@@ -3,8 +3,9 @@
 ## 1.13.0 — 2026-08-30
 
 Package and engine version are both `1.13.0`. Natal schema remains `1.9.0`.
-Local source tag is `v1.13.0`. PyPI, GitHub Release, and Zenodo remain
-unpublished until explicit approval.
+Local source tag is `v1.13.0`. The package is published on PyPI and the
+GitHub Release is available. The concept DOI remains
+`10.5281/zenodo.22052875`; the version DOI is `10.5281/zenodo.22206006`.
 
 - House systems: public Placidus / Whole Sign / Equal through one settings
   resolver. Omitted, `None`, and `"placidus"` stay the western-modern default.

@@ -19,6 +19,11 @@ houses, Ascendant, Midheaven, aspects, lunar nodes, and Chiron. It does not
 include the website, accounts, payments, or interpretation text.
 
 Package release `1.13.0` uses calculation engine `1.13.0`. Natal schema `1.9.0`.
+The current release is available on [PyPI](https://pypi.org/project/gbc-astro/1.13.0/)
+and from the [GitHub release](https://github.com/getbirthchart-com/gbc-astro-engine/releases/tag/v1.13.0).
+The [concept DOI](https://doi.org/10.5281/zenodo.22052875) covers the project;
+the [1.13.0 version DOI](https://doi.org/10.5281/zenodo.22206006) identifies
+this release.
 
 ## Installation
 
@@ -61,12 +66,14 @@ chart = calculate_chart(
     latitude=51.5074,
     longitude=-0.1278,
     timezone="Europe/London",
-    house_system="placidus",
 )
 
 print(chart.bodies["sun"].sign)
 print(chart.angles["ascendant"].longitude)
 ```
+
+The omitted options above are the public defaults: Tropical zodiac, Placidus
+houses, True Node, Standard aspects, Chiron on, and Lilith off.
 
 Sidereal is available on the same facade (every engine ayanamsa; Lahiri is
 the GetBirthChart recommended product value). Tropical remains the omitted
@@ -172,11 +179,78 @@ returning fabricated cusps.
 - twelve house cusps
 - major aspects with orb and applying/separating phase
 - true node, mean node, south node, Chiron
-- derived points when geometry allows (vertex, Part of Fortune)
+- Standard, Extended, and validated Custom natal aspects
+- opt-in Mean Lilith and True Lilith
+- derived points when geometry allows (Vertex, Part of Fortune)
 - derived natal facts (big three, moon phase, element/modality counts, dignities)
 
 `AstrologyEngine` also exposes relationship charts, transits, returns, and
 related surfaces. Those are not part of the small `calculate_chart` API.
+
+## House systems, nodes, and aspects
+
+The engine accepts the registered house systems listed below. The product-facing
+choices are Placidus, Whole Sign, and Equal. This example compares the three
+public choices while keeping planetary positions and the input birth data fixed:
+
+```python
+from gbc_astro import calculate_chart
+
+common = {
+    "date": "1992-11-03",
+    "time": "14:35:00",
+    "latitude": 21.0285,
+    "longitude": 105.8542,
+    "timezone": "Asia/Ho_Chi_Minh",
+}
+charts = {
+    system: calculate_chart(**common, house_system=system)
+    for system in ("placidus", "whole_sign", "equal")
+}
+```
+
+True Node is the default; select Mean Node explicitly when that convention is
+needed. Natal aspects use Standard by default, with Extended and Custom profiles
+available through the same facade:
+
+```python
+mean_node = calculate_chart(**common, node_type="mean")
+extended = calculate_chart(**common, aspect_preset="extended")
+custom = calculate_chart(
+    **common,
+    aspect_preset="custom",
+    custom_aspect_rules=[
+        {"type": "conjunction", "exact_angle": 0, "orb": 6},
+        {"type": "opposition", "exact_angle": 180, "orb": 7},
+    ],
+)
+custom.meta.aspect_profile  # custom-v1:<64 lowercase hex>
+```
+
+Mean and True Lilith are opt-in and are not silently added to Standard aspects:
+
+```python
+chart = calculate_chart(**common, additional_points=["mean_lilith", "vertex"])
+chart.bodies["mean_lilith"]
+chart.points["vertex"]
+```
+
+## Synastry
+
+Relationship calculations use a relationship-level node convention. The
+omitted value is True Node; `mean` applies Mean Node consistently to both
+charts. Synastry uses schema `1.5.0`; Composite uses `1.3.0`; Davison uses
+`1.1.0`.
+
+```python
+from gbc_astro import AstrologyEngine
+
+engine = AstrologyEngine()
+person_a = engine.natal("1992-11-03T14:35:00", "Asia/Ho_Chi_Minh", 21.0285, 105.8542)
+person_b = engine.natal("1988-02-14T09:20:00", "Europe/Paris", 48.8566, 2.3522)
+relationship = engine.synastry(person_a, person_b, node_type="mean")
+relationship.meta.node_type  # "mean"
+```
 
 ## Supported house systems
 
@@ -187,6 +261,8 @@ Default: `placidus`.
 
 Placidus and Koch have no solution beyond the polar circles. The engine raises
 `HouseCalculationUnavailableError` there. It does not silently switch systems.
+For a high-latitude chart, choose `whole_sign` or `equal` explicitly if that is
+the intended convention; the engine will not make that choice for you.
 
 ## Timezone handling
 
@@ -269,10 +345,12 @@ This is not an MIT-licensed project.
 ## Citation
 
 If you use `gbc-astro` in software, analysis, or documentation, you can cite
-the archived release:
+the versioned release:
 
 Pham, Luis. `gbc-astro: GetBirthChart Astrology Calculation Engine`, version
-1.12.2. Zenodo. <https://doi.org/10.5281/zenodo.22052875>
+1.13.0. Zenodo. <https://doi.org/10.5281/zenodo.22206006>
+
+The project concept DOI is <https://doi.org/10.5281/zenodo.22052875>.
 
 ## Development and testing
 
@@ -291,7 +369,9 @@ python -m pytest
 
 - GetBirthChart: <https://getbirthchart.com/>
 - Source code: <https://github.com/getbirthchart-com/gbc-astro-engine>
+- GitHub release: <https://github.com/getbirthchart-com/gbc-astro-engine/releases/tag/v1.13.0>
+- PyPI 1.13.0: <https://pypi.org/project/gbc-astro/1.13.0/>
 - Issue tracker: <https://github.com/getbirthchart-com/gbc-astro-engine/issues>
 - Maintainer: <https://getbirthchart.com/author/luis-pham/>
-- Zenodo: <https://zenodo.org/records/22052875>
-- DOI: <https://doi.org/10.5281/zenodo.22052875>
+- Concept DOI: <https://doi.org/10.5281/zenodo.22052875>
+- Version DOI: <https://doi.org/10.5281/zenodo.22206006>
